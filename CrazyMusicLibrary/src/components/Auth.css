@@ -1,0 +1,31 @@
+img{
+    width: 200px;
+
+}
+.authDiv{
+    margin: 30px auto;
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    align-items: center;
+    max-width: 400px;
+    width: 70%;
+    background-color: aliceblue;
+    border-radius: 20px;
+    padding: 10px 20px;
+}
+
+.authDiv > form {
+    display: flex;
+    flex-direction: column;
+}
+
+form input{
+    height: 30px;
+    border-radius: 20px;
+    background-color: white;
+    border: none;
+    margin: 10px 0px;
+    padding: 2px 20px;
+    flex-shrink: 0;
+}

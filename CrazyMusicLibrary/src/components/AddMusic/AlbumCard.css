@@ -1,0 +1,43 @@
+:root{
+    --card-border-radius: 15px;
+}
+
+.album-card{
+    display: flex;
+    flex-direction: column;
+    width: 150px;
+    height: fit-content;
+    background-color: var(--cool-green);
+    border-radius: var( --card-border-radius);
+    position: relative;
+}
+.album-card:hover{
+    background-color: var(--chill-purple);
+    scale: 1.01;
+    transition: 0.1s;
+}
+
+.song-count-icon{
+    width: 30px;
+    height: auto;
+    
+}
+
+.album-card-cover{
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    border-radius:  var( --card-border-radius) ;
+}
+
+.album-card-song-count{
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    background-color: var(--chill-purple);
+    border-radius: calc(var( --card-border-radius) - 2px);
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    padding: 5px;
+}

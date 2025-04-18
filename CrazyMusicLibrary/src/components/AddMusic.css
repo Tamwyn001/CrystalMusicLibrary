@@ -1,0 +1,31 @@
+:root{
+    --width: 800px;
+
+}
+
+.addMusicContainer{
+    text-align: center;
+    position: fixed;
+    top: 10%;
+    width: var(--width);
+    right: calc(50% - (var(--width) / 2));   
+    width: var(--width);
+    height: 400px;
+    background-color: aliceblue;
+    border-radius: 25px;
+}
+
+.addMusicNav{
+    display: flex;
+    justify-content: center;
+    gap:10px;
+}
+
+.album-overview-container{
+    display: grid;
+    grid-template-columns: repeat(auto-fill, 140px);
+    gap: 28px;
+    padding: 10px 50px;
+    overflow-y: auto;
+    height: 290px;
+}

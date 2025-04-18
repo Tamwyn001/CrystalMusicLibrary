@@ -1,0 +1,41 @@
+#root {
+
+  width: 100%;
+}
+
+:root{
+  /* CSS HEX */
+  --yinmn-blue: #235690ff;
+  --chill-purple: #c6ccfc;
+  --jungle-green: #32A583ff;
+  --thistle: #F2CFEDff;
+  --violet-web-color: #E78FF0ff;
+  --heliotrope: #C86AF9ff;
+  --cool-green: #bfeae9;
+}
+
+.buttonRound{
+  padding: 5px;
+  background-color: rgba(255, 255, 255, 0.771);
+  border-radius: 20px;
+}
+.buttonRound:hover{
+  background-color: rgb(212, 219, 253);
+}
+
+.closeOverlay{
+  position: absolute;
+  top: 10px;
+  right:10px;
+  padding:5px;
+  cursor: pointer;
+
+}
+
+
+.album-name{
+  margin: 0px;
+}
+.album-artist{
+  margin: 0px;
+}

@@ -1,0 +1,21 @@
+.app-container{
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+}
+.content-container{
+    display: flex;
+    flex-direction: row;
+    height: 100%;
+    gap: 5px;
+    overflow: hidden;
+}
+
+.content{
+    background-color: rgb(236, 210, 239);
+    margin: 10px;
+    border-radius: 20px;
+    padding: 7px;
+    width: 100%;
+}

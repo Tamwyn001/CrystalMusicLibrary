@@ -1,0 +1,86 @@
+.header{
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    background: linear-gradient(90deg, rgb(187, 251, 223) 0%, rgb(198, 203, 253) 50%, rgb(239, 201, 249) 100%);
+    justify-content: space-between;
+    align-items: center;
+    height: 100px;
+}
+.logoHeader{
+    width: 50px;
+    height: 50px;
+    left: 0px;
+}
+
+.header__logo{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    margin-left: 10px;
+}
+.headerRight{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    margin-right: 10px;
+}
+
+.addMusicButton{
+    padding: 5px;
+    background-color: white;
+}
+.musicPlayer{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 10px;
+    height: 75%;
+    background-color: rgba(255, 255, 255, 0.284);
+    width: 40%;
+    padding: 4px 10px;
+    border-radius: 10px;
+}
+.playPauseContainer{
+    position: relative;
+    aspect-ratio: 1;
+    height: 90%;
+    width: auto;
+}
+.trackImage{
+    width: auto;
+    height: 100%;
+    border-radius: 10px;
+}
+.tracksInfo{
+    gap: 20px;
+}
+#songTitle{
+    margin: 0px;
+}
+.playPauseButtons{
+    top: 0px;
+    left: 0px;
+    opacity: 0;
+    position: absolute;
+
+}
+.playPauseButtons svg{
+    width: 48px;
+    height: auto;
+    padding:10px;
+}
+.playPauseButtons:hover{
+    opacity: 1;
+    transition: opacity 0.1s;
+}
+.trackinfos{
+    /* flex: 0; */
+    width: 100%;
+}
+
+.trackImage[hovered="hovered"]{
+    filter: blur(3px);
+    transition: filter 0.1s;    
+}

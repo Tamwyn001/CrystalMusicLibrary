@@ -1,0 +1,42 @@
+.albumWrapping{
+    display: flex;
+    flex-direction: row;
+    justify-content: left;
+    gap: 10px;
+    height: 270px;
+    overflow: hidden;
+    padding: 20px 10px;
+}
+.albumCover{
+    width: 20%;
+    height: auto;
+    aspect-ratio: 1;
+}
+.albumCoverImage{
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+}
+.albumDetails{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: left;
+    overflow: auto;
+    overflow-x: hidden;
+    width: 80%;
+    padding: 0px 20px;
+}
+
+.albumType{
+    display: grid;
+    grid-template-areas: "myArea myArea";
+    column-gap: 10px;
+    row-gap: 0px;
+}
+.albumTypeOption{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: center;
+}

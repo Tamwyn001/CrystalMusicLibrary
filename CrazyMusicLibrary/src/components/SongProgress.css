@@ -1,0 +1,25 @@
+.songProgress{
+    display: flex;
+    flex-direction: row;
+    align-content: space-between;
+    width: 100%;
+    align-items: center;
+    gap: 10px;
+
+}
+.songProgress p{
+    margin: 0px;
+}
+.progressBar{
+    background-color: rgb(192, 210, 216);
+    flex: 1;
+    height: 10px;
+    border-radius: 10px;
+}
+
+.progress{
+    width: 45%;
+    height: inherit;
+    background-color: var(--heliotrope);
+    border-radius: 10px;
+}
