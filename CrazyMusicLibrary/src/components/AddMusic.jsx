@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { use, useEffect, useState } from 'react';
 import './AddMusic.css' 
 import {IconX} from '@tabler/icons-react';
 import ActiveIndex from './ActiveIndex';
@@ -6,7 +6,8 @@ import MusicSource from './AddMusic/MusicSource';
 import Loading from './Loading';
 import {parseBlob} from 'music-metadata';
 import AlbumsOverview from './AddMusic/AlbumsOverview';
-
+import { v4 as uuidv4 } from 'uuid';
+import AlbumWrapping from './AddMusic/AlbumWrapping';
 
 class Album{
 
@@ -17,6 +18,7 @@ class Album{
         this.year = year;
         this.tracks = tracks;
         this.coverURL = this.setCover(cover);
+        this.uuid = uuidv4();
     }
     setCover(cover) {
         //escape if already a cover or no cover given
@@ -33,6 +35,9 @@ const AddMusic = ({closeOverlay}) => {
     const [finishedMeta, setFinishedMeta] = useState(0);
     const [metadatas, setMetadatas] = useState([]);
     const [albums, setAlbums] = useState([]);
+    const [editingAlbum, setEditingAlbum] = useState("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
+    //this avoids fetching the metadate when we remove the songs from the list
+    let deleting = false;
 
     const handleSetActiveIndex = (index) => {
         setActiveIndex(index);
@@ -41,13 +46,17 @@ const AddMusic = ({closeOverlay}) => {
         if (tracks.length === 0) return;
         setToAddTracks(tracks);
     }
+    useEffect(() => {
+        console.log(`from effect ${toAddTracks.length}`);
+        if(toAddTracks.length === 0 || deleting){deleting = false; return}
+        fetchMetadata();
+    }, [toAddTracks]);
 
     useEffect(() => { 
         if (toAddTracks.length === 0) return;
-        setTimeout(() => {
-            setFinishedMeta(0); 
-            setActiveIndex(2);
-        }, 1000);
+        setFinishedMeta(0); 
+        setActiveIndex(2);
+        console.log("Reconstructing albums... " + albums[0]);
     }, [albums]);
 
     const reconstructAlbums = () => {
@@ -65,18 +74,18 @@ const AddMusic = ({closeOverlay}) => {
 
         
         let localAlbums = [];
-        let counter = -1;
         for (const metadata of metadatas){
-            counter++;
             const albumId = findAlbumId(metadata.common.album);
             if(albumId === -1){
-                localAlbums.push(new Album(metadata.common.album, metadata.common.artist, metadata.common.year, [counter], metadata.common.picture?.[0]));
+                localAlbums.push(new Album(metadata.common.album, metadata.common.artist, metadata.common.year, [metadata.uuid], metadata.common.picture?.[0]));
                 continue;
             }
-            localAlbums[albumId].tracks.push(counter);
+            localAlbums[albumId].tracks.push(metadata.uuid);
             localAlbums[albumId].setCover(metadata.common.picture?.[0]);
         }
-        setAlbums([...albums, ...localAlbums]);
+        setTimeout(() => {
+            setAlbums([...albums, ...localAlbums]);
+        }, 750);
     }
 
     useEffect(() => {
@@ -90,7 +99,6 @@ const AddMusic = ({closeOverlay}) => {
         //fetch the filenames from the files and parse them
         await Promise.all(
             Array.from(toAddTracks).map(async (track) => {
-                console.log(track);
             let meta = await parseBlob(track);
             if(meta.common.title == undefined){
                 meta.common.title = track.name;
@@ -98,6 +106,7 @@ const AddMusic = ({closeOverlay}) => {
             if(meta.common.album == undefined){
                 meta.common.album = meta.common.title;
             }
+            meta.uuid = uuidv4();
             localMetadatas.push(meta);
             setFinishedMeta(localMetadatas.length);
         }));
@@ -105,6 +114,28 @@ const AddMusic = ({closeOverlay}) => {
         setMetadatas(localMetadatas);
        
     }
+
+    const deleteAlbum = (uuid) => {
+        console.log("Deleting album: " + uuid);
+        deleting = true;
+        const tracksToDelete = albums.find(album => album.uuid === uuid).tracks;
+        const tracksCopy = [...toAddTracks];
+        const filteredTracks = tracksCopy.filter(track => tracksToDelete.includes(track));
+        setToAddTracks(filteredTracks);
+       
+
+        const newAlbums = albums.filter(album => album.uuid !== uuid);
+        setAlbums(newAlbums);
+    }
+    const editAlbum = (uuid) => {
+        console.log("Editing album: " + uuid);
+        setEditingAlbum(uuid);
+    }
+
+    useEffect(() => {
+        if(editingAlbum === null || albums.length === 0) {setActiveIndex(2); return;};
+        setActiveIndex(3);
+    }, [editingAlbum]);
 
     const MusicWindowState = () => {
         switch(activeIndex){
@@ -114,7 +145,9 @@ const AddMusic = ({closeOverlay}) => {
             case 1:
                 return <Loading text={`Fetching metadata... ${finishedMeta}/${toAddTracks.length}`} />;
             case 2:
-                return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)}/>;
+                return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} editAlbum={editAlbum}/>;
+            case 3:
+                return <AlbumWrapping setEditUid={setEditingAlbum} albumClass={albums.find(album => album.uuid === editingAlbum)}/>;
             default:
                 return <div className="addMusicSource"><p>Not implemented yet</p></div>;
         }   
@@ -123,7 +156,7 @@ const AddMusic = ({closeOverlay}) => {
         <div className="addMusicContainer">
             <IconX className="buttonRound closeOverlay" onClick={closeOverlay}/>
             <h2>Add Music</h2>
-            <ActiveIndex context={{name: "AddMusic", length: 5}} active={activeIndex} setActive={null}/>
+            <ActiveIndex context={{name: "AddMusic", length: 4}} active={activeIndex} setActive={null}/>
             < MusicWindowState />
         </div>
     )

@@ -4,7 +4,7 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
         if (e.target.files) {
             tracksSelected(e.target.files);
         }
-      };
+    };
     return (
         <div className="addMusicSource">
             <p>Select the source.</p>
@@ -15,7 +15,6 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
             {fromFile ? (
                 <div className="addMusicInput">
                     <input multiple type="file" accept="audio/*" onChange={handleFileChange} />
-                    <button className="buttonRound" onClick={initMetadataFetching}>Add</button>
                 </div>
             ):(
                 <div className="addMusicInput">

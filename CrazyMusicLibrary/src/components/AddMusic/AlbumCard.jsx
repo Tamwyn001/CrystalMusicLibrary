@@ -1,12 +1,14 @@
 import './albumCard.css';
 
-import {IconMountain, IconFileMusic} from "@tabler/icons-react";
+import {IconPencil, IconFileMusic, IconTrash} from "@tabler/icons-react";
 
-const AlbumCard = ({album}) => {
+const AlbumCard = ({album, deleteAlbum, editAlbum}) => {
 
     return(
         <div className="album-card">
-            <div className="album-card-song-count">
+            <IconTrash className='album-card-overview-button' use="delete" onClick={() => deleteAlbum(album.uuid)} />
+            <IconPencil className='album-card-overview-button' use="edit"  onClick={() => editAlbum(album.uuid)} />
+            <div className="album-card-overview-button" use="song-count">
                 < IconFileMusic className='song-count-icon'/>
                 <span>{album.tracks.length}</span>
             </div>

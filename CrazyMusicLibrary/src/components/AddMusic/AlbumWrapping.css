@@ -8,9 +8,12 @@
     padding: 20px 10px;
 }
 .albumCover{
+    display: flex;
+    flex-direction: column;
     width: 20%;
     height: auto;
     aspect-ratio: 1;
+    gap: 10px;
 }
 .albumCoverImage{
     width: 100%;
@@ -39,4 +42,31 @@
     flex-direction: column;
     align-items: left;
     justify-content: center;
+}
+.albumCoverImageEdit{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    position: relative;
+}
+.albumCoverImageEdit:hover img{
+    filter: blur(2px);
+    transition: filter 0.3s;
+}
+.albumCoverImageEdit label{
+    opacity: 0;
+    position: absolute;
+    top: 20%;
+    width: 75%;
+    height: 75%;
+    cursor: pointer;
+}
+.albumCoverImageEdit label svg{
+    width: 100%;
+    height: 75%;
+    color: white;
+}
+.albumCoverImageEdit:hover label{
+    opacity: 1;
+    transition: opacity 0.3s;
 }

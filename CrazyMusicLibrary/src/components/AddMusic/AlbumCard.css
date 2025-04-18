@@ -30,14 +30,30 @@
     border-radius:  var( --card-border-radius) ;
 }
 
-.album-card-song-count{
+.album-card-overview-button{
     position: absolute;
-    top: 0px;
-    right: 0px;
+
     background-color: var(--chill-purple);
     border-radius: calc(var( --card-border-radius) - 2px);
     display: flex;
     flex-direction: row;
     justify-content: center;
     padding: 5px;
+}
+.album-card-overview-button:hover{
+    background-color:aliceblue;  
+    transition: 0.1s;
+}
+.album-card-overview-button[use="delete"]{
+    top: 0px;
+    left: 0px;
+}
+.album-card-overview-button[use="song-count"]{
+    top: 110px;
+    right: 0px;
+    background-color: #c5cbfbda;
+}
+.album-card-overview-button[use="edit"]{
+    top: 0px;
+    right: 0px;
 }
