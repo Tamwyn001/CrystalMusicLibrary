@@ -1,14 +1,18 @@
 //main server file
 import express from "express";
 import cors from "cors";
-// import bodyParser from "body-parser";
+import bodyParser from "body-parser";
 import "dotenv/config";
 import db from "./db.js"; // Import the database connection
+
+
+
+
 console.log(`Initializing routes`);
 
 // import translationsRouter from "./routes/translations.js";
 import authRouter from "./routes/auth.js";
-// import imageRouter from "./routes/images.js";
+import readWriteRouter from "./routes/read-write.js";
 
 import cookieParser from "cookie-parser"; 
 // import path from "path";
@@ -22,16 +26,19 @@ app.use(cors({
     credentials: true,
     exposedHeaders: ["Content-Disposition"] // Expose the header to the frontend
 }));
-//
+app.use((err, req, res, next) => {
+    console.error("Unhandled error:", err);
+    res.status(500).json({ message: "Server error" });
+});
 app.use(express.json());
 app.use(cookieParser());
-// app.use(bodyParser.json());
+app.use(bodyParser.json());
 // app.use("/translations", translationsRouter);
 // console.log(`  . 🏳️‍🌈  Translation`);
 app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
-// app.use("/publications", publiRouter);
-// console.log(`  . 📰     Publications`);
+app.use("/read-write", readWriteRouter);
+console.log(`  . 📰     Read write music`);
 // app.use("/images", imageRouter);
 // console.log(`  . 🖼️     Images`);
 

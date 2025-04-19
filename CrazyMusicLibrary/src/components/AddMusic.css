@@ -1,6 +1,6 @@
 :root{
     --width: 800px;
-
+    --height: 700px;
 }
 
 .addMusicContainer{
@@ -10,7 +10,7 @@
     width: var(--width);
     right: calc(50% - (var(--width) / 2));   
     width: var(--width);
-    height: 400px;
+    height: var(--height);
     background-color: aliceblue;
     border-radius: 25px;
 }
@@ -25,7 +25,13 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, 140px);
     gap: 28px;
-    padding: 10px 50px;
     overflow-y: auto;
     height: 290px;
+}
+
+.albums-overview{
+    padding: 10px 50px;
+    display: flex;
+    flex-direction: column;
+    height: calc(100% - 96px);
 }

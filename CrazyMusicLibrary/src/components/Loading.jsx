@@ -1,6 +1,7 @@
 import logo from '../assets/CML_logo.svg';
-
-const Loading = ({text}) => {
+import ProgressBar from './ProgressBar';
+import './Loading.css';
+const Loading = ({text, progressBar = {useProgressBar: false}}) => {
     return (
         <div className="loading-container">
             <div className="loading-spinner">
@@ -8,7 +9,14 @@ const Loading = ({text}) => {
 
             </div>
             <h1>{text}</h1>
-            <p>Loading...</p>
+            {(progressBar.useProgressBar) ? 
+                <ProgressBar 
+                    percent={progressBar.percent} 
+                    showPercent={progressBar.showPercent} 
+                    isMarquee={progressBar.isMarquee} 
+                    fillColor = {progressBar.fillColor} 
+                    style={{width: "500px"}} /> :
+                <p>Loading...</p>}
         </div>
     );
 }

@@ -8,6 +8,10 @@ import {parseBlob} from 'music-metadata';
 import AlbumsOverview from './AddMusic/AlbumsOverview';
 import { v4 as uuidv4 } from 'uuid';
 import AlbumWrapping from './AddMusic/AlbumWrapping';
+import axios from 'axios';
+
+
+
 
 class Album{
 
@@ -36,6 +40,8 @@ const AddMusic = ({closeOverlay}) => {
     const [metadatas, setMetadatas] = useState([]);
     const [albums, setAlbums] = useState([]);
     const [editingAlbum, setEditingAlbum] = useState("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
+    const [totalMbUpload, setTotalMbUpload] = useState(0);
+    const [percentageUpload, setPercentageUpload] = useState(0);
     //this avoids fetching the metadate when we remove the songs from the list
     let deleting = false;
 
@@ -137,6 +143,50 @@ const AddMusic = ({closeOverlay}) => {
         setActiveIndex(3);
     }, [editingAlbum]);
 
+    const publish = async () => {
+        setActiveIndex(4);
+        const bodyFormData = new FormData();
+        bodyFormData.append("metadata", JSON.stringify(albums));
+        let totalBytes = 0;
+        for (const file of toAddTracks) {
+            bodyFormData.append("music", file); // Append each file individually
+            totalBytes += file.size;
+        }
+        setTotalMbUpload((totalBytes/1024/1024).toFixed(1));
+        try{
+        await axios({
+            method: "POST",
+            data: bodyFormData,
+            withCredentials: true, // include credentials
+            url: "/upload", // route name
+            baseURL: "http://localhost:4590/read-write", //local url
+            onUploadProgress: progress => {
+                const { total, loaded } = progress;
+                const totalSizeInMB = total / 1000000;
+                const loadedSizeInMB = loaded / 1000000;
+                const uploadPercentage = (loadedSizeInMB / totalSizeInMB) * 100;
+               
+                setPercentageUpload(uploadPercentage.toFixed(2));
+                console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
+            },
+          });}
+          catch(err){
+            console.log("Error uploading files", err);
+          }      
+        console.log("Upload finished");
+        setTimeout(() => {
+            setToAddTracks([]);
+            setMetadatas([]);
+            setFinishedMeta(0);
+            setAlbums([]);
+            setActiveIndex(0);
+            setEditingAlbum("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
+            setPercentageUpload(0);
+            console.log("Closing overlay");
+            closeOverlay();
+        }, 750);
+
+    }
     const MusicWindowState = () => {
         switch(activeIndex){
             case 0:
@@ -145,9 +195,13 @@ const AddMusic = ({closeOverlay}) => {
             case 1:
                 return <Loading text={`Fetching metadata... ${finishedMeta}/${toAddTracks.length}`} />;
             case 2:
-                return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} editAlbum={editAlbum}/>;
+                return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} editAlbum={editAlbum} publish={publish}/>;
             case 3:
                 return <AlbumWrapping setEditUid={setEditingAlbum} albumClass={albums.find(album => album.uuid === editingAlbum)}/>;
+            case 4:
+                return <Loading text={`Publishing ${totalMbUpload}Mb..`} 
+                        progressBar={{useProgressBar: true, showPercent: true, isMarquee: true, 
+                            percent: percentageUpload, fillColor: 'var(--cool-green)'}} />;
             default:
                 return <div className="addMusicSource"><p>Not implemented yet</p></div>;
         }   
@@ -156,7 +210,7 @@ const AddMusic = ({closeOverlay}) => {
         <div className="addMusicContainer">
             <IconX className="buttonRound closeOverlay" onClick={closeOverlay}/>
             <h2>Add Music</h2>
-            <ActiveIndex context={{name: "AddMusic", length: 4}} active={activeIndex} setActive={null}/>
+            <ActiveIndex context={{name: "AddMusic", length: 5}} active={activeIndex} setActive={null}/>
             < MusicWindowState />
         </div>
     )
