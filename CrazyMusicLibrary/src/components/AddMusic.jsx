@@ -16,13 +16,13 @@ import axios from 'axios';
 class Album{
 
 
-    constructor(name, artist, year, tracks, cover){
+    constructor(name, artist, year, tracks, cover, uuid){
         this.name = name;
         this.artist = artist;
         this.year = year;
         this.tracks = tracks;
         this.coverURL = this.setCover(cover);
-        this.uuid = uuidv4();
+        this.uuid = uuid;
     }
     setCover(cover) {
         //escape if already a cover or no cover given
@@ -37,74 +37,81 @@ const AddMusic = ({closeOverlay}) => {
     const [activeIndex, setActiveIndex] = useState(0);
     const [toAddTracks, setToAddTracks] = useState([]);
     const [finishedMeta, setFinishedMeta] = useState(0);
+    const [totalMeta, setTotalMeta] = useState(0);
     const [metadatas, setMetadatas] = useState([]);
     const [albums, setAlbums] = useState([]);
     const [editingAlbum, setEditingAlbum] = useState("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
     const [totalMbUpload, setTotalMbUpload] = useState(0);
     const [percentageUpload, setPercentageUpload] = useState(0);
+    const [sendingFile, setSendingFile] = useState('');
     //this avoids fetching the metadate when we remove the songs from the list
     let deleting = false;
 
-    const handleSetActiveIndex = (index) => {
-        setActiveIndex(index);
-    }
-    const handleTracksSelected = (tracks) => {
+    // const handleSetActiveIndex = (index) => {
+    //     setActiveIndex(index);
+    // }
+    const handleTracksSelected = async (tracks) => {
         if (tracks.length === 0) return;
-        setToAddTracks(tracks);
+        setTotalMeta(tracks.length);
+        setToAddTracks((prev) => [...prev, ...tracks]); // Add the new metadatas to the list of tracks
+        const localMetadatas = await fetchMetadata(tracks);
+        handleReconstruct(localMetadatas);
+        
     }
-    useEffect(() => {
-        console.log(`from effect ${toAddTracks.length}`);
-        if(toAddTracks.length === 0 || deleting){deleting = false; return}
-        fetchMetadata();
-    }, [toAddTracks]);
+ 
 
     useEffect(() => { 
-        if (toAddTracks.length === 0) return;
         setFinishedMeta(0); 
         setActiveIndex(2);
         console.log("Reconstructing albums... " + albums[0]);
     }, [albums]);
 
-    const reconstructAlbums = () => {
-
-        function findAlbumId(name){
-            let i = 0;
-            for(const album of localAlbums){
-                if(album.name === name){
-                    return i;
-                }
-                i++;
-            }
-            return -1;
+    const reconstructAlbums = (tempMetadatas) => {
+        function findAlbumId(name, albums) {
+            return albums.findIndex((album) => album.name === name);
         }
-
-        
+    
         let localAlbums = [];
-        for (const metadata of metadatas){
-            const albumId = findAlbumId(metadata.common.album);
-            if(albumId === -1){
-                localAlbums.push(new Album(metadata.common.album, metadata.common.artist, metadata.common.year, [metadata.uuid], metadata.common.picture?.[0]));
-                continue;
+    
+        for (let i = 0; i < tempMetadatas.length; i++) {
+            let metadata = tempMetadatas[i];
+            metadata.trackUploadId = i;
+            const albumId = findAlbumId(metadata.common.album, localAlbums);
+            if (albumId === -1) {
+                const newUuid = uuidv4();
+                localAlbums.push(new Album(
+                    metadata.common.album,
+                    metadata.common.artist,
+                    metadata.common.year,
+                    [metadata.uuid],
+                    metadata.common.picture?.[0],
+                    newUuid
+                ));
+                metadata.albumUuid = newUuid;
+            } else {
+                localAlbums[albumId].tracks.push(metadata.uuid);
+                localAlbums[albumId].setCover(metadata.common.picture?.[0]);
+                metadata.albumUuid = localAlbums[albumId].uuid;
             }
-            localAlbums[albumId].tracks.push(metadata.uuid);
-            localAlbums[albumId].setCover(metadata.common.picture?.[0]);
         }
+        setMetadatas((prev) => ([...prev, ...tempMetadatas]));
+        return localAlbums;
+    };
+    
+    const handleReconstruct = (tempMetas) => {
+        const newAlbums = reconstructAlbums(tempMetas);
+        // Delay to wait for metadatas state to update
         setTimeout(() => {
-            setAlbums([...albums, ...localAlbums]);
-        }, 750);
-    }
+            setAlbums((prev) => [...prev, ...newAlbums]);
+        }, 400);
+    };
 
-    useEffect(() => {
-        if (toAddTracks.length === 0) return;
-        reconstructAlbums();
-    }, [metadatas]);
-
-    const fetchMetadata = async () => {
+    const fetchMetadata = async (tracks) => {
         setActiveIndex(1);
         let localMetadatas = [];
         //fetch the filenames from the files and parse them
         await Promise.all(
-            Array.from(toAddTracks).map(async (track) => {
+            Array.from(tracks).map(async (track) => {
             let meta = await parseBlob(track);
             if(meta.common.title == undefined){
                 meta.common.title = track.name;
@@ -112,13 +119,10 @@ const AddMusic = ({closeOverlay}) => {
             if(meta.common.album == undefined){
                 meta.common.album = meta.common.title;
             }
-            meta.uuid = uuidv4();
             localMetadatas.push(meta);
             setFinishedMeta(localMetadatas.length);
-        }));
-
-        setMetadatas(localMetadatas);
-       
+        }));       
+        return localMetadatas;
     }
 
     const deleteAlbum = (uuid) => {
@@ -144,35 +148,51 @@ const AddMusic = ({closeOverlay}) => {
     }, [editingAlbum]);
 
     const publish = async () => {
+        if (toAddTracks.length === 0) return;
         setActiveIndex(4);
-        const bodyFormData = new FormData();
-        bodyFormData.append("metadata", JSON.stringify(albums));
-        let totalBytes = 0;
-        for (const file of toAddTracks) {
-            bodyFormData.append("music", file); // Append each file individually
-            totalBytes += file.size;
-        }
+        let bodyAlbumFormData = new FormData();
+        bodyAlbumFormData.append("albums", JSON.stringify(albums));
+        let totalBytes = toAddTracks.reduce((acc, track) => acc + track.size, 0); 
         setTotalMbUpload((totalBytes/1024/1024).toFixed(1));
-        try{
-        await axios({
+        await fetch("http://localhost:4590/read-write/upload", {
             method: "POST",
-            data: bodyFormData,
-            withCredentials: true, // include credentials
-            url: "/upload", // route name
-            baseURL: "http://localhost:4590/read-write", //local url
-            onUploadProgress: progress => {
-                const { total, loaded } = progress;
-                const totalSizeInMB = total / 1000000;
-                const loadedSizeInMB = loaded / 1000000;
-                const uploadPercentage = (loadedSizeInMB / totalSizeInMB) * 100;
-               
-                setPercentageUpload(uploadPercentage.toFixed(2));
-                console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
-            },
-          });}
-          catch(err){
-            console.log("Error uploading files", err);
-          }      
+            body: bodyAlbumFormData,
+            credentials: "include",
+        })
+        .then((response) => {
+            if (!response.ok) {
+                console.error("Error uploading albums:", response.statusText);
+                throw new Error("Error uploading albums");
+            }
+            return response.json();
+        })
+        .then((data) => {console.log( data);});
+        bodyAlbumFormData = null; //clear the form data to free memory
+
+        for (let i = 0; i < toAddTracks.length; i++) {
+            const track = toAddTracks[i];
+            const bodyFormData = new FormData();
+            bodyFormData.append("tracksMeta", JSON.stringify(metadatas[i]));
+            bodyFormData.append("music", track); // Append each file individually
+            console.log("Adding file to form data: ", track);
+            setSendingFile(track.name);
+            await axios({
+                method: "POST",
+                data: bodyFormData,
+                withCredentials: true, // include credentials
+                url: "/upload", // route name
+                baseURL: "http://localhost:4590/read-write", //local url
+                onUploadProgress: progress => {
+                    const { total, loaded } = progress;
+                    const totalSizeInMB = total / 1000000;
+                    const loadedSizeInMB = loaded / 1000000;
+                    const uploadPercentage = (loadedSizeInMB / totalSizeInMB) * 100;
+                   
+                    setPercentageUpload(uploadPercentage.toFixed(2));
+                    console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
+                },
+              });
+        }
         console.log("Upload finished");
         setTimeout(() => {
             setToAddTracks([]);
@@ -193,13 +213,13 @@ const AddMusic = ({closeOverlay}) => {
                 return <MusicSource fromFile={fromFile} setFromFile={setFromFile} tracksSelected={handleTracksSelected}
                     initMetadataFetching={fetchMetadata} />;
             case 1:
-                return <Loading text={`Fetching metadata... ${finishedMeta}/${toAddTracks.length}`} />;
+                return <Loading text={`Fetching metadata... ${(totalMeta) ? finishedMeta+'/'+totalMeta : "-/-"}`} />;
             case 2:
                 return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} editAlbum={editAlbum} publish={publish}/>;
             case 3:
                 return <AlbumWrapping setEditUid={setEditingAlbum} albumClass={albums.find(album => album.uuid === editingAlbum)}/>;
             case 4:
-                return <Loading text={`Publishing ${totalMbUpload}Mb..`} 
+                return <Loading text={`Publishing ${sendingFile} ${totalMbUpload}Mb..`} 
                         progressBar={{useProgressBar: true, showPercent: true, isMarquee: true, 
                             percent: percentageUpload, fillColor: 'var(--cool-green)'}} />;
             default:

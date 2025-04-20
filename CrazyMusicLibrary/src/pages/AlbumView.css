@@ -1,0 +1,42 @@
+.track-list{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex: 1;
+}
+
+.track-view{
+    display: flex;
+    flex-direction: row;
+    border-radius: 10px;
+    justify-content: space-between;
+    background-color: #f0f0f0;
+    padding: 10px;
+}
+.track-view p{
+    margin: 0;
+    font-size: 16px;
+}
+.album-content img{
+    padding: 100px;
+    width: 200px;
+    height: 200px;
+    border-radius: 10px;
+
+    animation: rotate 5s linear infinite;
+}
+:root{
+    --rotating: 0, 1, 0;
+}
+
+
+@keyframes rotate {
+    0% { transform: rotate3d(var(--rotating), 0deg); }
+    100% { transform: rotate3d(var(--rotating), 360deg); }
+}
+.album-content{
+    display: flex;
+    flex-direction: row;
+    gap: 20px;
+    width: calc(100% - 20px);
+}

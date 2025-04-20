@@ -13,6 +13,7 @@
     height: var(--height);
     background-color: aliceblue;
     border-radius: 25px;
+    z-index: 5;
 }
 
 .addMusicNav{

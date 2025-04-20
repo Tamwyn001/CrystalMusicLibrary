@@ -2,21 +2,36 @@
 //Database conenction setup
 
 import "dotenv/config";
-import mysql from "mysql2";
-const db = mysql.createConnection({
-    host : process.env.DB_HOST,
-    user : process.env.DB_USER,
-    port : parseInt(process.env.DB_PORT),
-    password : process.env.DB_PASSWORD,
-    database : process.env.DB_NAME,
-    charset: 'utf8mb4' // To support emojis and other special characters
-});
-db.connect(err => {
-    if (err) {
-        console.error("❌ Database connection failed:", err);
-    } else {
-        console.log("✅ Database connected successfully");
-    }
-});
+import Database from "better-sqlite3";
+import fs from "fs";
 
+
+const resetDatabase = (dbPath, setupPath) => {
+    const sqlScript = fs.readFileSync(setupPath, "utf8");
+    const db = new Database(dbPath, {fileMustExist: false}); // Create a new database connection
+
+    try {
+        db.exec("PRAGMA foreign_keys = ON;");
+        db.pragma('journal_mode = WAL'); //for performance https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md
+        db.exec(sqlScript);
+        console.log("✅ Database reset successfully");
+      } catch (err) {
+        console.error("❌ Error executing SQL script:", err);
+      }
+    db.close();  // Close the database connection
+}
+
+const setupDatabase = () => {
+    const dbPath = "../db/CML_db.sqlite";
+    const sqlSetupFilpath = "../db/CML_setup.sql";
+
+    if(fs.existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
+    else{resetDatabase(dbPath, sqlSetupFilpath);}
+    console.log("✅ Database mounted");
+    return new Database(dbPath, {
+        fileMustExist: true,
+    });
+}
+
+const db = setupDatabase();
 export default db;

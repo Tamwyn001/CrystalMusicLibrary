@@ -1,11 +1,12 @@
 import ProgressBar from "../components/ProgressBar";
 import LibAlbumCard from "../components/LibAlbumCard";
 import { useEffect, useState } from "react";
-const Home = () => {
+const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
     let cards;
     const fetchAlbums = () => {
-        fetch("http://localhost:4590/read-write/albums", {method: "GET", credentials: "include"}).then((response) => {
+        fetch("http://localhost:4590/read-write/albums", {method: "GET", credentials: "include"})
+        .then((response) => {
             if(response.status !== 200){
                 console.error("Error fetching albums");
                 return;
@@ -21,7 +22,7 @@ const Home = () => {
     return(
         <div className="home">
            {albums.map((album) => (
-            <LibAlbumCard key={album.id} album={album} />
+            <LibAlbumCard key={album.id} album={album}/>
         ))}
         </div>
     )

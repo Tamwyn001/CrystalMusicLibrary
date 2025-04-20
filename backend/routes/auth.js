@@ -22,58 +22,42 @@ import jwt from "jsonwebtoken";
 
 router.get("/any-user", (req, res) => {
     console.log("Fetching all users");
-    db.query("SELECT * FROM users", (err, results) => { 
-        if (err) return res.status(500).json({ error: err.message });
-        res.json(results);
-        return results.length;
-    });
+    const allUsers = db.prepare("SELECT * FROM users").all();
+    res.json(allUsers);
 });
 
 router.post("/register", upload.none() ,async (req, res) => {
     console.log(req.body);
     const { email, password, name } = req.body;
-    const checkFirstUser = new Promise((resolve, reject) => {
-        db.query("SELECT * FROM users", (err, results) => {
-            if (err) return reject(err);
-            resolve(results.length === 0);
-        });
-    });
-    checkFirstUser.then((isFirstUser) => {
-        const role = isFirstUser ? "admin" : "user";
-        db.query("INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)",
-            [email, password, name ,role, currentDate()], (err, results) => {
-            if (err) return res.status(500).json({ error: err.message });
-            res.json({ message: "User registered successfully" });
-        });
-    })
+    const isFirstUser = db.prepare("SELECT * FROM users").all().length === 0;
+    const role = isFirstUser ? "admin" : "user";
+    db.prepare("INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)").run([email, password, name ,role, currentDate()]);
+    res.json({ message: "User registered successfully" });
+
 });
 
 router.post("/login", 
     upload.none(), (req, res) => {
-        db.query("SELECT * from users WHERE email = ? AND password = ?",
-            [req.body.email, req.body.password], (err, results) => { 
-                //generate a JWT token
-            if (results.length == 0) { 
-                return res.status(401).json({ success: false, message: "Invalid credentials" });
-            }
-            const token = jwt.sign(
-                { email : results[0]['email'], name : results[0]['name'] },
-                process.env.JWT_SECRET,
-                { expiresIn: process.env.JWT_TOKEN_EXPIRES_IN+"h" });
-            
-            //send the token in a http-only cookie (Prevents JavaScript access)
-            res.cookie("token", token, {
-                httpOnly: true, //cannot be accessed by client side scripts
-                secure: process.env.NODE_ENV === "production", //only sent over HTTPS in production
-                sameSite: "strict", //CSRF protection
-                maxAge: parseFloat(process.env.JWT_TOKEN_EXPIRES_IN)*60*60*1000 //N*hours
+        const userQuery  = db.prepare("SELECT * FROM users WHERE email = ? AND password = ?").get([req.body.email, req.body.password]);
+        if (userQuery === undefined) { return res.status(401).json({ success: false, message: "Invalid credentials" });}
+        console.log("User found: ", userQuery);
+        const token = jwt.sign(
+            { email : userQuery.email, name : userQuery.username },
+            process.env.JWT_SECRET,
+            { expiresIn: process.env.JWT_TOKEN_EXPIRES_IN+"h" });
+        
+        //send the token in a http-only cookie (Prevents JavaScript access)
+        res.cookie("token", token, {
+            httpOnly: true, //cannot be accessed by client side scripts
+            secure: process.env.NODE_ENV === "production", //only sent over HTTPS in production
+            sameSite: "strict", //CSRF protection
+            maxAge: parseFloat(process.env.JWT_TOKEN_EXPIRES_IN)*60*60*1000 //N*hours
 
-            });
+        });
 
-            res.json({success : true, message: "Login successful", user : results[0]['email']});
-            }
-        );
+        res.json({success : true, message: "Login successful", user : userQuery.email});
     });
+
 
 router.post("/verifyToken", (req, res) => {
     const token = req.cookies.token;

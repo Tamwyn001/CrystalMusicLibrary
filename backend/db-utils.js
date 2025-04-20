@@ -2,102 +2,68 @@ import db from "./db.js";
 import { currentDate } from "./lib.js";
 import{ v4 as uuidv4 } from 'uuid';
 const DUPLICATE_KEY_ERROR = 1062;
+
+// inserting array of arrays
+const batchInsert = (table, columns, params, ignore = false) => {
+    const placeholders = params.map((row) => `(${row.map(() => '?').join(',')})`).join(",");
+    db.prepare(`INSERT ${ignore? "OR IGNORE" : ''} INTO ${table} (${columns}) VALUES ${placeholders}`).run(params.flat().flat());
+    
+}
 export const addTracks = (tracks) => {
+
     // Function to add tracks to the database
     console.log("Adding tracks to the database...");
+    // console.log(tracks);
     const localTime = currentDate();
-    const query = "INSERT INTO tracks (id, title, album, genre, duration, release_date, path, created_at) VALUES (?, ?, ?)";
-    db.query()
-    
+    console.log(tracks);
+    batchInsert("tracks", "id, title, album, release_date, path, created_at", tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime]));
 }
 
 
-export const addAlbums = async (albums) => {
+export const addAlbums = (albums) => {
     // Function to add albums to the database. These are emnpty albums with no tracks, then call addTracks and pass the id of the album
-    
-    console.log("Adding albums to the database...");
-    const localTime = currentDate();
-    let placeholders="";
+
     let artists = [];
     for(let i =0; i < albums.length; i++){
-        const uuid = uuidv4();
-        placeholders+= "(?, ?, ?, ?),";
-        albums[i].id = uuid;
-        artists.push(albums[i].artist); //todo split with comma if multiple artists
+        for(const artist of albums[i].artist.split(",")){artists.push([artist]);} //need an array otherwise row.map is not a function
+    }
+    console.log("Adding albums to the database...");
+    const localTime = currentDate();
+    batchInsert("artists_descs", "name", artists, true);
+    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, album.coverURL]));
+    const query = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
+    const insert = db.prepare(query);
+    console.log(albums);
+    for(let i = 0; i < albums.length; i++){
+        const album = albums[i];
+        insert.run(album.artist, album.uuid);
     }
 
-    placeholders = placeholders.slice(0, -1); // Remove the last comma
-    const addArtists = new Promise((resolve, reject) => {
-        let artistsPlaceholders = "";
-        for(let i = 0; i < artists.length; i++){artistsPlaceholders+= "(?),";}
-        artistsPlaceholders = artistsPlaceholders.slice(0, -1); // Remove the last comma
-        const query = `INSERT INTO artists_descs (name) VALUES ${artistsPlaceholders}`;
-        db.query(query, artists, (err, results) => {
-            if (err) {
-                if(err.errno === DUPLICATE_KEY_ERROR){
-                    console.log("Duplicate key error, ignoring");
-                }
-                else{reject(err);}
-            }
-            //now we need to map the artists to their ids:
-            db.query("SELECT id, name FROM artists_descs", (err, results) => { //todo use the length to add in order to retrieve the last ids with a sort on id and max count(number)
-                if (err) {reject(err);}
-                resolve(results);
-            });
-        });
-    });
-    const queryPromise = new Promise((resolve, reject) => {
-        const query = `INSERT INTO albums (id, title, release_date, cover) VALUES ${placeholders}`;
-        db.query(query, albums.flatMap((album) => [album.id, album.name, localTime, album.coverURL]), (err, results) => {
-            if (err) {
-                console.error(err);
-                reject(err);
-            }
-            console.log("Albums added to the database");
-            resolve();
-        });        
-    });
-
-    const remapedArtist = await addArtists;
-
-    const queryAlbumToArtist = new Promise((resolve, reject) => {
-        let placeholders = "";
-        let toAdd = [];
-        console.log(remapedArtist);
-        for(let i = 0; i < albums.length; i++){
-            placeholders+= "(?, ?),";
-            const artist = remapedArtist.filter((pair) => pair.name === albums[i].artist)[0];
-            toAdd.push(artist.id, albums[i].id);
-        }
-        placeholders = placeholders.slice(0, -1); // Remove the last comma
-        const query = `INSERT INTO artists_to_albums (artist, taking_part) VALUES ${placeholders}`;
-        db.query(query, toAdd, (err, results) => {  
-            if (err) reject(err);
-            resolve();
-        });
-
-    });
-
-    
-    await queryPromise;
-    await queryAlbumToArtist;
     return
 }
 
-export const getAlbums = async ()  => {
+export const getAlbums = ()  => {
+    const query = `
+        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
+        FROM albums AS a 
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+    `;
+    return db.prepare(query).all(); 
+}
 
-    const query = new Promise((resolve, reject) => {
-        const query = `
-            SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
-            FROM albums AS a 
-            JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
-            JOIN artists_descs AS ad ON A2A.artist = ad.id
-        `;
-        db.query(query, (err, results) => {
-            if (err) reject(err);
-            resolve(results);
-        });
-    })
-    const results = await query;
-    return results;
+export const getAlbum = (id) => {
+    const queryAlbumInfos = `
+        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
+        FROM albums AS a 
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        WHERE a.id = ?
+    `;
+    const tracksInfos = `
+        SELECT t.id AS id, t.title AS title
+        FROM tracks AS t 
+        WHERE t.album = ?
+    `;
+    return {albumInfos : db.prepare(queryAlbumInfos).get(id), tracks : db.prepare(tracksInfos).all(id)};
 }
