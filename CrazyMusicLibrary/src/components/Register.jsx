@@ -1,6 +1,7 @@
 import { useNavigate  } from "react-router-dom"
 import './Auth.css'
 import logoURL from '../assets/CML_logo.svg'
+import apiBase from "../../APIbase";
 const Register = () => {
     const navigate = useNavigate();
     const handleRegister = async (e) => {
@@ -14,7 +15,7 @@ const Register = () => {
             return
         }
         const formData = new FormData(e.target);    
-        const res = await fetch('http://localhost:4590/auth/register', {
+        const res = await fetch(`${apiBase}/auth/register`, {
             method: 'POST',
             credentials: 'include',
             body: formData

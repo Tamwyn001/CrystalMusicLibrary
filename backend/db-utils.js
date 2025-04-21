@@ -16,7 +16,8 @@ export const addTracks = (tracks) => {
     // console.log(tracks);
     const localTime = currentDate();
     console.log(tracks);
-    batchInsert("tracks", "id, title, album, release_date, path, created_at", tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime]));
+    batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration", 
+        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime, track.no, track.duration]));
 }
 
 
@@ -30,7 +31,7 @@ export const addAlbums = (albums) => {
     console.log("Adding albums to the database...");
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
-    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, album.coverURL]));
+    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, `${album.uuid}.${album.ext}`]));
     const query = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
     const insert = db.prepare(query);
     console.log(albums);
@@ -61,9 +62,21 @@ export const getAlbum = (id) => {
         WHERE a.id = ?
     `;
     const tracksInfos = `
-        SELECT t.id AS id, t.title AS title
+        SELECT t.path AS path, t.title AS title, t.track_number AS track_number
         FROM tracks AS t 
         WHERE t.album = ?
+        ORDER BY track_number ASC
     `;
     return {albumInfos : db.prepare(queryAlbumInfos).get(id), tracks : db.prepare(tracksInfos).all(id)};
+}
+
+export const getTrackInfos = (id) => {
+    const query = `
+        SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist
+        FROM tracks AS t JOIN albums AS a ON t.album = a.id
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        WHERE t.id = ?
+    `;
+    return db.prepare(query).get(id);
 }

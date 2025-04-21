@@ -12,7 +12,7 @@ const AlbumsOverview = ({albums, addNewMusic, deleteAlbum, editAlbum, publish}) 
     return(
         <div className="albums-overview">
             <div className="album-overview-container">{cards}</div>
-            <button className="roundButton" onClick={addNewMusic}>Add new music</button>
+            {/* <button className="roundButton" onClick={addNewMusic}>Add new music</button> */}
             <button className="roundButton" onClick={publish}>Publish to library</button>
 
         </div>

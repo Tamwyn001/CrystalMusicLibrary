@@ -5,7 +5,7 @@ import {IconPencil, IconFileMusic, IconTrash} from "@tabler/icons-react";
 const AlbumCard = ({album, deleteAlbum, editAlbum}) => {
 
     return(
-        <div className="album-card">
+        <div className="album-card" context={"add"}>
             <IconTrash className='album-card-overview-button' use="delete" onClick={() => deleteAlbum(album.uuid)} />
             <IconPencil className='album-card-overview-button' use="edit"  onClick={() => editAlbum(album.uuid)} />
             <div className="album-card-overview-button" use="song-count">

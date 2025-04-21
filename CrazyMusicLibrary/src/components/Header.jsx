@@ -5,16 +5,17 @@ import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause } from '@t
 import SongProgress from './SongProgress'
 import { useState } from 'react'
 import AddMusic from './AddMusic'
+import { useAudioPlayer } from '../GlobalAudioProvider'
 
 
 const Header = () => {
     const [pausePlayVisible, setPausePlayVisible] = useState(false)
     const [musicPaused, setMusicPaused] = useState(false)
-
     const [newMusicShown, setNewMusicShown] = useState(false)
+
+    const {currentTrackData} = useAudioPlayer();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
-        console.log('AAA');
         if(visible){
             document.querySelector('.trackImage').setAttribute('hovered','hovered');
         }else{
@@ -49,7 +50,8 @@ const Header = () => {
                 </div>
             </div>
             <div className='trackinfos'>
-                <p id="songTitle">Song Title</p>
+                <span id="songTitle">{currentTrackData.title}</span>
+                <span id="songArtist">{currentTrackData.artist}</span>
                 <SongProgress />
             </div>
         </div>

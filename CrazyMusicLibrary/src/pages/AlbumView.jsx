@@ -6,6 +6,7 @@ import {IconArrowBackUp} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import logo from "../assets/CML_logo.svg";
+import apiBase from "../../APIbase";
 const AlbumView = () => {
     //the actual album data
     const [album, setAlbum] = useState(null);
@@ -13,7 +14,7 @@ const AlbumView = () => {
     //the id for the REST API is the albumId in the URL
     const albumId = useParams().albumId;
     useEffect(() => {
-        fetch(`http://localhost:4590/read-write/album/${albumId}`, {
+        fetch(`${apiBase}/read-write/album/${albumId}`, {
             method: "GET",
             credentials: "include"
         })
@@ -36,9 +37,9 @@ const AlbumView = () => {
                     <h1>{album.title}</h1>
                     <h2>{album.artist}</h2>
                     <div className="album-content">
-                        <img src={album.coverImage? album.coverImage : logo} alt={`${album.title} cover`} className="cover-image" />
+                        <img src={album.cover? `${apiBase}/covers/${album.cover}` : logo} alt={`${album.title} cover`} className="cover-image" />
                         <div className="track-list">
-                            {tracks.map(track => (<TrackView key={track.id} track={track} />))}
+                            {tracks.map(track => (<TrackView key={track.path} track={track} />))}
                         </div>
                     </div>
                 </div>

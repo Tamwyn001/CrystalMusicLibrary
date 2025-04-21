@@ -1,11 +1,11 @@
 import ProgressBar from "../components/ProgressBar";
 import LibAlbumCard from "../components/LibAlbumCard";
 import { useEffect, useState } from "react";
+import apiBase from "../../APIbase";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
-    let cards;
     const fetchAlbums = () => {
-        fetch("http://localhost:4590/read-write/albums", {method: "GET", credentials: "include"})
+        fetch(`${apiBase}/read-write/albums`, {method: "GET", credentials: "include"})
         .then((response) => {
             if(response.status !== 200){
                 console.error("Error fetching albums");
@@ -20,7 +20,7 @@ const Home = ({}) => {
 
 
     return(
-        <div className="home">
+        <div className="home album-displayer">
            {albums.map((album) => (
             <LibAlbumCard key={album.id} album={album}/>
         ))}

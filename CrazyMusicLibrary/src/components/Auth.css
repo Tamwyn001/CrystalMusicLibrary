@@ -20,7 +20,7 @@ img{
     flex-direction: column;
 }
 
-form input{
+input, textarea, select{
     height: 30px;
     border-radius: 20px;
     background-color: white;
@@ -28,4 +28,7 @@ form input{
     margin: 10px 0px;
     padding: 2px 20px;
     flex-shrink: 0;
+    color: #000;            /* ensure text is visible */
+    caret-color: #000;      /* optional: change blinking cursor color */
+
 }

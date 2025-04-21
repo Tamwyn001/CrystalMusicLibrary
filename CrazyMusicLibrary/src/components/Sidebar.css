@@ -3,14 +3,25 @@
     flex-direction: column;
     height: calc(100% - 20px);
     background-color: rgb(237, 255, 247);
-    width: 350px;
+    width: calc(100% - 20px);
     margin-top: 10px;
     margin-left: 10px;
     border-radius: 20px;
 }
 .stat-short{
     padding: 20px 10px;
+    display: none;
 }
+@media screen and (min-width: 450px) {
+    .sidebar{
+        width: 350px;
+    }
+    .stat-short{
+        display: block;
+    }
+    
+}
+
 .sidebar > nav{
     display: flex;
     flex-direction: column;
@@ -20,7 +31,7 @@ a{
     text-decoration: none;
     color: #2d4961;
     font-size: 20px;
-    margin: 10px 0;
+    margin: 0px;
     background-color: rgb(228, 255, 250);
     border-radius: 20px;
     padding: 7px 20px;

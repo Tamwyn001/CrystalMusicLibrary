@@ -5,10 +5,13 @@ import Register from '../components/Register.jsx';
 import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
 import Loading from '../components/Loading.jsx';
+import apiBase from '../../APIbase.js';
 
 const stauts = Object.freeze({
     LOGIN : "login",
-    REGISTER : "register"
+    REGISTER : "register",
+    ANY_USER : "any_user",
+    VERIF_TOKEN : "verif_token"
 });
 
 const Authentification = () => {
@@ -18,7 +21,8 @@ const Authentification = () => {
     const [isLoading, setIsLoading] = useState(true);
     useEffect(() => {
         const fetchUsers = async () => { 
-            const resUsers = await fetch('http://localhost:4590/auth/any-user', {method: 'GET'});
+            setResult(stauts.ANY_USER);
+            const resUsers = await fetch(`${apiBase}/auth/any-user`, {method: 'GET'});
             const parsedUsers = await resUsers.json();
             setAreUsers(parsedUsers); 
             if(parsedUsers.length === 0) {
@@ -26,12 +30,13 @@ const Authentification = () => {
                 setResult(stauts.REGISTER);
                 return;
             }
-            const resToken = await fetch('http://localhost:4590/auth/verifyToken', {method: 'POST', credentials: 'include'}); 
+            setResult(stauts.VERIF_TOKEN);
+            const resToken = await fetch(`${apiBase}/auth/verifyToken`, {method: 'POST', credentials: 'include'}); 
             const parsedToken = await resToken.json();
             setIsLoading(false);
             if(parsedToken.success) {
-                navigate('/home');
                 console.log("Token is valid");
+                navigate('/home');
                 return;
             }
             setResult(stauts.LOGIN);
@@ -41,7 +46,7 @@ const Authentification = () => {
     }, [navigate]);
 
     if(isLoading) {
-        return <Loading />;
+       return <Loading text={result}/>;
     }
 
     if(result === stauts.LOGIN) {

@@ -5,11 +5,15 @@
 .album-card{
     display: flex;
     flex-direction: column;
-    width: 150px;
+    width: 100%;
     height: fit-content;
     background-color: var(--cool-green);
     border-radius: var( --card-border-radius);
     position: relative;
+}
+
+.album-card[context="add"]{
+    width: 150px;
 }
 .album-card:hover{
     background-color: var(--chill-purple);

@@ -58,6 +58,7 @@ CREATE TABLE tracks(
     release_date DATE,
     path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    track_number INT,
     PRIMARY KEY (id),
     FOREIGN KEY (album) REFERENCES albums(id),
     FOREIGN KEY (genre) REFERENCES genres(id)

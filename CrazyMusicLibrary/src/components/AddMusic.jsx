@@ -9,6 +9,7 @@ import AlbumsOverview from './AddMusic/AlbumsOverview';
 import { v4 as uuidv4 } from 'uuid';
 import AlbumWrapping from './AddMusic/AlbumWrapping';
 import axios from 'axios';
+import apiBase from '../../APIbase';
 
 
 
@@ -27,7 +28,10 @@ class Album{
     setCover(cover) {
         //escape if already a cover or no cover given
         if(!cover || this.coverURL) return;
-        this.coverURL = URL.createObjectURL(new Blob([cover.data], { type: cover.format }))
+        this.coverData = cover.data;         // binary data (Uint8Array or Buffer)
+        this.coverMime = cover.format;
+        this.coverURL = URL.createObjectURL(new Blob([this.coverData], { type: this.coverMime}))
+        this.ext = this.coverMime.split('/')[1]; // get the extension from the mime type
     }
 
 }
@@ -151,10 +155,25 @@ const AddMusic = ({closeOverlay}) => {
         if (toAddTracks.length === 0) return;
         setActiveIndex(4);
         let bodyAlbumFormData = new FormData();
-        bodyAlbumFormData.append("albums", JSON.stringify(albums));
-        let totalBytes = toAddTracks.reduce((acc, track) => acc + track.size, 0); 
-        setTotalMbUpload((totalBytes/1024/1024).toFixed(1));
-        await fetch("http://localhost:4590/read-write/upload", {
+        bodyAlbumFormData.append("albums", JSON.stringify(albums.map((album) => {
+            //remove the coverURL from the album object
+            const { coverURL,  ...albumWithoutCover} = album;
+            return {...albumWithoutCover}
+        })));
+        const covers =  albums.map((album) => {
+            const uint8Array = new Uint8Array(album.coverData); // ensure proper binary format
+            const blob = new Blob([uint8Array], { type: album.coverMime });
+
+            // Optional: if you want to give it a name
+            const coverImage = new File([blob], `${album.uuid}.${album.coverMime.split('/').pop()}`, { type: album.coverMime});
+            return coverImage;
+        }); 
+        
+        //send the covers as well
+        for(const cover of covers){console.log("Cover file:", cover.name, "size:", cover.size);bodyAlbumFormData.append("cover", cover);}
+
+
+        await fetch(`${apiBase}/read-write/upload`, {
             method: "POST",
             body: bodyAlbumFormData,
             credentials: "include",
@@ -167,12 +186,22 @@ const AddMusic = ({closeOverlay}) => {
             return response.json();
         })
         .then((data) => {console.log( data);});
+
+        //album upload finished, we can revoke the covers etc:
+        albums.forEach(album => {
+            if (album.coverURL) {
+                URL.revokeObjectURL(album.coverURL);
+                album.coverURL = null; //revoke blob reference to destroy it
+            }
+        });
         bodyAlbumFormData = null; //clear the form data to free memory
+        let totalBytes = toAddTracks.reduce((acc, track) => acc + track.size, 0); 
+        setTotalMbUpload((totalBytes/1024/1024).toFixed(1));
 
         for (let i = 0; i < toAddTracks.length; i++) {
             const track = toAddTracks[i];
-            const bodyFormData = new FormData();
-            bodyFormData.append("tracksMeta", JSON.stringify(metadatas[i]));
+            let bodyFormData = new FormData();
+            bodyFormData.append("albumId", JSON.stringify(metadatas[i].albumUuid));
             bodyFormData.append("music", track); // Append each file individually
             console.log("Adding file to form data: ", track);
             setSendingFile(track.name);
@@ -181,7 +210,7 @@ const AddMusic = ({closeOverlay}) => {
                 data: bodyFormData,
                 withCredentials: true, // include credentials
                 url: "/upload", // route name
-                baseURL: "http://localhost:4590/read-write", //local url
+                baseURL: `${apiBase}/read-write`, //local url
                 onUploadProgress: progress => {
                     const { total, loaded } = progress;
                     const totalSizeInMB = total / 1000000;
@@ -191,7 +220,9 @@ const AddMusic = ({closeOverlay}) => {
                     setPercentageUpload(uploadPercentage.toFixed(2));
                     console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
                 },
-              });
+              }).catch((error) => {
+                console.error("Error uploading track:", error);});
+            bodyFormData = null; //clear the form data to free memory
         }
         console.log("Upload finished");
         setTimeout(() => {

@@ -1,13 +1,18 @@
+import { useAudioPlayer } from '../GlobalAudioProvider';
 import './SongProgress.css';
+import { parseAudioDuration } from "../../lib.js";
+import ProgressBar from './ProgressBar';
+const SongProgress = () => {
+    const { currentTrackData, currentTime } = useAudioPlayer();
+    if (!currentTrackData || Object.keys(currentTrackData).length === 0) {
+        return null; // or some fallback UI
+    }
 
-const SongProgress = ({ currentTime, duration }) => {
     return(
         <div className="songProgress">
-            <p>1:23</p>
-            <div className="progressBar">
-                <div className="progress"></div>
-            </div>
-            <p>3:45</p>
+            <span>{parseAudioDuration(currentTime).readable}</span>
+            <ProgressBar percent={currentTime/ currentTrackData.rawDuration *100} showPercent={false} fillColor = "#dddddd" style={{height : '10px'}}/>
+            <span>{currentTrackData.duration.readable}</span>
         </div>
     )
 }

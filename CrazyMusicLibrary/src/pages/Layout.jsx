@@ -6,6 +6,7 @@ import './Layout.css'
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "../components/Loading";
+import apiBase from "../../APIbase";
 
 
 const Layout = () => {
@@ -14,7 +15,7 @@ const Layout = () => {
 
     useEffect(() => {
         const checkLogin = async () => {
-            const resToken = await fetch('http://localhost:4590/auth/verifyToken', {method: 'POST', credentials: 'include'});
+            const resToken = await fetch(`${apiBase}/auth/verifyToken`, {method: 'POST', credentials: 'include'});
             const parsedToken = await resToken.json();
             if(parsedToken.success) {
                 setLoading(false);

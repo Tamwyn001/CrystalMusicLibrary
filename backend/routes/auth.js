@@ -23,6 +23,7 @@ import jwt from "jsonwebtoken";
 router.get("/any-user", (req, res) => {
     console.log("Fetching all users");
     const allUsers = db.prepare("SELECT * FROM users").all();
+    console.log(allUsers);
     res.json(allUsers);
 });
 

@@ -6,18 +6,22 @@ import Authentification from './pages/Authentification';
 import AlbumView from './pages/AlbumView';
 import './App.css';
 import './assets/palette.svg'
+import { AudioPlayerProvider } from './GlobalAudioProvider';
 
 function App() {
-    
+
+
     return (
-        <Routes>
-            <Route path="/" element={<Authentification />} />
-            <Route element={<Layout />}>
-                <Route path='home' element={<Home />}/>
-                <Route path="albums" element={<Albums />}/>
-                <Route path="albums/:albumId" element={<AlbumView />}/>
-            </Route>
-        </Routes>
+        <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
+            <Routes>    
+                <Route path="/" element={<Authentification />} />
+                    <Route element={<Layout />}>
+                        <Route path='home' element={<Home />}/>
+                        <Route path="albums" element={<Albums />}/>
+                        <Route path="albums/:albumId" element={<AlbumView />}/>
+                    </Route>
+            </Routes>
+        </AudioPlayerProvider>
     );
 }
 

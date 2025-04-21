@@ -1,5 +1,5 @@
 import './ProgressBar.css';
-const progressBar = ({percent, showPercent, isMarquee, fillColor = "#fffdff", style}) => {
+const progressBar = ({percent, showPercent, isMarquee = false, fillColor = "#fffdff", style}) => {
     return(
         <div className="progressBar" style={style}>
             <div className="progressBar">

@@ -25,3 +25,6 @@ dist-ssr
 backend/.env
 docker.cmd
 /backend/data
+
+/db/*
+!db/*.sql

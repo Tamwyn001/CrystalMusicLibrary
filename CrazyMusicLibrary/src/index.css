@@ -37,6 +37,7 @@ h1 {
   cursor: pointer;
   transition: border-color 0.25s;
   border: none;
+  color: #000;            /* ensure text is visible */
 } 
 button:hover {
   background-color: #f9e0fa;
