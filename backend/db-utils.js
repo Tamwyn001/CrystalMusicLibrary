@@ -80,3 +80,28 @@ export const getTrackInfos = (id) => {
     `;
     return db.prepare(query).get(id);
 }
+
+export const getNextSongsFromAlbum = (albumId, currentSong) => {
+    const query = `
+        SELECT path from tracks WHERE album = ? AND track_number > (SELECT track_number from tracks WHERE id = ?) ORDER BY track_number ASC`;
+    return db.prepare(query).all(albumId, currentSong);
+}
+
+export const getNextSongsFromPlayist = (playlistId, currentSong) => {
+    return;
+}
+
+export const getTrackCoverPath = (trackId) => {
+    console.log("fetching cover for song", trackId);
+    const query = `
+        SELECT a.cover AS cover
+        FROM tracks AS t JOIN albums AS a ON t.album = a.id
+        WHERE t.id = ?
+    `;
+    const result = db.prepare(query).get(trackId);
+    if (result && result.cover) {
+        return result.cover;
+    } else {
+        return null; // or a default cover path
+    }
+}

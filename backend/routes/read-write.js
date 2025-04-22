@@ -2,7 +2,7 @@ import multer from 'multer';
 import express from "express";
 import {existsSync, mkdirSync, statSync, createReadStream} from "fs";
 import { v4 as uuidv4 } from 'uuid';
-import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos } from "../db-utils.js";
+import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath } from "../db-utils.js";
 import { parseFile} from "music-metadata";
 import {pipeline} from "stream";
 
@@ -126,6 +126,17 @@ router.get("/music/:id", async (req, res) => {
 router.get("/trackInfos/:id", async (req, res) => {
     //const trackInfos = await parseFile(filePath); //* pareseFile too overkill, maybe for an advanced view in the future
     res.json(getTrackInfos(req.params.id));
+});
+
+router.get("/nextSongs/:isPlaylist/:containerId/:trackId", (req, res) => {
+    const { isPlaylist, containerId, trackId } = req.params;
+    const nextSongs = (isPlaylist === "true") ?
+        getNextSongsFromPlayist(containerId, trackId) : getNextSongsFromAlbum(containerId, trackId);
+    res.json(nextSongs.map((song) => {return song.path.split('\\').pop()}));
+});
+
+router.get("/trackCover/:id", (req, res) => {
+    res.json(getTrackCoverPath(req.params.id));
 });
 
 export default router;

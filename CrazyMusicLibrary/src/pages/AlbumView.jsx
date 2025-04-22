@@ -36,10 +36,11 @@ const AlbumView = () => {
                 <div className="album-details">
                     <h1>{album.title}</h1>
                     <h2>{album.artist}</h2>
+                    {/* <p>{albumId}</p> */}
                     <div className="album-content">
                         <img src={album.cover? `${apiBase}/covers/${album.cover}` : logo} alt={`${album.title} cover`} className="cover-image" />
                         <div className="track-list">
-                            {tracks.map(track => (<TrackView key={track.path} track={track} />))}
+                            {tracks.map(track => (<TrackView key={track.path} track={track} containerId={albumId} isPlaylistView={false} />))}
                         </div>
                     </div>
                 </div>

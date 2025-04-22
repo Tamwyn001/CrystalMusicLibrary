@@ -1,4 +1,4 @@
-import {Outlet} from "react-router-dom";
+import {Outlet, useLocation} from "react-router-dom";
 import Header from "../components/Header";
 import Sidebar from "../components/Sidebar";
 
@@ -21,18 +21,22 @@ const Layout = () => {
                 setLoading(false);
                 return;
             }
+           
             navigate('/');
         }
         checkLogin();
     }, [navigate]);
-
+    
     if(loading) {
         return <Loading />;
     }
+    const location = useLocation();
+    const currentPath = location.pathname;
+    const pageWithSidebarPhone = ['/home', '/playlists', '/albums'];
     return (
         <div className="app-container">
             <Header />
-            <div className="content-container">
+            <div className="content-container" page={pageWithSidebarPhone.includes(currentPath) ? currentPath: 'inside' }>
                 <Sidebar />
                 <div className="content">
                     <Outlet /> {/* Route content will render here */}
