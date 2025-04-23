@@ -18,3 +18,19 @@
     color: #2d4961;
     padding: 0px 15px;
 }
+
+.progressFill[init="init"]{
+    animation: init-animation 1s ease-in-out forwards;
+    animation-iteration-count: infinite;
+    position: absolute;
+    top: 0;
+    width: 20%;
+}
+@keyframes init-animation{
+    0%{
+        left: -20%;
+    }
+    100%{
+        left: 100%;
+    }
+}

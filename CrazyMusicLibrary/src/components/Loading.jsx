@@ -1,11 +1,12 @@
-import logo from '../assets/CML_logo.svg';
+
 import ProgressBar from './ProgressBar';
 import './Loading.css';
+import CML_logo from './CML_logo';
 const Loading = ({text, progressBar = {useProgressBar: false}}) => {
     return (
         <div className="loading-container">
             <div className="loading-spinner">
-                <img src={logo} alt="Loading..." />
+                <CML_logo />
 
             </div>
             <h1>{text}</h1>

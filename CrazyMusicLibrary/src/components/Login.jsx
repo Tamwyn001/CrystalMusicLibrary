@@ -1,7 +1,7 @@
-import { useNavigate  } from "react-router-dom"
-import logoURL from '../assets/CML_logo.svg'   
+import { useNavigate  } from "react-router-dom"   
 import './auth.css'
 import apiBase from "../../APIbase";
+import CML_logo from "./CML_logo";
 
 const Register = () => {
     const navigate = useNavigate();
@@ -31,7 +31,7 @@ const Register = () => {
 
     return (
         <div className="authDiv">
-        <img src={logoURL} alt="CML logo"/>
+        <CML_logo />
         <h1>Login</h1>
         <p>We were not able to connect you, please login.</p>
         <form onSubmit={handleLogin}>

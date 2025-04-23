@@ -5,6 +5,7 @@ import bodyParser from "body-parser";
 import "dotenv/config";
 import db from "./db.js"; // Import the database connection
 import {networkInterfaces} from "os"; // Import the os module to get network interfaces
+import path from "path";
 
 function getLocalIP() {
     const interfaces = networkInterfaces();
@@ -22,12 +23,15 @@ function getLocalIP() {
   }
 
 
+
+
 console.log(`Initializing routes`);
 
 import authRouter from "./routes/auth.js";
-import readWriteRouter from "./routes/read-write.js";
+import readWriteRouter, { runServerStats } from "./routes/read-write.js";
 
 import cookieParser from "cookie-parser"; 
+import { currentDate } from "./lib.js";
 
 console.log(`✅ Routes initialized`);
 const app = express();
@@ -63,6 +67,7 @@ app.use((err, req, res, next) => {
     console.error("Unhandled error:", err);
     res.status(500).json({ message: "Server error" });
 });
+app.use(express.Router().get("/isResponding", (req, res) => {res.json({message: "Server is responding"});}));
 app.use('/covers', express.static('data/covers'));
 app.use(express.json());
 app.use(cookieParser());
@@ -76,3 +81,5 @@ console.log(`  . 📰     Read write music`);
 app.listen(PORT, () => {
     console.log(`✅ Server running at http://${localIP}:4590`);
 });
+runServerStats()
+console.log(`  . 📊     Server stats updated`);

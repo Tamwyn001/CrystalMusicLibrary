@@ -10,20 +10,61 @@
     display: flex;
     flex-direction: row;
     border-radius: 10px;
-    justify-content: space-between;
+    justify-content: flex-start;
     background-color: #f0f0f0;
     padding: 10px;
     width: calc(100% - 20px);
+    gap: 20px;
 }
 .track-view p{
-    margin: 0;
+    margin-top: 2px;
+    margin-bottom: 2px;
     font-size: 16px;
 }
+.track-number{
+    margin-left: 10px;
+}
+:root{
+    --dashArray: 60;
+}
+.track-number[playing="piano"], .track-number[playing="vinyl"]{
+    margin-left: 4px;
+
+}
+.track-number[playing="piano"] path{
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: dash 5s cubic-bezier(.86,0,.07,1) alternate;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+
+.track-number[playing="vinyl"] path{
+    stroke-dasharray: 60;
+    stroke-dashoffset: 60;
+    animation: dash-40 5s cubic-bezier(.86,0,.07,1) alternate;
+    animation-iteration-count: infinite;
+    animation-direction: alternate;
+}
+@keyframes dash {
+from {
+    stroke-dashoffset: 60;
+    }
+to {
+    stroke-dashoffset: 0;
+}}
+@keyframes dash-40{
+    from {
+        stroke-dashoffset: 57;
+        }
+    to {
+        stroke-dashoffset: 0;
+    }}
 .album-content img{
     padding: 5px;
     width: 200px;
     height: 200px;
-    border-radius: 10px;
+    border-radius: 20px;
     animation: rotate 5s linear infinite;
 }
 .track-id{
@@ -50,12 +91,21 @@
     width: 100%;
     align-items: center;
 }
+.album-details h1{
+    margin: 10px;
+}
+.album-details h2{
+    margin: 5px;
+}
+
+
 .album-content{
     display: flex;
     flex-direction: column;
     gap: 20px;
     width: 100%;
     align-items: center;
+    border-radius: 20px;
 }
 @media screen and (min-width: 450px) {
     .album-content{

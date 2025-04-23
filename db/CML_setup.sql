@@ -73,6 +73,16 @@ CREATE TABLE artists_to_track(
     FOREIGN KEY (taking_part) REFERENCES tracks(id)
 );
 
+CREATE TABLE serverStats(
+    date TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
+    total_users INT DEFAULT 0,
+    total_artists INT DEFAULT 0,
+    total_albums INT DEFAULT 0,
+    total_tracks INT DEFAULT 0,
+    total_playlists INT DEFAULT 0,
+    covers_byte_usage BIGINT DEFAULT 0,
+    tracks_byte_usage BIGINT DEFAULT 0 --todo add a history with a graph and so :0
+);
 
 
 

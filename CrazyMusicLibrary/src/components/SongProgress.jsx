@@ -11,7 +11,7 @@ const SongProgress = () => {
     return(
         <div className="songProgress">
             <span>{parseAudioDuration(currentTime).readable}</span>
-            <ProgressBar percent={currentTime/ currentTrackData.rawDuration *100} showPercent={false} fillColor = "#dddddd" style={{height : '10px'}}/>
+            <ProgressBar percent={currentTime/ currentTrackData.rawDuration *100} showPercent={false} fillColor = "var(--violet-web-color)" style={{height : '10px'}}/>
             <span>{currentTrackData.duration.readable}</span>
         </div>
     )

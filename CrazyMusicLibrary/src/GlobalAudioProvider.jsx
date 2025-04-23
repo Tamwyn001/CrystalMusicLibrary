@@ -12,9 +12,23 @@ export const AudioPlayerProvider = ({ children }) => {
     const [currentTime, setCurrentTime] = useState(0); // Store current time here
     const audioRef = useRef(new Audio());
     const [playQueue, setPlayQueue] = useState([]); // Store play queue here
-    const [trackCoverUrl, setTrackCoverUrl] = useState(''); // Store track cover URL here
+    const [trackCoverUrl, setTrackCoverUrl] = useState('null'); // Store track cover URL here
     const resolveTrackURL = (name) => `${apiBase}/read-write/music/${name}`; // Adjust the path as needed
     let context = {isPlaylist : false, containerId: '', trackName: ''};
+    const [queuePointer, setQueuePointer] = useState(-1); // Pointer to the current track in the queue
+
+    const playQueueRef = useRef(playQueue);
+    const queuePointerRef = useRef(queuePointer);
+
+
+    useEffect(() => {
+        playQueueRef.current = playQueue;
+    }, [playQueue]);
+    
+    useEffect(() => {
+        queuePointerRef.current = queuePointer;
+    }, [queuePointer]);
+
     const toggleTrackPaused = () => {
         if (isPlaying) {
             audioRef.current.pause();
@@ -30,20 +44,58 @@ export const AudioPlayerProvider = ({ children }) => {
         fetch(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}/${context.trackName}`, {
             method: 'GET'
         }).then(response => response.json())
-        .then(data => setPlayQueue(data));
+        .then(data => {
+            console.log('setting play queue');
+            setPlayQueue(data.queue);
+            setQueuePointer(data.currentIndex);
+        });
     }
-    const playNextSong = () => {
-        if (playQueue.length === 0) {
+
+    useEffect(() => {
+        if(queuePointer === -1 || playQueue.length ===0)return;
+        resolvetrack(playQueue[queuePointer])
+    },[queuePointer, playQueue]); // Update the queue pointer when the play queue changes
+
+    useEffect(() => {console.log(queuePointer)}, [queuePointer]); // Log the queue pointer when it changes
+
+    const playPreviousSong = () => {
+        if (audioRef.current.currentTime > 5 || queuePointer === 0) { // Check if the current time is greater than 3 seconds or if it's the first song
+            audioRef.current.currentTime = 0; // Reset the current time to 0
+            return; // Don't play the previous song if the current time is less than 3 seconds
+        }
+        setQueuePointer(queuePointer - 1); // Move to the previous track in the queue
+    }
+
+    const playNextSong = (useRefs = false) => {
+        const queue = useRefs ? playQueueRef.current : playQueue;
+        const pointer = useRefs ? queuePointerRef.current : queuePointer;
+    
+        if (queue.length <= pointer + 1) {
             audioRef.current.pause();
             audioRef.current.currentTime = 0;
-            setIsPlaying(false); // Pause the audio
-            setCurrentTrackData(null)
-            return; // No tracks to play
+            setIsPlaying(false);
+            setCurrentTrackData(null);
+            setQueuePointer(-1);
+            setTrackCoverUrl('null');
+            setPlayQueue([]);
+            setPlayingTrack('');
+            console.log('No more songs in the queue');
+            return;
         }
-        const nextTrack = playQueue[0]; // Get the next track from the queue
-        setPlayQueue(playQueue.filter((track) => {return track !== nextTrack})); // Update the play queue
-        console.log('playNextSong', nextTrack);
-        resolvetrack(nextTrack);
+    
+        setQueuePointer(pointer + 1);
+    };
+
+
+    const jumpTrackSeconds = (seconds) => {
+        if (audioRef.current.currentTime + seconds > audioRef.current.duration) {
+            audioRef.current.currentTime = audioRef.current.duration; // Set to the end of the track
+        } else if (audioRef.current.currentTime + seconds < 0) {
+            audioRef.current.currentTime = 0; // Set to the beginning of the track
+        } else {
+            audioRef.current.currentTime += seconds; // Jump forward or backward
+        }
+        setCurrentTime(audioRef.current.currentTime); // Update the current time state
     }
 
     const playTrack = (trackName, containerId, isPlaylist) => {
@@ -91,10 +143,12 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         const audio = audioRef.current;
         const updateTime = () => setCurrentTime(audio.currentTime);
+        const playNextTrackOnEnd = () => { playNextSong(true); }
         audio.addEventListener("timeupdate", updateTime);
-    
+        audio.addEventListener("ended", playNextTrackOnEnd);
         return () => {
             audio.removeEventListener("timeupdate", updateTime);
+            audio.removeEventListener("ended", playNextTrackOnEnd);
         };
     }, []);
 
@@ -107,7 +161,10 @@ export const AudioPlayerProvider = ({ children }) => {
             isPlaying,
             toggleTrackPaused,
             playNextSong,
-            trackCoverUrl
+            trackCoverUrl,
+            playPreviousSong,
+            playingTrack,
+            jumpTrackSeconds
             }}>
             {children}
         </AudioPlayerContext.Provider>

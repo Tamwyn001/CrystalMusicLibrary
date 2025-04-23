@@ -1,7 +1,8 @@
 import { useNavigate  } from "react-router-dom"
 import './Auth.css'
-import logoURL from '../assets/CML_logo.svg'
+
 import apiBase from "../../APIbase";
+import CML_logo from "./CML_logo";
 const Register = () => {
     const navigate = useNavigate();
     const handleRegister = async (e) => {
@@ -34,7 +35,7 @@ const Register = () => {
 
     return (
         <div className="authDiv">
-        <img src={logoURL} alt="CML logo"/>
+        <CML_logo />
         <h1>Register</h1>
         <p>Welcome to the Crazy_Music Library! Since you are the first to show up here, we would like you to create the admin account.</p>
         <form onSubmit={handleRegister}>

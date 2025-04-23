@@ -7,3 +7,15 @@ export const parseAudioDuration = (rawDuration) => {
         `${hours}:${minutes}:${seconds}` : `${minutes}:${seconds}`;
     return { hours, minutes, seconds, readable };
 }
+
+export const parseDataSize = (rawSize) => {
+    const kb = Math.floor(rawSize / 1024);
+    const mb = Math.floor(kb / 1024);
+    const gb = Math.floor(mb / 1024);
+    const tb = Math.floor(gb / 1024);
+    const readable = (tb > 0) ?
+        `${tb}TB` : (gb > 0) ?
+            `${gb}GB` : (mb > 0) ?
+                `${mb}MB` : `${kb}KB`;
+    return { kb, mb, gb, tb, readable };
+}

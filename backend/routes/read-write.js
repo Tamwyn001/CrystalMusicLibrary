@@ -2,9 +2,11 @@ import multer from 'multer';
 import express from "express";
 import {existsSync, mkdirSync, statSync, createReadStream} from "fs";
 import { v4 as uuidv4 } from 'uuid';
-import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath } from "../db-utils.js";
+import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats } from "../db-utils.js";
 import { parseFile} from "music-metadata";
 import {pipeline} from "stream";
+import { dirSize } from '../lib.js';
+import checkDiskSpace from 'check-disk-space';
 
 
 
@@ -132,11 +134,61 @@ router.get("/nextSongs/:isPlaylist/:containerId/:trackId", (req, res) => {
     const { isPlaylist, containerId, trackId } = req.params;
     const nextSongs = (isPlaylist === "true") ?
         getNextSongsFromPlayist(containerId, trackId) : getNextSongsFromAlbum(containerId, trackId);
-    res.json(nextSongs.map((song) => {return song.path.split('\\').pop()}));
+    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()}),
+    currentIndex : getTrackIndex(trackId).track_number - 1
+});
 });
 
 router.get("/trackCover/:id", (req, res) => {
     res.json(getTrackCoverPath(req.params.id));
 });
+
+
+router.get("/stats", (req, res) => {
+    const musicDir = "./data/music/";
+    const coversDir = "./data/covers/";
+
+    let totalByte = 0;
+    // Get the size of the music directory
+    const musicStats = statSync(musicDir);
+    const coversStats = statSync(coversDir);
+    if (musicStats.isDirectory()) {
+        totalByte += musicStats.size;
+    }
+    if (coversStats.isDirectory()) {
+        totalByte += coversStats.size;
+    }
+    
+    res.json({...getDbStats(), totalByte});
+});
+
+let runningServerStats = false; // Flag to prevent multiple executions
+let promiseServerStats = null;
+export const runServerStats = () => {
+  runningServerStats = true; // Set the flag to true
+  console.log("Running server stats...");
+  promiseServerStats = Promise.all([
+    dirSize( './data/music' ),
+    dirSize( './data/covers' )
+  ]).then( ( [  musicSize, coversSize ] ) => {
+    insertNewServerState( musicSize, coversSize );
+    runningServerStats = false; // Reset the flag after execution
+    console.log( 'Server stats updated:', { coversSize, musicSize } );
+  } ).catch( error => {
+    console.error( 'Error calculating directory size:', error );
+    runningServerStats = false;
+
+  } );
+}
+
+router.get("/serverStats", async (req, res) => {
+    if(runningServerStats){
+        await promiseServerStats; //this is to a promise when the server stats are already running
+    }
+    const {date, tracks_byte_usage : tracksByteUsage, covers_byte_usage : coversByteUsage} = latestServerStats();
+    const {free, size} = await checkDiskSpace(process.cwd());
+    res.json({date, tracksByteUsage, coversByteUsage, free, size});
+});
+
 
 export default router;

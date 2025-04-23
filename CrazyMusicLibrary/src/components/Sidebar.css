@@ -1,12 +1,15 @@
 .sidebar{
     display: flex;
     flex-direction: column;
-    height: calc(100% - 20px);
+   
     background-color: rgb(237, 255, 247);
     width: calc(100% - 20px);
     margin-top: 10px;
     margin-left: 10px;
     border-radius: 20px;
+}
+.sidebar p{
+   padding: 0px;
 }
 .stat-short{
     padding: 20px 10px;
@@ -15,11 +18,17 @@
 @media screen and (min-width: 450px) {
     .sidebar{
         width: 350px;
+        height: calc(100% - 20px);
     }
     .stat-short{
         display: block;
     }
     
+}
+.stat-short-category{
+    background-color: rgb(255, 255, 255);
+    border-radius: 10px;
+    padding: 10px 20px;
 }
 
 .sidebar > nav{

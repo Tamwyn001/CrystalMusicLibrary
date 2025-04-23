@@ -1,6 +1,5 @@
 import db from "./db.js";
 import { currentDate } from "./lib.js";
-import{ v4 as uuidv4 } from 'uuid';
 const DUPLICATE_KEY_ERROR = 1062;
 
 // inserting array of arrays
@@ -83,8 +82,8 @@ export const getTrackInfos = (id) => {
 
 export const getNextSongsFromAlbum = (albumId, currentSong) => {
     const query = `
-        SELECT path from tracks WHERE album = ? AND track_number > (SELECT track_number from tracks WHERE id = ?) ORDER BY track_number ASC`;
-    return db.prepare(query).all(albumId, currentSong);
+        SELECT path from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+    return db.prepare(query).all(albumId);
 }
 
 export const getNextSongsFromPlayist = (playlistId, currentSong) => {
@@ -104,4 +103,36 @@ export const getTrackCoverPath = (trackId) => {
     } else {
         return null; // or a default cover path
     }
+}
+
+export const getTrackIndex = (trackId) => {
+    const query = `
+        SELECT track_number
+        FROM tracks
+        WHERE id = ?
+    `;
+    return db.prepare(query).get(trackId);
+}
+
+export const getDbStats = () => {
+    const query = `
+        SELECT COUNT(*) AS totalTracks, SUM(duration) AS totalDuration
+        FROM tracks
+    `;
+    return db.prepare(query).get();
+}
+
+export const latestServerStats = () => {
+    const query = `
+        SELECT date, tracks_byte_usage, covers_byte_usage
+        FROM serverStats
+        ORDER BY date DESC
+        LIMIT 1
+    `;
+    return db.prepare(query).get();
+}
+
+export const insertNewServerState = (tracksByteUsage, coversByteUsage) => {
+    const query =  `INSERT OR IGNORE INTO serverStats (date, covers_byte_usage, tracks_byte_usage) VALUES (?,?,?)`;
+    db.prepare(query).run([currentDate(), coversByteUsage, tracksByteUsage] );
 }

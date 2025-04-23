@@ -1,19 +1,19 @@
 import './Header.css'
-import logoURL from '../assets/CML_logo.svg'
 import UserDropdown from './UserDropdown'
 import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
 import { useAudioPlayer } from '../GlobalAudioProvider'
 import AudioControls from './AudioControls'
+import CML_logo from './CML_logo.jsx'
 
 
 const Header = () => {
     const [pausePlayVisible, setPausePlayVisible] = useState(false)
     const [musicPaused, setMusicPaused] = useState(false)
     const [newMusicShown, setNewMusicShown] = useState(false)
-
+    const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl} = useAudioPlayer();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
@@ -49,18 +49,30 @@ const Header = () => {
             </div>
         </div>)
     }
-
+    useEffect(() => {
+        const colors = [{
+            col1: "#ffa585",
+            col2: "#ffeda0"
+        },
+        {
+            col1: "#9bf8f4",
+            col2: "#6f7bf7"
+        }
+    ];
+        setLogoColors(colors[Math.floor(Math.random() * colors.length)])
+    }, []);
     return(
-    
+
     <header className="header">
         <div className="header__logo">
-            <img src={logoURL} alt="CML logo" className="logoHeader"/>
+            <CML_logo col1={logoColors.col1} col2={logoColors.col2}/>
             <h1>CML</h1>
         </div>
         <AudioControls context={{mobile : false}}/>
         <div className="musicPlayer">
             <div className='playPauseContainer'>
-                <img src={trackCoverUrl} className="trackImage" />
+                {(trackCoverUrl === 'null') ? <CML_logo  className="trackImage" />:  <img src={trackCoverUrl} className="trackImage" />}
+               
                 <div className="playPauseButtons">
                     {musicPaused ? (
                         <IconPlayerPlay onClick={() => setMusicPaused(false)} onMouseEnter={() => playPauseVisibility(true)} onMouseLeave={() => playPauseVisibility(false)} />
