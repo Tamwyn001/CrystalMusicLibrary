@@ -33,7 +33,7 @@ const upload = multer({
         },
         filename: (req, file, cb) => {
             if (file.fieldname === "music") {
-                const fileName = uuidv4();
+                const fileName = JSON.parse(req.body.trackMeta).id;
                 const ext = file.originalname.split(".").pop();
                 cb(null, `${fileName}.${ext}`); // Keep original name
                 file.uuid = fileName;
@@ -61,21 +61,22 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     const musicFileProcess = new Promise(async (resolve, reject) => {
         const trackAlbumId = JSON.parse(req.body.albumId);
         const tracksMeta = await parseFile(req.files.music[0].path);
-        const musicFiles = req.files.music.map((file) => {
-            file.albumId = trackAlbumId;
-            file.title = tracksMeta.common.title;
-            file.year = tracksMeta.common.year;
-            file.no = tracksMeta.common.track.no;
-            file.duration = tracksMeta.format.duration;
-            return file;
-        });
-        try{
-        addTracks(musicFiles);
-        resolve(musicFiles[0].title);
-        }catch(err){
-            console.error("Error adding tracks to the database:", err);
-            reject(err);
-        }
+        const meta = JSON.parse(req.body.trackMeta);
+        let file = req.files.music[0];
+        file.uuid = meta.id;
+        file.albumId = trackAlbumId;
+        file.title = (meta.title) ? meta.title : tracksMeta.common.title;
+        file.year = tracksMeta.common.year;
+        file.no = tracksMeta.common.track.no;   
+        file.duration = tracksMeta.format.duration;
+
+    try{
+        addTracks([file]);
+        resolve(file.title);
+    }catch(err){
+        console.error("Error adding tracks to the database:", err);
+        reject(err);
+    }
     });
     musicFileProcess.then((trackName) => {console.log("Processed track: " + trackName);});
     res.json({ message: "Files uploaded successfully" });

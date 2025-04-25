@@ -1,12 +1,13 @@
 import { IconPiano, IconRadio, IconVinyl } from "@tabler/icons-react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
+import { parseAudioDuration } from "../../lib";
 
-const TrackView = ({ track, containerId, isPlaylistView,playIconId }) => {
-  const { title, track_number } = track;
+const TrackView = ({ index, track, containerId, isPlaylistView,playIconId }) => {
+  const { title, track_number, rawDuration } = track;
   const {playTrack, playingTrack} = useAudioPlayer();
   const trackName = track.path.split('\\').pop()
   const handleClick = () => { 
-    playTrack(trackName, containerId, isPlaylistView ); // Extract the file name from the path
+    playTrack(trackName, containerId, isPlaylistView, index ); // Extract the file name from the path
   };
   const GetRandomPlayIcon = () => {
     switch (playIconId) {
@@ -22,7 +23,8 @@ const TrackView = ({ track, containerId, isPlaylistView,playIconId }) => {
   return (
     <div className="track-view" onClick={handleClick}>
       {(playingTrack === trackName) ? GetRandomPlayIcon() : <p className="track-number">{track_number}</p>}
-      <p>{title}</p>
+      <p style={{flexGrow : '1'}}>{title}</p>
+      <p style={{paddingRight:'10px'}}>{parseAudioDuration(rawDuration).readable}</p>
     </div>
   );
 }

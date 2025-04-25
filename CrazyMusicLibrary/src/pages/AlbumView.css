@@ -60,7 +60,7 @@ to {
     to {
         stroke-dashoffset: 0;
     }}
-.album-content img{
+.album-content > img, .album-content > svg{
     padding: 5px;
     width: 200px;
     height: 200px;
@@ -113,7 +113,7 @@ to {
         width: calc(100% - 20px);
         align-items: flex-start;
     }
-    .album-content img{
+    .album-content > img, .album-content > svg{
         padding: 100px;
         width: 200px;
         height: 200px;

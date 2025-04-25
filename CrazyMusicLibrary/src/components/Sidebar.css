@@ -1,7 +1,7 @@
 .sidebar{
     display: flex;
     flex-direction: column;
-   
+    justify-content: space-between;
     background-color: rgb(237, 255, 247);
     width: calc(100% - 20px);
     margin-top: 10px;
@@ -29,6 +29,9 @@
     background-color: rgb(255, 255, 255);
     border-radius: 10px;
     padding: 10px 20px;
+}
+.stat-short-category p{
+    margin: 3px 0px;
 }
 
 .sidebar > nav{

@@ -45,7 +45,8 @@ const AlbumView = () => {
                         <img src={`${apiBase}/covers/${album.cover}`} alt={`${album.title} cover`} className="cover-image" />
                         : <CML_logo className="cover-image" />}
                         <div className="track-list">
-                            {tracks.map(track => (<TrackView key={track.path} track={track} containerId={albumId} isPlaylistView={false} playIconId={currentPlayIcon} />))}
+                            {tracks.map((track, index) => (<TrackView key={track.path} index={index} track={track} containerId={albumId}
+                             isPlaylistView={false} playIconId={currentPlayIcon} />))}
                         </div>
                     </div>
                 </div>

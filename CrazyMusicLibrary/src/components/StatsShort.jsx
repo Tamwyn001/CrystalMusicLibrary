@@ -68,8 +68,8 @@ const StatShort = () => {
             </div>
             <div style={{display : 'flex', alignItems : 'baseline', gap : '5px'}}>
                 <div className="server-status-sprite" style={
-                    {width : '10px', height : '10px', borderRadius : '10px', backgroundColor : (isResponding) ? 'green': 'red'}}/>
-                <p>Server: {isResponding ? "Online" : "Offline"}</p>
+                    {width : '10px', height : '10px', borderRadius : '10px', backgroundColor : (isResponding) ? 'lightgreen': 'red'}}/>
+                <p>Server is {isResponding ? "online" : "offline"}</p>
             </div>
         </div>
     )

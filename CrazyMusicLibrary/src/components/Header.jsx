@@ -40,7 +40,7 @@ const Header = () => {
         <div className='trackinfos-parent'>
             <div className='trackinfo-desktop'>
                 <span id="songTitle">{currentTrackData.title}</span>
-                <span id="songArtist">{currentTrackData.artist}</span>
+                <span id="songArtist" style={{fontSize: '13px'}}>{currentTrackData.artist}</span>
                 <SongProgress />
             </div>
             <div className='trackinfo-mobile'>
@@ -71,7 +71,7 @@ const Header = () => {
         <AudioControls context={{mobile : false}}/>
         <div className="musicPlayer">
             <div className='playPauseContainer'>
-                {(trackCoverUrl === 'null') ? <CML_logo  className="trackImage" />:  <img src={trackCoverUrl} className="trackImage" />}
+                {(trackCoverUrl.split('/').pop() === 'null') ? <CML_logo  className="trackImage" />:  <img src={trackCoverUrl} className="trackImage" />}
                
                 <div className="playPauseButtons">
                     {musicPaused ? (
@@ -83,6 +83,7 @@ const Header = () => {
             </div>
             <TrackOverlay />
         </div>
+        <div className='mobile-gost'/>
         <div className="headerRight">
             <IconMusicPlus className="addMusicButton buttonRound" onClick={() => openNewMusic()}/>
             <UserDropdown />

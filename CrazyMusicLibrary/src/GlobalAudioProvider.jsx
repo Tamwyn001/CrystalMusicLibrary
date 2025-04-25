@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import apiBase from "../APIbase";
 import { parseAudioDuration } from "../lib.js";
+import { preconnect } from "react-dom";
 const AudioPlayerContext = createContext();
 
 //this is only for the top level component
@@ -39,7 +40,8 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         console.log('toggleTrackPaused', isPlaying);
     }
-    const getNextSongsFromAlbum = () => {
+
+    const getNextSongsFromAlbum = (index) => {
         console.log(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}/${context.trackName}`);
         fetch(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}/${context.trackName}`, {
             method: 'GET'
@@ -47,12 +49,14 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(data => {
             console.log('setting play queue');
             setPlayQueue(data.queue);
-            setQueuePointer(data.currentIndex);
+            setQueuePointer(index); //we do this here to this when the useEffect fires, both are updated.
         });
     }
 
     useEffect(() => {
         if(queuePointer === -1 || playQueue.length ===0)return;
+        console.log('Playcueue', playQueue, queuePointer);
+        console.log('resolving track', playQueue[queuePointer]);
         resolvetrack(playQueue[queuePointer])
     },[queuePointer, playQueue]); // Update the queue pointer when the play queue changes
 
@@ -86,6 +90,12 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(pointer + 1);
     };
 
+    const jumpToPercent = (percent) => {
+        if (percent < 0 || percent > 100) return; // Ensure percent is between 0 and 100
+        const newTime = (percent / 100) * audioRef.current.duration; // Calculate new time based on percent
+        audioRef.current.currentTime = newTime; // Set the new current time
+        setCurrentTime(newTime); // Update the current time state
+    }
 
     const jumpTrackSeconds = (seconds) => {
         if (audioRef.current.currentTime + seconds > audioRef.current.duration) {
@@ -98,14 +108,13 @@ export const AudioPlayerProvider = ({ children }) => {
         setCurrentTime(audioRef.current.currentTime); // Update the current time state
     }
 
-    const playTrack = (trackName, containerId, isPlaylist) => {
-
-       
+    const playTrack = (trackName, containerId, isPlaylist, index) => {
         context.trackName = trackName.split('.')[0];
         context.containerId = containerId;
         context.isPlaylist = isPlaylist;
-        resolvetrack(trackName);
-        getNextSongsFromAlbum();
+        console.log('new index',index)
+
+        getNextSongsFromAlbum(index);
     }
     useEffect(() => {
         if (playQueue.length === 0) return; // No tracks to play
@@ -114,13 +123,17 @@ export const AudioPlayerProvider = ({ children }) => {
 
     // audio.addEventListener("timeupdate", timeListener);
     const resolvetrack = (trackName) => {
-
         if (audioRef.current.src !== resolveTrackURL(trackName)) {
             audioRef.current.src = resolveTrackURL(trackName); // Set the new track URL
+        }else{
+            audioRef.current.currentTime = 0; // Reset the current time if the track is already loaded
+            setCurrentTime(0);
+            return;
         }
         audioRef.current.play()
         setPlayingTrack(trackName);
         setIsPlaying(true);
+        console.log('playing track', trackName);
         fetch(`${apiBase}/read-write/trackInfos/${trackName.split('.')[0]}`, {
             method: 'GET'
         })
@@ -164,7 +177,8 @@ export const AudioPlayerProvider = ({ children }) => {
             trackCoverUrl,
             playPreviousSong,
             playingTrack,
-            jumpTrackSeconds
+            jumpTrackSeconds,
+            jumpToPercent
             }}>
             {children}
         </AudioPlayerContext.Provider>

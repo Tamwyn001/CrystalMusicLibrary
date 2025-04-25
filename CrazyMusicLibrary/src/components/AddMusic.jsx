@@ -1,4 +1,4 @@
-import { use, useEffect, useState } from 'react';
+import { use, useEffect, useRef, useState } from 'react';
 import './AddMusic.css' 
 import {IconX} from '@tabler/icons-react';
 import ActiveIndex from './ActiveIndex';
@@ -33,7 +33,19 @@ class Album{
         this.coverURL = URL.createObjectURL(new Blob([this.coverData], { type: this.coverMime}))
         this.ext = this.coverMime.split('/')[1]; // get the extension from the mime type
     }
+    setCoverFromFile(file) {
+        this.coverURL = URL.createObjectURL(file);
+        this.coverMime = file.type;
+        this.ext = file.name.split('.').pop();
+        // Read file as ArrayBuffer for binary data
+        const reader = new FileReader();
+        reader.onload = () => {
+            this.coverData = new Uint8Array(reader.result); // Binary data
+        };
+        reader.readAsArrayBuffer(file);
 
+        return this.coverURL;
+    }
 }
 
 const AddMusic = ({closeOverlay}) => {
@@ -48,22 +60,40 @@ const AddMusic = ({closeOverlay}) => {
     const [totalMbUpload, setTotalMbUpload] = useState(0);
     const [percentageUpload, setPercentageUpload] = useState(0);
     const [sendingFile, setSendingFile] = useState('');
+    const [trackMetaOverwrite, setTrackMetaOverwrite] = useState([]); //contains all the metadatas that the user changed
     //this avoids fetching the metadate when we remove the songs from the list
     let deleting = false;
-
     // const handleSetActiveIndex = (index) => {
     //     setActiveIndex(index);
     // }
+    let awaitForTrackOverwite = useRef(false); //used to avoid setting the state when the user deletes the album
+    let pendingTracksForMetaFetch = useRef(null);
     const handleTracksSelected = async (tracks) => {
         if (tracks.length === 0) return;
         setTotalMeta(tracks.length);
         setToAddTracks((prev) => [...prev, ...tracks]); // Add the new metadatas to the list of tracks
-        const localMetadatas = await fetchMetadata(tracks);
-        handleReconstruct(localMetadatas);
+        pendingTracksForMetaFetch.current = tracks;
+        let idMapping = [];
+        for (let i = 0; i < tracks.length; i++) {
+            idMapping.push({id: uuidv4()});
+        }
+        awaitForTrackOverwite.current = true; //set the flag to true to avoid setting to trigger fetch metas
+        setTrackMetaOverwrite((prev) => [...prev, ...idMapping]); //add the modified metadata to the list
+        
         
     }
- 
+    useEffect(() => {
+        console.log("Track meta overwrite changed: ", trackMetaOverwrite);
+        if(awaitForTrackOverwite.current){
+            awaitForTrackOverwite.current = false;
+            beginFetchMeta();
+        }
+    },[trackMetaOverwrite]);
 
+    const beginFetchMeta = async () => {
+        const localMetadatas = await fetchMetadata();
+        handleReconstruct(localMetadatas);
+    }
     useEffect(() => { 
         setFinishedMeta(0); 
         setActiveIndex(2);
@@ -85,7 +115,7 @@ const AddMusic = ({closeOverlay}) => {
                 const newUuid = uuidv4();
                 localAlbums.push(new Album(
                     metadata.common.album,
-                    metadata.common.artist,
+                    (metadata.common.artis) ? metadata.common.artist : 'Unknown artist',
                     metadata.common.year,
                     [metadata.uuid],
                     metadata.common.picture?.[0],
@@ -110,33 +140,51 @@ const AddMusic = ({closeOverlay}) => {
         }, 400);
     };
 
-    const fetchMetadata = async (tracks) => {
+    const fetchMetadata = async () => {
+        console.log("enter")
+        const tracks = pendingTracksForMetaFetch.current;
         setActiveIndex(1);
         let localMetadatas = [];
+        let modifiedMetas = trackMetaOverwrite;
         //fetch the filenames from the files and parse them
         await Promise.all(
-            Array.from(tracks).map(async (track) => {
+            Array.from(tracks).map(async (track, index) => {
             let meta = await parseBlob(track);
-            if(meta.common.title == undefined){
+            let modifiedMeta = modifiedMetas[index];
+            if(!meta.common.title){
                 meta.common.title = track.name;
+                modifiedMeta.title = track.name;
             }
-            if(meta.common.album == undefined){
+            if(!meta.common.album){
                 meta.common.album = meta.common.title;
+                modifiedMeta.album = meta.common.title;
             }
+
             localMetadatas.push(meta);
             setFinishedMeta(localMetadatas.length);
         }));       
+        setTrackMetaOverwrite(modifiedMetas); //add the modified metadata to the list
         return localMetadatas;
     }
+
+
 
     const deleteAlbum = (uuid) => {
         console.log("Deleting album: " + uuid);
         deleting = true;
+        let modifiedMetaLocal = [...trackMetaOverwrite];
         const tracksToDelete = albums.find(album => album.uuid === uuid).tracks;
         const tracksCopy = [...toAddTracks];
-        const filteredTracks = tracksCopy.filter(track => tracksToDelete.includes(track));
+        const filteredTracks = tracksCopy.filter((track, index) => {
+            if(tracksToDelete.includes(track)){
+                console.log("Deleting track: " + track.name);
+                modifiedMetaLocal.splice(index, 1)
+
+                return false; // Filter out the track
+            }
+        });
         setToAddTracks(filteredTracks);
-       
+        setTrackMetaOverwrite(modifiedMetaLocal);
 
         const newAlbums = albums.filter(album => album.uuid !== uuid);
         setAlbums(newAlbums);
@@ -161,6 +209,7 @@ const AddMusic = ({closeOverlay}) => {
             return {...albumWithoutCover}
         })));
         const covers =  albums.map((album) => {
+            if(!album.coverData) return null; //skip if no cover data
             const uint8Array = new Uint8Array(album.coverData); // ensure proper binary format
             const blob = new Blob([uint8Array], { type: album.coverMime });
 
@@ -170,8 +219,7 @@ const AddMusic = ({closeOverlay}) => {
         }); 
         
         //send the covers as well
-        for(const cover of covers){console.log("Cover file:", cover.name, "size:", cover.size);bodyAlbumFormData.append("cover", cover);}
-
+        for(const cover of covers){if(!cover){continue;} bodyAlbumFormData.append("cover", cover);}
 
         await fetch(`${apiBase}/read-write/upload`, {
             method: "POST",
@@ -202,8 +250,8 @@ const AddMusic = ({closeOverlay}) => {
             const track = toAddTracks[i];
             let bodyFormData = new FormData();
             bodyFormData.append("albumId", JSON.stringify(metadatas[i].albumUuid));
+            bodyFormData.append("trackMeta", JSON.stringify(trackMetaOverwrite[i])); // Append the metadata, BEFORE the track, otherwise might not be populated yet
             bodyFormData.append("music", track); // Append each file individually
-            console.log("Adding file to form data: ", track);
             setSendingFile(track.name);
             await axios({
                 method: "POST",

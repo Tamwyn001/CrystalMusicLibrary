@@ -11,7 +11,6 @@ const AudioControls = ({context}) => {
                             iconDefault={(isPlaying) ? IconPlayerPause : IconPlayerPlay} 
                             onClick={toggleTrackPaused}/>
             <SvgHoverToggle iconHovered={IconPlayerTrackNextFilled} iconDefault={IconPlayerTrackNext} onClick={playNextSong}/>
-            <IconAdjustmentsPlus onClick={() => {jumpTrackSeconds(20)}}/>
         </div>
     )
 }

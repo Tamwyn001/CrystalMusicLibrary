@@ -25,17 +25,20 @@ export const addAlbums = (albums) => {
 
     let artists = [];
     for(let i =0; i < albums.length; i++){
+        if(!albums[i].artist){artists.push([null]);continue;}
         for(const artist of albums[i].artist.split(",")){artists.push([artist]);} //need an array otherwise row.map is not a function
     }
     console.log("Adding albums to the database...");
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
-    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, `${album.uuid}.${album.ext}`]));
+    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, (album.ext) ? `${album.uuid}.${album.ext}` : null]));
+
     const query = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
     const insert = db.prepare(query);
     console.log(albums);
     for(let i = 0; i < albums.length; i++){
         const album = albums[i];
+        if(!album.artist) continue;
         insert.run(album.artist, album.uuid);
     }
 
@@ -61,7 +64,7 @@ export const getAlbum = (id) => {
         WHERE a.id = ?
     `;
     const tracksInfos = `
-        SELECT t.path AS path, t.title AS title, t.track_number AS track_number
+        SELECT t.path AS path, t.title AS title, t.track_number AS track_number, t.duration AS rawDuration
         FROM tracks AS t 
         WHERE t.album = ?
         ORDER BY track_number ASC

@@ -1,9 +1,20 @@
+import { useEffect, useState } from 'react';
+import CML_logo from '../CML_logo';
 import './AlbumWrapping.css'
 
 import { IconMountain, IconFolderPlus } from '@tabler/icons-react';
 
 const AlbumWrapping = ({setEditUid, albumClass}) => {
-    if(!albumClass) return <></>;
+    
+    const [coverURL, setCoverURL] = useState(null);
+    if(!albumClass) return null;
+
+    //only load when the albumClass is set
+    useEffect(() => {
+        if (albumClass) {
+            setCoverURL(albumClass.coverURL);
+        }
+    }, [albumClass]);
     const handleApply = () => {
         const form = document.getElementById("editAlbumInfos");
         albumClass.name = form.albumName.value;
@@ -19,15 +30,15 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
     const selectNewImage = (e) => {
         const file = e.target.files[0];
         if(file){
-            albumClass.coverURL =  URL.createObjectURL(file);
-            document.getElementById("coverPicture").src =albumClass.coverURL;
+            setCoverURL(albumClass.setCoverFromFile(file));
         }
     }
     return(
         <div className="albumWrapping">
             <div className="albumCover">
                 <div className="albumCoverImageEdit">
-                    <img id="coverPicture" src={albumClass.coverURL} style={{width: "100%"}}/>
+                    {(coverURL)? <img id="coverPicture" src={coverURL} style={{width: "100%"}}/>
+                    : <CML_logo id="coverPicture" style={{width: "100%"}}/>}
                     <label htmlFor="coverInput">
                         <IconFolderPlus/>
                     </label>
