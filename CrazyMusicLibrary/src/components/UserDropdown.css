@@ -8,5 +8,6 @@
     width: 200px;
     background-color: rgb(242, 215, 250);
     padding: 10px 10px;
-    gap:10px
+    gap:10px;
+    z-index: 10;   
 }

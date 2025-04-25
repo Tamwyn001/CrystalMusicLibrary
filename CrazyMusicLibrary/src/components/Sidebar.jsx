@@ -9,8 +9,7 @@ const Sidebar = () => {
     return(
         <div className="sidebar">
             <nav>
-                <Link to="/">Recent</Link>
-                <Link to="/albums"><IconAlbum/>Albums</Link> 
+                <Link to="/"><IconAlbum/>Recent</Link> 
                 <Link to="/playlists"><IconPlaylist/>Playlists</Link>
                 <Link to="/artists"><IconChefHat/>Artists</Link>
                 <Link to="/genres"><IconList/>Genres</Link>

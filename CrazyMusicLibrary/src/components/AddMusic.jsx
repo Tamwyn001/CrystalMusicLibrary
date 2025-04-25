@@ -115,7 +115,7 @@ const AddMusic = ({closeOverlay}) => {
                 const newUuid = uuidv4();
                 localAlbums.push(new Album(
                     metadata.common.album,
-                    (metadata.common.artis) ? metadata.common.artist : 'Unknown artist',
+                    (metadata.common.artist) ? metadata.common.artist : 'Unknown artist',
                     metadata.common.year,
                     [metadata.uuid],
                     metadata.common.picture?.[0],

@@ -1,0 +1,30 @@
+.three-points-loader{
+    display: flex;
+    flex-direction: row;
+}
+.point{
+    width: 7px;
+    height: 7px;
+    border-radius: 50%;
+    background-color: #837bb6;
+    margin: 0 5px;
+    animation: bounce 0.4s infinite alternate;
+}
+.point1{
+    animation-delay: 0s;
+}
+.point2{
+    animation-delay: 0.1s;
+}
+.point3{
+    animation-delay: 0.2s;
+}
+
+@keyframes bounce {
+    0% {
+        transform: translateY(-3.5px);
+    }
+    100% {
+        transform: translateY(3.5px);
+    }
+}

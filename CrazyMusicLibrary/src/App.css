@@ -39,3 +39,13 @@
 .album-artist{
   margin: 0px;
 }
+
+
+.button-with-callback{
+  display: flex;
+  flex-direction: row;
+  height: 40px;
+  align-content: center;
+  width: fit-content;
+  gap: 3px;
+}

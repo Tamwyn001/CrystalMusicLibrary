@@ -1,18 +1,20 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause } from '@tabler/icons-react'
+import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
 import { useAudioPlayer } from '../GlobalAudioProvider'
 import AudioControls from './AudioControls'
 import CML_logo from './CML_logo.jsx'
+import MusicQueue from './MusicQueue.jsx'
 
 
 const Header = () => {
     const [pausePlayVisible, setPausePlayVisible] = useState(false)
     const [musicPaused, setMusicPaused] = useState(false)
-    const [newMusicShown, setNewMusicShown] = useState(false)
+    const [newMusicShown, setNewMusicShown] = useState(false);
+    const [queueShown, setQueueShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl} = useAudioPlayer();
     function playPauseVisibility(visible){
@@ -31,6 +33,10 @@ const Header = () => {
     const closeNewMusic = () => {
         setNewMusicShown(false);
     }
+
+    function toggleQueueShown(){
+        setQueueShown(!queueShown);
+    } 
 
     const TrackOverlay = () =>{
         if (!currentTrackData || Object.keys(currentTrackData).length === 0){
@@ -83,12 +89,16 @@ const Header = () => {
             </div>
             <TrackOverlay />
         </div>
-        <div className='mobile-gost'/>
+        <div className='mobile-gost'>
+            <IconListDetails id="playlist-button" className="buttonRound" onClick={() => toggleQueueShown(true)}/>
+            { queueShown && <MusicQueue hideComponent={() => setQueueShown(false)}/>}
+        </div>
         <div className="headerRight">
             <IconMusicPlus className="addMusicButton buttonRound" onClick={() => openNewMusic()}/>
             <UserDropdown />
         </div>
         {newMusicShown && (<AddMusic closeOverlay={closeNewMusic} />) }
+
       </header>    
     )
 }

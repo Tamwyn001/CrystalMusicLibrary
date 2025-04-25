@@ -72,6 +72,16 @@ export const getAlbum = (id) => {
     return {albumInfos : db.prepare(queryAlbumInfos).get(id), tracks : db.prepare(tracksInfos).all(id)};
 }
 
+export const getTrackNameCover = (id) => {
+    const query = `
+        SELECT t.title AS title, a.cover AS cover
+        FROM tracks AS t JOIN albums AS a ON t.album = a.id
+        WHERE t.id = ?
+    `;
+    const result = db.prepare(query).get(id);
+    return result;
+}
+
 export const getTrackInfos = (id) => {
     const query = `
         SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist
@@ -83,13 +93,13 @@ export const getTrackInfos = (id) => {
     return db.prepare(query).get(id);
 }
 
-export const getNextSongsFromAlbum = (albumId, currentSong) => {
+export const getNextSongsFromAlbum = (albumId) => {
     const query = `
         SELECT path from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
     return db.prepare(query).all(albumId);
 }
 
-export const getNextSongsFromPlayist = (playlistId, currentSong) => {
+export const getNextSongsFromPlayist = (playlistId) => {
     return;
 }
 

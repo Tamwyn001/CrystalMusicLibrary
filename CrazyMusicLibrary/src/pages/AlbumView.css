@@ -46,6 +46,13 @@
     animation-iteration-count: infinite;
     animation-direction: alternate;
 }
+.track-list-header{
+    display: flex;
+    flex-direction: row;
+    gap:10px;
+    margin-bottom: 10px;
+    
+}
 @keyframes dash {
 from {
     stroke-dashoffset: 60;

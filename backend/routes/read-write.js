@@ -2,7 +2,7 @@ import multer from 'multer';
 import express from "express";
 import {existsSync, mkdirSync, statSync, createReadStream} from "fs";
 import { v4 as uuidv4 } from 'uuid';
-import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats } from "../db-utils.js";
+import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover } from "../db-utils.js";
 import { parseFile} from "music-metadata";
 import {pipeline} from "stream";
 import { dirSize } from '../lib.js';
@@ -131,13 +131,21 @@ router.get("/trackInfos/:id", async (req, res) => {
     res.json(getTrackInfos(req.params.id));
 });
 
-router.get("/nextSongs/:isPlaylist/:containerId/:trackId", (req, res) => {
-    const { isPlaylist, containerId, trackId } = req.params;
-    const nextSongs = (isPlaylist === "true") ?
-        getNextSongsFromPlayist(containerId, trackId) : getNextSongsFromAlbum(containerId, trackId);
-    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()}),
-    currentIndex : getTrackIndex(trackId).track_number - 1
+router.get("/shortTrackInfos/:id", async (req, res) => {
+    console.log("Getting short track infos for track: " + getTrackNameCover(req.params.id));
+    res.json(getTrackNameCover(req.params.id));
 });
+
+router.get("/nextSongs/:isPlaylist/:containerId", (req, res) => {
+    const { isPlaylist, containerId } = req.params;
+    const nextSongs = (isPlaylist === "true") ?
+        getNextSongsFromPlayist(containerId) : getNextSongsFromAlbum(containerId);
+
+    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()})});
+    return;
+    
+    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()}),
+    currentIndex : getTrackIndex(trackId).track_number - 1});
 });
 
 router.get("/trackCover/:id", (req, res) => {
