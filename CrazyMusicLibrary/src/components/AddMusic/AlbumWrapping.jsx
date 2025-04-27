@@ -2,10 +2,12 @@ import { useEffect, useState } from 'react';
 import CML_logo from '../CML_logo';
 import './AlbumWrapping.css'
 
-import { IconMountain, IconFolderPlus } from '@tabler/icons-react';
+import { IconMountain, IconFolderPlus, IconDirections } from '@tabler/icons-react';
+import { useAddMusicContext } from '../AddMusic';
+import TrackRemapAlbum from './TrackRemapAlbum';
 
 const AlbumWrapping = ({setEditUid, albumClass}) => {
-    
+    const [showTrackRemap, setShowTrackRemap] = useState({visible: false});
     const [coverURL, setCoverURL] = useState(null);
     if(!albumClass) return null;
 
@@ -22,7 +24,6 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
         albumClass.year = form.releaseDate.value;
         albumClass.genre = form.genre.value;
         albumClass.description = form.description.value;
-        albumClass.bpm = form.bpm.value;
 
         //switch to the album overview
         setEditUid(null);
@@ -32,6 +33,10 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
         if(file){
             setCoverURL(albumClass.setCoverFromFile(file));
         }
+    }
+
+    const openTrackRemap = (track) => {
+        setShowTrackRemap({visible: !showTrackRemap.visible, ...track});
     }
     return(
         <div className="albumWrapping">
@@ -64,12 +69,25 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
                         <label htmlFor="description">Description</label>
                         <textarea id="description" placeholder="Enter description" defaultValue={albumClass.description}></textarea>
                     </div>
-                    <div className="albumTypeOption">
+                    {/* <div className="albumTypeOption">
                         <label htmlFor="bpm">BPM</label>
                         <input type="number" id="bpm" placeholder="Enter BPM" defaultValue={albumClass.bpm}/>
-                    </div>
+                    </div> */}
+                    
+                </div>
+                <div className="albumTracks">
+                    {albumClass.tracks.map((track, index) => {
+                        return (
+                            <div key={index} className="albumTrack">
+                                <span>{track.name}</span>
+                                <IconDirections className="trackIcon" onClick={() => {openTrackRemap(track)}}/>
+                            </div>
+                        )
+                    })}
                 </div>
             </form>
+            {showTrackRemap.visible && < TrackRemapAlbum track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
+
         </div>
     )
 }

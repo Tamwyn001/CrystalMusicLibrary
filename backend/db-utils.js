@@ -12,7 +12,7 @@ export const addTracks = (tracks) => {
 
     // Function to add tracks to the database
     console.log("Adding tracks to the database...");
-    // console.log(tracks);
+    // console.log(tracks);6
     const localTime = currentDate();
     console.log(tracks);
     batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration", 
@@ -31,15 +31,21 @@ export const addAlbums = (albums) => {
     console.log("Adding albums to the database...");
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
-    batchInsert("albums", "id, title, release_date, cover", albums.map((album) => [album.uuid, album.name, localTime, (album.ext) ? `${album.uuid}.${album.ext}` : null]));
-
-    const query = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
-    const insert = db.prepare(query);
+    batchInsert("albums", "id, title, release_date, cover, description", 
+        albums.map((album) => [album.uuid, album.name, localTime, (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description]));
+    if(albums[0].genre){
+        const queryGenre = "INSERT OR IGNORE INTO genres (name) VALUES (?)";
+        db.prepare(queryGenre).run(albums[0].genre);
+        const queryA2G = "INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES ((SELECT id from albums WHERE id = ?) , (SELECT id from genres WHERE name = ?))";
+        db.prepare(queryA2G).run(albums[0].uuid, albums[0].genre);
+    }
+    const queryA2A = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
+    const insertA2A = db.prepare(queryA2A);
     console.log(albums);
     for(let i = 0; i < albums.length; i++){
         const album = albums[i];
         if(!album.artist) continue;
-        insert.run(album.artist, album.uuid);
+        insertA2A.run(album.artist, album.uuid);
     }
 
     return

@@ -32,8 +32,12 @@ CREATE TABLE albums(
     title VARCHAR(255) NOT NULL,
     release_date DATE,
     cover VARCHAR(255),
+    genre int,
+    description TEXT,
     PRIMARY KEY (id)
 );
+
+
 
 CREATE TABLE artists_to_albums(
     id INTEGER PRIMARY KEY,
@@ -49,6 +53,14 @@ CREATE TABLE genres(
     description TEXT
 );
 
+CREATE TABLE albums_to_genres(
+    id INTEGER PRIMARY KEY,
+    album VARCHAR(36) NOT NULL,
+    genre int,
+    FOREIGN KEY (album) REFERENCES albums(id),
+    FOREIGN KEY (genre) REFERENCES genres(id)
+);
+
 CREATE TABLE tracks(
     id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
@@ -60,8 +72,7 @@ CREATE TABLE tracks(
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     track_number INT,
     PRIMARY KEY (id),
-    FOREIGN KEY (album) REFERENCES albums(id),
-    FOREIGN KEY (genre) REFERENCES genres(id)
+    FOREIGN KEY (album) REFERENCES albums(id)
 );
 
 

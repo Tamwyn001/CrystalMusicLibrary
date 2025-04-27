@@ -38,7 +38,9 @@ const upload = multer({
                 cb(null, `${fileName}.${ext}`); // Keep original name
                 file.uuid = fileName;
             } else if (file.fieldname === "cover") {
-                cb(null, file.originalname); // Keep original name
+                console.log(req.body.album);
+                const album = JSON.parse(req.body.album);
+                cb(null, `${album.uuid}.${album.ext}`); // Give the albums name to the cover
             }
         },
     }),
@@ -51,20 +53,20 @@ const upload = multer({
 
 router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), async (req, res) =>  {
     //the subroute for uploading albums 
-    if (req.body.albums) {
-        addAlbums(JSON.parse(req.body.albums));
+    if (req.body.album) {
+        addAlbums([JSON.parse(req.body.album)]);
         res.json({ message: "Albums uploaded successfully" });
         return;
     }
     //the subroute for uploading tracks
     //link tracks to albumUuid
     const musicFileProcess = new Promise(async (resolve, reject) => {
-        const trackAlbumId = JSON.parse(req.body.albumId);
         const tracksMeta = await parseFile(req.files.music[0].path);
         const meta = JSON.parse(req.body.trackMeta);
+        console.log(meta);
         let file = req.files.music[0];
         file.uuid = meta.id;
-        file.albumId = trackAlbumId;
+        file.albumId = meta.albumUuid;
         file.title = (meta.title) ? meta.title : tracksMeta.common.title;
         file.year = tracksMeta.common.year;
         file.no = tracksMeta.common.track.no;   

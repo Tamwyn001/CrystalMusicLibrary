@@ -1,0 +1,15 @@
+.trackRemapAlbum{
+    background-color: rgb(255, 240, 255);
+    border-radius: 10px;
+    position: absolute;
+    padding: 25px;
+}
+.trackRemapAlbum form{
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.trackRemapAlbum label{
+    margin-top: 10px;
+}

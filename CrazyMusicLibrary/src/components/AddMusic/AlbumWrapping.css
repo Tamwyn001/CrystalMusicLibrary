@@ -3,7 +3,7 @@
     flex-direction: row;
     justify-content: left;
     gap: 10px;
-    height: 270px;
+    height: 100%;
     overflow: hidden;
     padding: 20px 30px;
 }
