@@ -1,14 +1,16 @@
-import multer from 'multer';
-import express from "express";
-import {existsSync, mkdirSync, statSync, createReadStream} from "fs";
-import { v4 as uuidv4 } from 'uuid';
-import {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover } from "../db-utils.js";
-import { parseFile} from "music-metadata";
-import {pipeline} from "stream";
-import { dirSize } from '../lib.js';
-import checkDiskSpace from 'check-disk-space';
-
-
+console.log("Loading read-write.js");
+const multer = require( 'multer');
+const express = require( "express");
+const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
+const { v4 : uuidv4 } = require( 'uuid');
+console.log("  Loading db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks } = require( "../db-utils.js");
+console.log("  Loading db-utils.js done");
+const mm = require('music-metadata-browser');
+const {pipeline} = require( "stream");
+const { dirSize } = require( '../lib.js');
+const checkDiskSpace = require('check-disk-space').default
+const fs = require( "fs");
 
 const router = express.Router();
 
@@ -61,13 +63,16 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     //the subroute for uploading tracks
     //link tracks to albumUuid
     const musicFileProcess = new Promise(async (resolve, reject) => {
-        const tracksMeta = await parseFile(req.files.music[0].path);
+        const tracksMeta = await    // mm.parseFile(req.files.music[0].path);
+            mm.parseBlob(fs.readFileSync(req.files.music[0].path)) 
+            .then(metadata => console.log(metadata))
+            .catch(err => console.error(err)); //comonJS freindly
         const meta = JSON.parse(req.body.trackMeta);
         console.log(meta);
         let file = req.files.music[0];
         file.uuid = meta.id;
         file.albumId = meta.albumUuid;
-        file.title = (meta.title) ? meta.title : tracksMeta.common.title;
+        file.title = (meta.title) ? meta.title : tracksMeta.common.title || file.originalname;
         file.year = tracksMeta.common.year;
         file.no = tracksMeta.common.track.no;   
         file.duration = tracksMeta.format.duration;
@@ -86,14 +91,27 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     }
 );
 
-router.get("/albums", async (req, res) => {
+router.get("/albums",  (req, res) => {
     const albums = getAlbums();
     res.json(albums);
 });
 
-router.get("/album/:id", async (req, res) => {
+router.get("/album/:id",  (req, res) => {
     const album = getAlbum(req.params.id);
     res.json(album);
+});
+
+router.get("/artists",  (req, res) => {
+    const artists = getArtists();
+    res.json(artists);
+});
+router.get("/artist/:id",  (req, res) => {
+    const artist = getArtist(req.params.id);
+    res.json(artist);
+});
+router.get("/artist-all-tracks/:id",  (req, res) => {
+    const artist = getArtistTracks(req.params.id);
+    res.json(artist);
 });
 
 router.get("/music/:id", async (req, res) => {
@@ -175,7 +193,7 @@ router.get("/stats", (req, res) => {
 
 let runningServerStats = false; // Flag to prevent multiple executions
 let promiseServerStats = null;
-export const runServerStats = () => {
+const runServerStats = () => {
   runningServerStats = true; // Set the flag to true
   console.log("Running server stats...");
   promiseServerStats = Promise.all([
@@ -202,4 +220,4 @@ router.get("/serverStats", async (req, res) => {
 });
 
 
-export default router;
+module.exports = {router, runServerStats};

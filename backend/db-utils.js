@@ -1,6 +1,6 @@
-import db from "./db.js";
-import { currentDate } from "./lib.js";
-const DUPLICATE_KEY_ERROR = 1062;
+const db = require("./db.js");
+const { currentDate } = require("./lib.js");
+
 
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
@@ -8,7 +8,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
     db.prepare(`INSERT ${ignore? "OR IGNORE" : ''} INTO ${table} (${columns}) VALUES ${placeholders}`).run(params.flat().flat());
     
 }
-export const addTracks = (tracks) => {
+ const addTracks = (tracks) => {
 
     // Function to add tracks to the database
     console.log("Adding tracks to the database...");
@@ -20,7 +20,7 @@ export const addTracks = (tracks) => {
 }
 
 
-export const addAlbums = (albums) => {
+ const addAlbums = (albums) => {
     // Function to add albums to the database. These are emnpty albums with no tracks, then call addTracks and pass the id of the album
 
     let artists = [];
@@ -51,7 +51,7 @@ export const addAlbums = (albums) => {
     return
 }
 
-export const getAlbums = ()  => {
+ const getAlbums = ()  => {
     const query = `
         SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
         FROM albums AS a 
@@ -61,7 +61,7 @@ export const getAlbums = ()  => {
     return db.prepare(query).all(); 
 }
 
-export const getAlbum = (id) => {
+ const getAlbum = (id) => {
     const queryAlbumInfos = `
         SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
         FROM albums AS a 
@@ -78,7 +78,7 @@ export const getAlbum = (id) => {
     return {albumInfos : db.prepare(queryAlbumInfos).get(id), tracks : db.prepare(tracksInfos).all(id)};
 }
 
-export const getTrackNameCover = (id) => {
+ const getTrackNameCover = (id) => {
     const query = `
         SELECT t.title AS title, a.cover AS cover
         FROM tracks AS t JOIN albums AS a ON t.album = a.id
@@ -88,7 +88,7 @@ export const getTrackNameCover = (id) => {
     return result;
 }
 
-export const getTrackInfos = (id) => {
+ const getTrackInfos = (id) => {
     const query = `
         SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist
         FROM tracks AS t JOIN albums AS a ON t.album = a.id
@@ -99,17 +99,17 @@ export const getTrackInfos = (id) => {
     return db.prepare(query).get(id);
 }
 
-export const getNextSongsFromAlbum = (albumId) => {
+ const getNextSongsFromAlbum = (albumId) => {
     const query = `
         SELECT path from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
     return db.prepare(query).all(albumId);
 }
 
-export const getNextSongsFromPlayist = (playlistId) => {
+ const getNextSongsFromPlayist = (playlistId) => {
     return;
 }
 
-export const getTrackCoverPath = (trackId) => {
+ const getTrackCoverPath = (trackId) => {
     console.log("fetching cover for song", trackId);
     const query = `
         SELECT a.cover AS cover
@@ -124,7 +124,7 @@ export const getTrackCoverPath = (trackId) => {
     }
 }
 
-export const getTrackIndex = (trackId) => {
+ const getTrackIndex = (trackId) => {
     const query = `
         SELECT track_number
         FROM tracks
@@ -133,7 +133,7 @@ export const getTrackIndex = (trackId) => {
     return db.prepare(query).get(trackId);
 }
 
-export const getDbStats = () => {
+ const getDbStats = () => {
     const query = `
         SELECT COUNT(*) AS totalTracks, SUM(duration) AS totalDuration
         FROM tracks
@@ -141,7 +141,7 @@ export const getDbStats = () => {
     return db.prepare(query).get();
 }
 
-export const latestServerStats = () => {
+ const latestServerStats = () => {
     const query = `
         SELECT date, tracks_byte_usage, covers_byte_usage
         FROM serverStats
@@ -151,7 +151,66 @@ export const latestServerStats = () => {
     return db.prepare(query).get();
 }
 
-export const insertNewServerState = (tracksByteUsage, coversByteUsage) => {
+ const insertNewServerState = (tracksByteUsage, coversByteUsage) => {
     const query =  `INSERT OR IGNORE INTO serverStats (date, covers_byte_usage, tracks_byte_usage) VALUES (?,?,?)`;
     db.prepare(query).run([currentDate(), coversByteUsage, tracksByteUsage] );
 }
+
+ const getArtists = () => {
+    const query = `SELECT id, name, picture FROM artists_descs`;
+    return db.prepare(query).all();
+}
+
+ const getArtist = (id) => {
+    const queryInfos = `
+        SELECT id, name, bio, picture FROM artists_descs WHERE id = ?
+    `;
+    const queryAlbum = `
+        SELECT a.id AS id, a.title AS title, a.cover AS cover
+        FROM albums AS a 
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        WHERE ad.id = ?
+    `;
+    const artistInfos = db.prepare(queryInfos).get(id);
+    const albums = db.prepare(queryAlbum).all(id);
+    return {artistInfos, albums};
+}
+
+ const getArtistTracks = (id) => {
+    const queryAlbums = `
+        SELECT a.id AS id FROM albums a 
+        JOIN artists_to_albums A2A ON a.id = A2A.taking_part
+        JOIN artists_descs ad ON A2A.artist = ad.id
+        WHERE ad.id = ?
+    `;
+    const queryTracks = `
+        SELECT t.path AS path, t.track_number
+        FROM tracks AS t 
+        WHERE t.album = ?
+        ORDER BY track_number ASC
+    `;
+    const albums = db.prepare(queryAlbums).all(id);
+    const tracks = [];
+    for (const album of albums) {
+        tracks.push(...db.prepare(queryTracks).all(album.id));
+    }
+    return tracks;
+}
+
+module.exports = {addTracks,
+    addAlbums,
+    getAlbums,
+    getAlbum,
+    getTrackInfos,
+    getNextSongsFromPlayist,
+    getNextSongsFromAlbum,
+    getTrackCoverPath,
+    getTrackIndex,
+    getDbStats,
+    insertNewServerState,
+    latestServerStats,
+    getTrackNameCover,
+    getArtists,
+    getArtist,
+    getArtistTracks };

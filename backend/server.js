@@ -1,85 +1,122 @@
-//main server file
-import express from "express";
-import cors from "cors";
-import bodyParser from "body-parser";
-import "dotenv/config";
-import db from "./db.js"; // Import the database connection
-import {networkInterfaces} from "os"; // Import the os module to get network interfaces
-import path from "path";
+console.log(`Initializing routes`);
 
+const express = require("express");
+const cors = require("cors");
+const bodyParser = require("body-parser");
+const dotenv = require("dotenv");
+const db = require("./db.js");
+const { networkInterfaces } = require("os");
+const path = require("path");
+console.log(`Starting authentication server`);
+const authRouter = require("./routes/auth.js");
+console.log(`✅ Auth routes initialized`);
+const { router : readWriteRouter, runServerStats } = require("./routes/read-write.js");
+const cookieParser = require("cookie-parser");
+const { fileURLToPath } = require("url");
+// -----------------------------------
+// 🛠️ Path handling for ESM & pkg
+// -----------------------------------
+// const __filename = fileURLToPath(import.meta.url);
+// const __dirname = path.dirname(__filename);
+
+const isPkg = typeof process.pkg !== "undefined";
+
+// Public path handling (for /dist and static files)
+const publicPath = isPkg
+  ? path.join(path.dirname(process.execPath), 'dist')
+  : path.join(__dirname, 'dist');
+
+// .env loading (only outside pkg)
+if (!isPkg) {
+  dotenv.config({ path: path.join(__dirname, '.env') });
+}
+console.log(`✅ Environment variables loaded`, process.env);
+// -----------------------------------
+// 📡 Get local IP
+// -----------------------------------
 function getLocalIP() {
-    const interfaces = networkInterfaces();
-    for (const name of Object.keys(interfaces)) {
-      for (const iface of interfaces[name]) {
-        if (
-          iface.family === 'IPv4' &&
-          !iface.internal &&
-          !iface.address.startsWith('169.254') // Skip link-local addresses
-        ) {
-          return iface.address;
-        }
+  const interfaces = networkInterfaces();
+  for (const name of Object.keys(interfaces)) {
+    for (const iface of interfaces[name]) {
+      if (
+        iface.family === 'IPv4' &&
+        !iface.internal &&
+        !iface.address.startsWith('169.254')
+      ) {
+        return iface.address;
       }
     }
   }
+  return '127.0.0.1';
+}
 
+const localIP = getLocalIP();
 
-
-
-console.log(`Initializing routes`);
-
-import authRouter from "./routes/auth.js";
-import readWriteRouter, { runServerStats } from "./routes/read-write.js";
-
-import cookieParser from "cookie-parser"; 
-import { currentDate } from "./lib.js";
-
+// -----------------------------------
+// 🚀 Initialize server
+// -----------------------------------
 console.log(`✅ Routes initialized`);
 const app = express();
-const PORT = process.env.PORT;
-const localIP = getLocalIP();
+
 const allowedDomains = [
-  "http://localhost:5173",          // ton front local
-  "http://localhost:5174",          
-  "http://192.168.10.134:5173",     // ton IP réseau (pour ton iPhone)
+  "http://localhost:5173",
+  "http://localhost:5174",
   `http://${localIP}:4173`,
+  `http://${localIP}:4590`,
   'http://10.24.134.178:4173',
   'http://169.254.160.204:4173',
-  "http://192.168.10.134:4173"
-  // ajoute ici d'autres IPs/URLs de frontends autorisés
+  "http://192.168.10.134:4173",
+  "http://192.168.10.134:5173"
 ];
+
+console.log("Serving static files from", publicPath);
+app.use(express.static(publicPath));
+app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
 
 app.use(cors({
   origin: function (origin, callback) {
-    // Autorise les requêtes sans origin (ex: curl, apps mobiles, server-to-server)
     if (!origin) return callback(null, true);
-
-    if (allowedDomains.includes(origin)) {
-      return callback(null, true);
-    }
-
-    const msg = `Cette origine (${origin}) n'est pas autorisée.`;
-    return callback(new Error(msg), false);
+    if (allowedDomains.includes(origin)) return callback(null, true);
+    return callback(new Error(`Cette origine (${origin}) n'est pas autorisée.`), false);
   },
   credentials: true,
   exposedHeaders: ["Content-Disposition"]
 }));
-app.use((err, req, res, next) => {
-    console.error("Unhandled error:", err);
-    res.status(500).json({ message: "Server error" });
-});
-app.use(express.Router().get("/isResponding", (req, res) => {res.json({message: "Server is responding"});}));
-app.use('/covers', express.static('data/covers'));
-app.use(express.json());
-app.use(cookieParser());
-app.use(bodyParser.json());
 
+app.use(express.json());
+app.use(bodyParser.json());
+app.use(cookieParser());
+
+// Routes
 app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
 
-app.listen(PORT, () => {
-    console.log(`✅ Server running at http://${localIP}:4590`);
+app.get("/isResponding", (req, res) => {
+  res.json({ message: "Server is responding" });
 });
+
+app.use((err, req, res, next) => {
+  console.error("Unhandled error:", err);
+  res.status(500).json({ message: "Server error" });
+});
+
+// -----------------------------------
+// 🟢 Start server
+// -----------------------------------
+const PORT = 4590;
+app.listen(PORT, () => {
+  console.log(`✅ Server running at http://${localIP}:${PORT}`);
+});
+
 runServerStats()
 console.log(`  . 📊     Server stats updated`);
+
+// -----------------------------------
+// 🌐 Open browser (only when NOT packaged)
+// -----------------------------------
+if (!isPkg) {
+  const open = require("open");
+  open.default(`http://${localIP}:${PORT}`);
+}

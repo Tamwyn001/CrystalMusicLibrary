@@ -53,6 +53,7 @@ const AddMusic = ({closeOverlay}) => {
     const [totalMeta, setTotalMeta] = useState(0);
     const [metadatas, setMetadatas] = useState([]);
     const [albums, setAlbums] = useState([]);
+    const [avoidChangeWindowAlbum, setAvoidChangeWindowAlbum] = useState(false); //used to avoid changing the window when the user is editing an album
     const [editingAlbum, setEditingAlbum] = useState("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
     const [totalMbUpload, setTotalMbUpload] = useState(0);
     const [percentageUpload, setPercentageUpload] = useState(0);
@@ -71,7 +72,9 @@ const AddMusic = ({closeOverlay}) => {
     let pendingTracksForMetaFetch = useRef(null);
 
     const handleTracksSelected = async (tracks) => {
+        console.log("Tracks selected: ", tracks);
         if (tracks.length === 0) return;
+
         setTotalMeta(tracks.length);
         setToAddTracks((prev) => [...prev, ...tracks]); // Add the new metadatas to the list of tracks
         pendingTracksForMetaFetch.current = tracks;
@@ -95,10 +98,17 @@ const AddMusic = ({closeOverlay}) => {
         const localMetadatas = await fetchMetadata();
         handleReconstruct(localMetadatas);
     }
+
+    const updateAlbums = (newAlbum) => {
+        const filteredAlbums = newAlbum.filter(({tracks}) => tracks.length > 0); //remove empty albums
+        setAvoidChangeWindowAlbum(true);
+        setAlbums(filteredAlbums);
+    }
     useEffect(() => { 
+        console.log("Reconstructing albums... " , albums);
+        if(avoidChangeWindowAlbum){return;}; //if we are editing an album, do not change the window
         setFinishedMeta(0); 
         setActiveIndex(2);
-        console.log("Reconstructing albums... " , albums);
     }, [albums]);
 
     const reconstructAlbums = (tempMetadatas ) => {
@@ -140,6 +150,7 @@ const AddMusic = ({closeOverlay}) => {
         const newAlbums = reconstructAlbums(tempMetas);
         // Delay to wait for metadatas state to update
         setTimeout(() => {
+            setAvoidChangeWindowAlbum(false);
             setAlbums((prev) => [...prev, ...newAlbums]);
         }, 400);
     };
@@ -188,6 +199,7 @@ const AddMusic = ({closeOverlay}) => {
         setTrackMetaOverwrite(filteredTracksMeta);
 
         const newAlbums = albums.filter(album => album.uuid !== uuid);
+        setAvoidChangeWindowAlbum(false);
         setAlbums(newAlbums);
     }
     const editAlbum = (uuid) => {
@@ -199,12 +211,13 @@ const AddMusic = ({closeOverlay}) => {
         setActiveIndex(3);
     }, [editingAlbum]);
 
+    
     const moveTrackToNewAlbum = (track, newAlbumName) => {
         let metaLocal = trackMetaOverwrite;
         const { id: trackId, name: trackName } = track;
-
-        console.log("Moving track: " + trackId + +" from " + editingAlbum +" to album: " + newAlbumId);
         const newUuid = uuidv4();
+        console.log("Moving track: " + trackId + +" from " + editingAlbum +" to album: " + newUuid);
+       
         metaLocal = metaLocal.map((track) => {
             if (track.id === trackId) track.albumUuid = newUuid;
             return track;}); //update the albumId of the track
@@ -217,7 +230,7 @@ const AddMusic = ({closeOverlay}) => {
         const newAlbum = new Album(newAlbumName, 'Unknown artist', '', [{id: trackId, name: trackName}], null, newUuid);
         albumLocal.push(newAlbum); //add the new album to the list
         setTrackMetaOverwrite(metaLocal);
-        setAlbums(albumLocal);
+        updateAlbums(albumLocal);
     }
 
     const moveTrackToAlbum = (track, newAlbumId) => {
@@ -238,7 +251,7 @@ const AddMusic = ({closeOverlay}) => {
             }
             return album;});
         setTrackMetaOverwrite(metaLocal);
-        setAlbums(albumLocal);
+        updateAlbums(albumLocal);
     }
 
     const publish = async () => {
@@ -358,7 +371,7 @@ const AddMusic = ({closeOverlay}) => {
     }
     return(
         <div className="addMusicContainer">
-            <AddMusicContext.Provider value={{albums, moveTrackToNewAlbum, editingAlbum, moveTrackToAlbum}}>
+            <AddMusicContext.Provider value={{albums, moveTrackToNewAlbum, editingAlbum, moveTrackToAlbum, setEditingAlbum}}>
                 <IconX className="buttonRound closeOverlay" onClick={closeOverlay}/>
                 <h2>Add Music</h2>
                 <ActiveIndex context={{name: "AddMusic", length: 5}} active={activeIndex} setActive={null}/>

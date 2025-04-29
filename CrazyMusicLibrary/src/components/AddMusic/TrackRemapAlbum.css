@@ -13,3 +13,8 @@
 .trackRemapAlbum label{
     margin-top: 10px;
 }
+.last-track-notify{
+    color: red;
+    font-size: 12px;
+    margin-top: 5px;
+}

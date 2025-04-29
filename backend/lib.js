@@ -1,7 +1,7 @@
-import { readdir, stat } from "fs/promises"; // Import fs/promises to read directory and get file stats
-import { join } from "path";
+const { readdir, stat } = require("fs/promises"); // Import fs/promises to read directory and get file stats
+const { join } = require("path");
 
-export function currentDate(){
+const currentDate= () =>{
     var pad = function(num) { return ('00'+num).slice(-2) };
     var date = new Date();
     date = date.getUTCFullYear()         + '-' +
@@ -14,9 +14,13 @@ export function currentDate(){
 }
 
 
-export const dirSize = async directory => {
+const dirSize = async directory => {
     const files = await readdir( directory );
     const stats = files.map( (file) => stat( join( directory, file ) ) );
   
     return ( await Promise.all( stats ) ).reduce( ( accumulator, { size } ) => accumulator + size, 0 );
   }
+
+  module.exports = {
+    currentDate,
+    dirSize};

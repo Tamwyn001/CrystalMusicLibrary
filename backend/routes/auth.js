@@ -1,22 +1,26 @@
 //Arto Steffan 2025
 //API routes for authentication
-import multer from 'multer';
+const multer = require('multer');
 const upload = multer();
+console.log("   Multer imported.");
 
+// const LoginStatus = {
+//     NONE: "none",
+//     LOGGED_OUT: "logged out",
+//     USER: "user",
+//     ADMIN: "admin"
+//     //do not use to veryfy the user role, this is only for the front end
+// };
 
-export const LoginStatus = {
-    NONE: "none",
-    LOGGED_OUT: "logged out",
-    USER: "user",
-    ADMIN: "admin"
-    //do not use to veryfy the user role, this is only for the front end
-};
-
-import express from "express";
+const express = require("express");
 const router = express.Router();
-import db from "../db.js"; 
-import {currentDate} from "../lib.js";
-import jwt from "jsonwebtoken";
+console.log("   Express imported.");
+const db = require("../db.js"); 
+console.log("   Database imported.");
+const {currentDate} = require("../lib.js");
+console.log("   Lib imported.");
+const jwt = require("jsonwebtoken");
+console.log("   JWT imported.");
 // import { sanitizeBody } from "../lib.js";
 //fetch auth
 
@@ -79,4 +83,4 @@ router.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({success : true, message: "Logout successful"});
 });
-export default router;
+module.exports = router;

@@ -1,9 +1,11 @@
 //Arto Steffan 2025
 //Database conenction setup
 
-import "dotenv/config";
-import Database from "better-sqlite3";
-import fs from "fs";
+const Database = require("better-sqlite3");
+const fs = require("fs");
+const path = require("path");
+const isPkg = typeof process.pkg !== 'undefined';
+
 
 
 const resetDatabase = (dbPath, setupPath) => {
@@ -11,6 +13,7 @@ const resetDatabase = (dbPath, setupPath) => {
     const db = new Database(dbPath, {fileMustExist: false}); // Create a new database connection
 
     try {
+        console.log("Initializing database reset...");
         db.exec("PRAGMA foreign_keys = ON;");
         db.pragma('journal_mode = WAL'); //for performance https://github.com/WiseLibs/better-sqlite3/blob/master/docs/performance.md
         db.exec(sqlScript);
@@ -22,16 +25,17 @@ const resetDatabase = (dbPath, setupPath) => {
 }
 
 const setupDatabase = () => {
-    const dbPath = "../db/CML_db.sqlite";
-    const sqlSetupFilpath = "../db/CML_setup.sql";
+  const basePath = isPkg ? path.dirname(process.execPath) : __dirname;
+  const sqlSetupFilePath = path.join(basePath, "db", "CML_setup.sql");
+  const dbPath = path.join(basePath, "db", "CML_db.sqlite");
 
-    if(fs.existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
-    else{resetDatabase(dbPath, sqlSetupFilpath);}
-    console.log("✅ Database mounted");
-    return new Database(dbPath, {
-        fileMustExist: true,
-    });
+  if(fs.existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
+  else{resetDatabase(dbPath, sqlSetupFilePath);}
+  console.log("✅ Database mounted");
+  return new Database(dbPath, {
+      fileMustExist: true,
+  });
 }
 
 const db = setupDatabase();
-export default db;
+module.exports = db;

@@ -98,7 +98,7 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(data => {
             console.log('setting play queue', data.queue);
             setPlayQueue(_.shuffle(data.queue));
-            setQueuePointer(floor(Math.random()) * data.queue.length); //we do this here to this when the useEffect fires, both are updated.
+            setQueuePointer(0); //we do this here to this when the useEffect fires, both are updated.
         });
     }
     const playNextSong = (useRefs = false) => {
@@ -211,6 +211,33 @@ export const AudioPlayerProvider = ({ children }) => {
         };
     }, []);
 
+    const addArtistToQueue = async (artistID) => {
+        setJustAddedNewToQueue(true);
+        const res = await fetch(`${apiBase}/read-write/artist-all-tracks/${artistID}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await res.json();
+        const tracks = data.map((track) => track.path.split('\\').pop()); // Extract the track name from the response
+        setPlayQueue((prevQueue) => [...prevQueue, ...tracks]);
+    }
+    const shuffleArtistToQueue = async (artistID) => {
+        const res = await fetch(`${apiBase}/read-write/artist-all-tracks/${artistID}`, {
+            method: 'GET',
+            credentials: 'include'
+        });
+        if (!res.ok) {
+            throw new Error('Network response was not ok');
+        }
+        const data = await res.json();
+        const tracks = data.map((track) => track.path.split('\\').pop()); // Extract the track name from the response
+        setPlayQueue(_.shuffle(tracks));
+        setQueuePointer(0); // Set the queue pointer to the first track
+    }
+
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -230,7 +257,9 @@ export const AudioPlayerProvider = ({ children }) => {
             playQueue,
             queuePointer,
             jumpToQueueTrack,
-            deleteQueue
+            deleteQueue,
+            addArtistToQueue,
+            shuffleArtistToQueue
             }}>
             {children}
         </AudioPlayerContext.Provider>

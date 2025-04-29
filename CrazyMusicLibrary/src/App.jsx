@@ -4,6 +4,8 @@ import Home from './pages/Home';
 import Albums from './pages/Albums';
 import Authentification from './pages/Authentification';
 import AlbumView from './pages/AlbumView';
+import Artist from './pages/Artist';
+import ArtistView from './pages/ArtistView';
 import './App.css';
 import './assets/palette.svg'
 import { AudioPlayerProvider } from './GlobalAudioProvider';
@@ -19,6 +21,8 @@ function App() {
                         <Route path='home' element={<Home />}/>
                         <Route path="albums" element={<Albums />}/>
                         <Route path="albums/:albumId" element={<AlbumView />}/>
+                        <Route path="artists" element={<Artist />} />
+                        <Route path="artists/:artistId" element={<ArtistView />}/>
                     </Route>
             </Routes>
         </AudioPlayerProvider>
