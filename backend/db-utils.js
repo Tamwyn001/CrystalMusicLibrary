@@ -1,7 +1,7 @@
-const db = require("./db.js");
+const {getDatabase} = require("./db.js");
 const { currentDate } = require("./lib.js");
 
-
+const db = getDatabase();
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
     const placeholders = params.map((row) => `(${row.map(() => '?').join(',')})`).join(",");
@@ -11,10 +11,9 @@ const batchInsert = (table, columns, params, ignore = false) => {
  const addTracks = (tracks) => {
 
     // Function to add tracks to the database
-    console.log("Adding tracks to the database...");
     // console.log(tracks);6
     const localTime = currentDate();
-    console.log(tracks);
+
     batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration", 
         tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime, track.no, track.duration]));
 }

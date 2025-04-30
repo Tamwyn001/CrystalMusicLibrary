@@ -1,12 +1,12 @@
 //Arto Steffan 2025
 //Database conenction setup
+const {existsSync} = require( "fs");
 
 const Database = require("better-sqlite3");
 const fs = require("fs");
 const path = require("path");
-const isPkg = typeof process.pkg !== 'undefined';
 
-
+let dbInstance = null
 
 const resetDatabase = (dbPath, setupPath) => {
     const sqlScript = fs.readFileSync(setupPath, "utf8");
@@ -24,18 +24,25 @@ const resetDatabase = (dbPath, setupPath) => {
     db.close();  // Close the database connection
 }
 
-const setupDatabase = () => {
-  const basePath = isPkg ? path.dirname(process.execPath) : __dirname;
-  const sqlSetupFilePath = path.join(basePath, "db", "CML_setup.sql");
-  const dbPath = path.join(basePath, "db", "CML_db.sqlite");
+const setupDatabase = (dataPath, basePath) => {
 
-  if(fs.existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
+  const sqlSetupFilePath = path.join(basePath, "CML_setup.sql");
+  const dbPath = path.join(dataPath, "CML_db.sqlite");
+
+  if(existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
   else{resetDatabase(dbPath, sqlSetupFilePath);}
-  console.log("✅ Database mounted");
-  return new Database(dbPath, {
+  dbInstance = new Database(dbPath, {
       fileMustExist: true,
   });
+  console.log("✅ Database mounted");
+
 }
 
-const db = setupDatabase();
-module.exports = db;
+const getDatabase = () => {
+  if(!dbInstance) {
+    throw new Error("Database not initialized. Call setupDatabase first.");
+  }
+  return dbInstance;
+}
+
+module.exports = {setupDatabase, getDatabase};

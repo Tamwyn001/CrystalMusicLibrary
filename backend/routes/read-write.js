@@ -1,56 +1,16 @@
-console.log("Loading read-write.js");
-const multer = require( 'multer');
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const { v4 : uuidv4 } = require( 'uuid');
-console.log("  Loading db-utils.js");
 const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks } = require( "../db-utils.js");
-console.log("  Loading db-utils.js done");
-const mm = require('music-metadata-browser');
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
-const fs = require( "fs");
+const { getMulterInstance } = require('../multerConfig.js');
 
 const router = express.Router();
+const isPkg = typeof process.pkg !== 'undefined';
 
-for(const uploadDir of ["music", "covers"]){
-    if (!existsSync(`data/${uploadDir}`)){
-        console.log(`Creating directory uploads/${uploadDir}`);
-        mkdirSync(`data/${uploadDir}`, { recursive: true });
-    }
-}
-
-// Create Multer instances
-const upload = multer({
-    storage: multer.diskStorage({ // Dynamic storage for multiple fields
-        destination: (req, file, cb) => {
-            if (file.fieldname === "music") {
-                cb(null, "data/music/");
-            } else if (file.fieldname === "cover") {
-                cb(null, "data/covers/");
-            } else {
-                cb(new Error("Invalid file field"));
-            }
-        },
-        filename: (req, file, cb) => {
-            if (file.fieldname === "music") {
-                const fileName = JSON.parse(req.body.trackMeta).id;
-                const ext = file.originalname.split(".").pop();
-                cb(null, `${fileName}.${ext}`); // Keep original name
-                file.uuid = fileName;
-            } else if (file.fieldname === "cover") {
-                console.log(req.body.album);
-                const album = JSON.parse(req.body.album);
-                cb(null, `${album.uuid}.${album.ext}`); // Give the albums name to the cover
-            }
-        },
-    }),
-    limits: { fieldSize: 25 * 1024 * 1024,
-                fileSize: 2 * 1024 * 1024 * 1024 // limit individual file size (2GB)
-     } //  MB limit
-
-});
+const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
+const upload = getMulterInstance(uploadPath);
 
 
 router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), async (req, res) =>  {
@@ -63,19 +23,15 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     //the subroute for uploading tracks
     //link tracks to albumUuid
     const musicFileProcess = new Promise(async (resolve, reject) => {
-        const tracksMeta = await    // mm.parseFile(req.files.music[0].path);
-            mm.parseBlob(fs.readFileSync(req.files.music[0].path)) 
-            .then(metadata => console.log(metadata))
-            .catch(err => console.error(err)); //comonJS freindly
         const meta = JSON.parse(req.body.trackMeta);
         console.log(meta);
         let file = req.files.music[0];
         file.uuid = meta.id;
         file.albumId = meta.albumUuid;
-        file.title = (meta.title) ? meta.title : tracksMeta.common.title || file.originalname;
-        file.year = tracksMeta.common.year;
-        file.no = tracksMeta.common.track.no;   
-        file.duration = tracksMeta.format.duration;
+        file.title = (meta.title) ? meta.title : file.originalname;
+        file.year = meta.year;
+        file.no = meta.no;   
+        file.duration = meta.duration;
 
     try{
         addTracks([file]);
@@ -152,7 +108,7 @@ router.get("/trackInfos/:id", async (req, res) => {
 });
 
 router.get("/shortTrackInfos/:id", async (req, res) => {
-    console.log("Getting short track infos for track: " + getTrackNameCover(req.params.id));
+    // console.log("Getting short track infos for track: " + getTrackNameCover(req.params.id));
     res.json(getTrackNameCover(req.params.id));
 });
 
@@ -202,7 +158,7 @@ const runServerStats = () => {
   ]).then( ( [  musicSize, coversSize ] ) => {
     insertNewServerState( musicSize, coversSize );
     runningServerStats = false; // Reset the flag after execution
-    console.log( 'Server stats updated:', { coversSize, musicSize } );
+    console.log(`  . 📊     Server stats updated`, { coversSize, musicSize });
   } ).catch( error => {
     console.error( 'Error calculating directory size:', error );
     runningServerStats = false;

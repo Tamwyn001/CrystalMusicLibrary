@@ -1,0 +1,30 @@
+.account-content{
+    background-color: aliceblue;
+    height: calc(100% );
+    max-width: 1200px;
+    border-radius: 20px;
+    width: 100%;
+    margin-top: 20px;
+    padding: 20px;
+}
+.account-page{
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}
+
+.account-container{
+    display: flex;
+    flex-direction: row;
+}
+.account-container > svg {
+    max-width: 300px;
+}
+.account-info{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    flex: 1;
+}

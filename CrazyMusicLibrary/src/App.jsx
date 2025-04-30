@@ -9,7 +9,9 @@ import ArtistView from './pages/ArtistView';
 import './App.css';
 import './assets/palette.svg'
 import { AudioPlayerProvider } from './GlobalAudioProvider';
-
+import NotFound from './pages/NotFound';
+import Account from './pages/Account';
+import Settings from './pages/Settings';
 function App() {
 
 
@@ -17,6 +19,7 @@ function App() {
         <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
             <Routes>    
                 <Route path="/" element={<Authentification />} />
+                
                     <Route element={<Layout />}>
                         <Route path='home' element={<Home />}/>
                         <Route path="albums" element={<Albums />}/>
@@ -24,6 +27,9 @@ function App() {
                         <Route path="artists" element={<Artist />} />
                         <Route path="artists/:artistId" element={<ArtistView />}/>
                     </Route>
+                    <Route path="account" element={<Account />} /> 
+                    <Route path="settings" element={<Settings />} /> 
+                    <Route path="*" element={<NotFound />} /> 
             </Routes>
         </AudioPlayerProvider>
     );

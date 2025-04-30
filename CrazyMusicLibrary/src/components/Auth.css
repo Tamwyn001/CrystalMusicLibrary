@@ -13,6 +13,10 @@ img{
     background-color: aliceblue;
     border-radius: 20px;
     padding: 10px 20px;
+    height: 600px;
+}
+.authDiv > svg{
+    max-width: 200px;
 }
 
 .authDiv > form {
@@ -32,3 +36,32 @@ input, textarea, select{
     caret-color: #000;      /* optional: change blinking cursor color */
 
 }
+
+.loginFeedback{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    margin-top: 20px;
+    gap : 10px;
+}
+
+.loginFeedback[sucess="true"]{
+    color: green;
+}
+.loginFeedback[sucess="false"]{
+    color: red;
+}
+
+.loginFeedback path{
+    stroke-dasharray: 60;
+    stroke-dashoffset: 0;
+    animation: dash 0.5s linear;
+}
+
+@keyframes dash {
+    from {
+        stroke-dashoffset: 0;
+        }
+    to {
+        stroke-dashoffset: 10;
+    }}

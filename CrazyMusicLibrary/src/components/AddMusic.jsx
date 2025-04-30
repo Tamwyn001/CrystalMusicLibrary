@@ -174,6 +174,11 @@ const AddMusic = ({closeOverlay}) => {
                 meta.common.album = meta.common.title;
                 modifiedMeta.album = meta.common.title;
             }
+            modifiedMeta.duration = meta.format.duration;
+            modifiedMeta.year = meta.common.year;
+            modifiedMeta.no = meta.common.track?.no || 0;
+            modifiedMeta.title = meta.common.title;
+
             localMetadatas.splice(index, 0, meta); //insert the metadata at the index of the track
             setFinishedMeta(localMetadatas.length);
         }));       

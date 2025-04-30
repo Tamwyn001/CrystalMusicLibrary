@@ -1,8 +1,5 @@
 //Arto Steffan 2025
 //API routes for authentication
-const multer = require('multer');
-const upload = multer();
-console.log("   Multer imported.");
 
 // const LoginStatus = {
 //     NONE: "none",
@@ -14,29 +11,26 @@ console.log("   Multer imported.");
 
 const express = require("express");
 const router = express.Router();
-console.log("   Express imported.");
-const db = require("../db.js"); 
-console.log("   Database imported.");
+const {getDatabase} = require("../db.js"); 
 const {currentDate} = require("../lib.js");
-console.log("   Lib imported.");
 const jwt = require("jsonwebtoken");
-console.log("   JWT imported.");
+const { getMulterInstance } = require("../multerConfig.js");
 // import { sanitizeBody } from "../lib.js";
 //fetch auth
+const db = getDatabase();
+const upload = getMulterInstance(process.env.CML_DATA_PATH_RESOLVED);
 
 router.get("/any-user", (req, res) => {
-    console.log("Fetching all users");
     const allUsers = db.prepare("SELECT * FROM users").all();
-    console.log(allUsers);
     res.json(allUsers);
 });
 
 router.post("/register", upload.none() ,async (req, res) => {
-    console.log(req.body);
     const { email, password, name } = req.body;
     const isFirstUser = db.prepare("SELECT * FROM users").all().length === 0;
     const role = isFirstUser ? "admin" : "user";
     db.prepare("INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)").run([email, password, name ,role, currentDate()]);
+    console.log("User registered: \x1b[36m", name, "\x1b[0m");
     res.json({ message: "User registered successfully" });
 
 });
@@ -47,7 +41,7 @@ router.post("/login",
         if (userQuery === undefined) { return res.status(401).json({ success: false, message: "Invalid credentials" });}
         console.log("User found: ", userQuery);
         const token = jwt.sign(
-            { email : userQuery.email, name : userQuery.username },
+            { email : userQuery.email, username : userQuery.username },
             process.env.JWT_SECRET,
             { expiresIn: process.env.JWT_TOKEN_EXPIRES_IN+"h" });
         
@@ -60,7 +54,7 @@ router.post("/login",
 
         });
 
-        res.json({success : true, message: "Login successful", user : userQuery.email});
+        res.json({success : true, message: "Login successful", username : userQuery.username});
     });
 
 

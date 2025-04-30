@@ -2,8 +2,18 @@ import { useNavigate  } from "react-router-dom"
 import './auth.css'
 import apiBase from "../../APIbase";
 import CML_logo from "./CML_logo";
-
+import ThreePointsLoader from "./ThreePointsLoader";
+import { IconCheck, IconX } from "@tabler/icons-react";
+import { useEffect, useState } from "react";
+const LoginStatus = {
+    FETCHING : "fetching",
+    SUCCESS : "success",
+    REJECTED : "rejected",
+    NONE: "none"
+};
 const Register = () => {
+    const [status, setStatus] = useState(LoginStatus.NONE);
+    const [displayedStatus, setDisplayedStatus] = useState(LoginStatus.NONE);
     const navigate = useNavigate();
     const handleLogin = async (e) => {
         e.preventDefault() // prevent form reload
@@ -21,13 +31,41 @@ const Register = () => {
         const json = await res.json()
     
         if (res.ok) {
-        alert('User login successfully')
-        navigate('/home');
+            localStorage.setItem('username', json.username)
+            setStatus(LoginStatus.SUCCESS)
         } else {
-        alert(json.error)
+            setStatus(LoginStatus.REJECTED)
         }
       }
-
+      const RequestStatus = () => {
+        switch (displayedStatus) {
+            case LoginStatus.FETCHING:
+                return <ThreePointsLoader/>
+            case LoginStatus.SUCCESS:
+                return (<div className="loginFeedback" sucess="true"><IconCheck className="successIcon" /><span>Logged in</span></div>)
+            case LoginStatus.REJECTED:
+                return (<div className="loginFeedback" sucess="false"><IconX className="failIcon" /><span>Wrong credentials</span></div>)
+            default:
+                return null
+        }
+      }
+    
+    useEffect(() => {
+        setDisplayedStatus(status)
+        switch (status) {
+            case LoginStatus.REJECTED:
+                setTimeout(() => {
+                    setDisplayedStatus(LoginStatus.NONE)
+                }, 1000)
+            case LoginStatus.SUCCESS:
+                setTimeout(() => {
+                    navigate('/home')
+                }, 1000)
+                break
+            default:
+                break
+        }
+    }, [status])
 
     return (
         <div className="authDiv">
@@ -41,6 +79,7 @@ const Register = () => {
             <input type="password" placeholder="Password" name="password"/>
             <button type="submit">Login </button>
         </form>
+        <RequestStatus/>
         </div>
     );
 }

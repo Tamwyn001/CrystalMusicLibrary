@@ -8,6 +8,7 @@ import { useAudioPlayer } from '../GlobalAudioProvider'
 import AudioControls from './AudioControls'
 import CML_logo from './CML_logo.jsx'
 import MusicQueue from './MusicQueue.jsx'
+import { useNavigate } from 'react-router-dom'
 
 
 const Header = () => {
@@ -17,6 +18,7 @@ const Header = () => {
     const [queueShown, setQueueShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl} = useAudioPlayer();
+    const navigate = useNavigate();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
         if(visible){
@@ -67,10 +69,12 @@ const Header = () => {
     ];
         setLogoColors(colors[Math.floor(Math.random() * colors.length)])
     }, []);
+
+
     return(
 
     <header className="header">
-        <div className="header__logo">
+        <div className="header__logo" onClick={() => navigate('/home')}>
             <CML_logo col1={logoColors.col1} col2={logoColors.col2}/>
             <h1>CML</h1>
         </div>

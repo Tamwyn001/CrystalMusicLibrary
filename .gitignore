@@ -28,3 +28,4 @@ docker.cmd
 
 /db/*
 !db/*.sql
+/pkg-dist

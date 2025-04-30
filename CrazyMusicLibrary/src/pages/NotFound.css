@@ -1,0 +1,12 @@
+.not-found{
+    margin: auto;
+    background-color: aliceblue;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
+    width: 500px;
+    border-radius: 20px;
+    position: fixed;
+    top: calc(50% - 200px);
+    left: calc(50% - 250px);
+}

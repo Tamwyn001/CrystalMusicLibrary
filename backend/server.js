@@ -1,13 +1,61 @@
-console.log(`Initializing routes`);
-
 const express = require("express");
 const cors = require("cors");
 const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
-const db = require("./db.js");
-const { networkInterfaces } = require("os");
 const path = require("path");
-console.log(`Starting authentication server`);
+const isPkg = typeof process.pkg !== "undefined";
+const { existsSync, mkdirSync } = require("fs");
+// Public path handling (for /dist and static files)
+const publicPath = isPkg
+  ? path.join(path.dirname(process.execPath), 'dist')
+  : path.join(__dirname, 'dist');
+
+// .env loading (only outside pkg)
+const basePath = isPkg ? path.dirname(process.execPath) : __dirname;
+
+const dotEnvPath = path.join(basePath, ".env");
+dotenv.config({ path: dotEnvPath });
+console.log(`✅ Environment variables loaded`);
+
+const rawPathData = process.env.CML_DATA_PATH || './data';
+const resolvedDataPath = path.isAbsolute(rawPathData)
+  ? rawPathData
+  : (isPkg
+      ? path.join(path.dirname(process.execPath), rawPathData)
+      : path.resolve(__dirname, rawPathData));
+
+console.log("Data path: ", resolvedDataPath);
+for(const uploadDir of ["music", "covers"]){
+    if (!existsSync(`${resolvedDataPath}/${uploadDir}`)){
+        console.log(`Creating directory ${resolvedDataPath}/${uploadDir}`);
+        mkdirSync(`${resolvedDataPath}/${uploadDir}`, { recursive: true });
+    }
+}
+process.env.CML_DATA_PATH_RESOLVED = resolvedDataPath;
+
+const rawPathDatabase = process.env.CML_DATABASE_PATH || './db';
+
+const resolvedDatabasePath =path.isAbsolute(rawPathDatabase)
+? rawPathDatabase
+: (isPkg
+    ? path.join(path.dirname(process.execPath), rawPathDatabase)
+    : path.resolve(__dirname, rawPathDatabase));
+
+  console.log("Database path: ", resolvedDatabasePath);
+if (!existsSync(resolvedDatabasePath)){
+  console.log(`Creating directory ${resolvedDatabasePath}`);
+  mkdirSync(resolvedDatabasePath, { recursive: true });
+}
+
+// Initialize DB once
+const { setupDatabase } = require('./db.js');
+setupDatabase(resolvedDatabasePath, basePath);
+
+
+
+
+const { networkInterfaces } = require("os");
+
 const authRouter = require("./routes/auth.js");
 console.log(`✅ Auth routes initialized`);
 const { router : readWriteRouter, runServerStats } = require("./routes/read-write.js");
@@ -19,18 +67,10 @@ const { fileURLToPath } = require("url");
 // const __filename = fileURLToPath(import.meta.url);
 // const __dirname = path.dirname(__filename);
 
-const isPkg = typeof process.pkg !== "undefined";
 
-// Public path handling (for /dist and static files)
-const publicPath = isPkg
-  ? path.join(path.dirname(process.execPath), 'dist')
-  : path.join(__dirname, 'dist');
 
-// .env loading (only outside pkg)
-if (!isPkg) {
-  dotenv.config({ path: path.join(__dirname, '.env') });
-}
-console.log(`✅ Environment variables loaded`, process.env);
+
+
 // -----------------------------------
 // 📡 Get local IP
 // -----------------------------------
@@ -55,7 +95,7 @@ const localIP = getLocalIP();
 // -----------------------------------
 // 🚀 Initialize server
 // -----------------------------------
-console.log(`✅ Routes initialized`);
+
 const app = express();
 
 const allowedDomains = [
@@ -68,10 +108,14 @@ const allowedDomains = [
   "http://192.168.10.134:4173",
   "http://192.168.10.134:5173"
 ];
-
-console.log("Serving static files from", publicPath);
+console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
-app.use('/covers', express.static(path.join(__dirname, 'data/covers')));
+
+
+
+
+const coversPath = path.join(basePath, "data", "covers");
+app.use('/covers', express.static(coversPath));
 
 app.use(cors({
   origin: function (origin, callback) {
@@ -82,7 +126,13 @@ app.use(cors({
   credentials: true,
   exposedHeaders: ["Content-Disposition"]
 }));
-
+///relax the csp to allow serving own files for the pkg:
+// if(isPkg){
+//   app.use((req, res, next) => {
+//     res.setHeader("Content-Security-Policy", "default-src 'self'; img-src 'self' data: http: https:; script-src 'self'; style-src 'self' 'unsafe-inline'");
+//     next();
+//   });
+// }
 app.use(express.json());
 app.use(bodyParser.json());
 app.use(cookieParser());
@@ -92,7 +142,7 @@ app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
-
+console.log(`✅ Routes initialized`);
 app.get("/isResponding", (req, res) => {
   res.json({ message: "Server is responding" });
 });
@@ -102,21 +152,38 @@ app.use((err, req, res, next) => {
   res.status(500).json({ message: "Server error" });
 });
 
+// Fallback to React app for other routes.
+//If user navs to /home with react its fine, this is pure JS.
+//However when calling /home themselves, this is does not exist on the srever
+//We then serve the basic index.html file
+//! after all the other routes
+try {
+  app.get('/{*splat}', (req, res) => {
+    res.sendFile(path.join(basePath, 'dist', 'index.html'));
+  });
+} catch (err) {
+  console.error('Failed to create fallback route:', err);
+}
+
 // -----------------------------------
 // 🟢 Start server
 // -----------------------------------
 const PORT = 4590;
+runServerStats()
 app.listen(PORT, () => {
-  console.log(`✅ Server running at http://${localIP}:${PORT}`);
+  console.log(`==========================================\n
+\x1b[92m. 🚀     Crazy Music Library Server online\x1b[0m\n
+✅ Open this link to access the \x1b[105mCrazy Music Library\x1b[0m\x1b[96m http://${localIP}:${PORT}\x1b[0m\n
+==========================================`);
 });
 
-runServerStats()
-console.log(`  . 📊     Server stats updated`);
+
+
 
 // -----------------------------------
 // 🌐 Open browser (only when NOT packaged)
 // -----------------------------------
-if (!isPkg) {
-  const open = require("open");
-  open.default(`http://${localIP}:${PORT}`);
-}
+// if (!isPkg) {
+//   const open = require("open");
+//   open.default(`http://${localIP}:${PORT}`);
+// }
