@@ -7,6 +7,7 @@
 
 ![alt text](./GitBanner_trans.png "The Crystal Music Library is hosted on your laptop, and avaliable in the local network.")
 
+![alt text](./HowTo.png "The Crystal Music Library is hosted on your laptop, and avaliable in the local network.")
 
 ## Setup
 
