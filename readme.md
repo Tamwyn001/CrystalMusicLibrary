@@ -6,8 +6,12 @@
 
 
 ![alt text](./GitBanner_trans.png "The Crystal Music Library is hosted on your laptop, and avaliable in the local network.")
+
+## What the Crystal Music Library is
 <p align="center">
-<img src="HowTo.png"  alt="drawing"  width="600"/></p>
+<img src="HowTo.png"  alt="drawing"  width="600"/>
+</p>
+
 ## Setup
 
 1. Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
