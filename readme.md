@@ -30,3 +30,7 @@
 2. First you will need to register, but later you can just log in.
 3. Add some music with the button ```+```, in the top right corner.
 4. After uploading, refresh the page. 
+
+
+## User system
+If you want to share this with your local network, just register new users, when these open the link.
