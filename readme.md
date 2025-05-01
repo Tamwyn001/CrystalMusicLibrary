@@ -8,3 +8,25 @@
 ![alt text](./GitBanner_trans.png "The Crystal Music Library is hosted on your laptop, and avaliable in the local network.")
 
 
+## Setup
+
+1. Download the executables from the latest release.
+2. Unzip the files to a folder.
+3. Open the ```.env``` file and set the variables:
+
+    ```CML_DATA_PATH``` : Where the music files and the album covers are stored. This can be a heavy directory the more music you add. Default, just next the executable.
+
+    ```CML_DATABASE_PATH``` : Where the database files are stored. Less heavy, they just make some relations between the musics.
+    Default, just next the executable.
+
+    ```CML_PORT``` : [Not supported for now] The port where the server will be hosted. Default is 4590. 
+
+4. Run the ```crystal-music.library.exe``` file on Windows or similar for other OS.
+5. Once the server is running, an IP will be printed, open it in the browser, or on your mobile phone.
+
+
+## Use
+1. Each time you want to use, you need to run the executable and open the address.
+2. First you will need to register, but later you can just log in.
+3. Add some music with the button ```+```, in the top right corner.
+4. After uploading, refresh the page. 
