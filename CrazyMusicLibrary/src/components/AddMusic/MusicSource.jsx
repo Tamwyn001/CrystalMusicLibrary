@@ -2,7 +2,9 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
 
     const handleFileChange = (e) => {
         if (e.target.files) {
+            console.log('New tracks')
             tracksSelected(e.target.files);
+            e.target.files = null; // Reset the input value
         }
     };
     return (

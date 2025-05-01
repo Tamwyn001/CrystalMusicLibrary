@@ -71,8 +71,10 @@ CREATE TABLE tracks(
     path VARCHAR(255) NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     track_number INT,
+    uploaded_by INT,
     PRIMARY KEY (id),
-    FOREIGN KEY (album) REFERENCES albums(id)
+    FOREIGN KEY (album) REFERENCES albums(id),
+    FOREIGN KEY (uploaded_by) REFERENCES users(id)
 );
 
 
@@ -84,7 +86,7 @@ CREATE TABLE artists_to_track(
     FOREIGN KEY (taking_part) REFERENCES tracks(id)
 );
 
-CREATE TABLE serverStats(
+CREATE TABLE server_stats(
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
     total_users INT DEFAULT 0,
     total_artists INT DEFAULT 0,

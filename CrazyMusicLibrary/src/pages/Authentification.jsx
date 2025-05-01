@@ -25,7 +25,8 @@ const Authentification = () => {
             const resUsers = await fetch(`${apiBase}/auth/any-user`, {method: 'GET'});
             const parsedUsers = await resUsers.json();
             setAreUsers(parsedUsers); 
-            if(parsedUsers.length === 0) {
+            console.log(parsedUsers);
+            if(parsedUsers === 0) {
                 setIsLoading(false);
                 setResult(stauts.REGISTER);
                 return;
@@ -52,6 +53,10 @@ const Authentification = () => {
     if(result === stauts.LOGIN) {
         return <Login />;     
     }
-    return(<Register />)
+    if(result === stauts.REGISTER) {
+        navigate('/register');    
+    }
+   
+    return null;
 }
 export default Authentification;

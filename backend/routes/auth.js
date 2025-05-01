@@ -10,36 +10,44 @@
 // };
 
 const express = require("express");
-const router = express.Router();
-const {getDatabase} = require("../db.js"); 
+const router = express.Router(); 
 const {currentDate} = require("../lib.js");
 const jwt = require("jsonwebtoken");
 const { getMulterInstance } = require("../multerConfig.js");
+const { getUserRole, getUsersCount, checkUserExist, registerNewUser, getAllUsers } = require('../db-utils.js')
 // import { sanitizeBody } from "../lib.js";
 //fetch auth
-const db = getDatabase();
 const upload = getMulterInstance(process.env.CML_DATA_PATH_RESOLVED);
 
 router.get("/any-user", (req, res) => {
-    const allUsers = db.prepare("SELECT * FROM users").all();
-    res.json(allUsers);
+    res.json(getUsersCount());
+});
+
+router.post("/init-admin-pannel", (req, res) => {
+    
+    res.json({users: getAllUsers(), totalStorage: process.env.CML_TOTAL_STORAGE});
 });
 
 router.post("/register", upload.none() ,async (req, res) => {
     const { email, password, name } = req.body;
-    const isFirstUser = db.prepare("SELECT * FROM users").all().length === 0;
-    const role = isFirstUser ? "admin" : "user";
-    db.prepare("INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)").run([email, password, name ,role, currentDate()]);
-    console.log("User registered: \x1b[36m", name, "\x1b[0m");
-    res.json({ message: "User registered successfully" });
+    try{
+        registerNewUser(email, password, name);
+        console.log("User registered: \x1b[36m", name, "\x1b[0m");
+        res.json({ message: "User registered successfully" });
+    }catch (err) {
+        if(err.code === 'SQLITE_CONSTRAINT_UNIQUE'){
+             res.status(500).json({ error: "Email already in use." });
+             return;
+        }
+        console.error("Error registering user:", err);
+        res.status(500).json({ error: "Error registering user." });
+    }
 
 });
 
-router.post("/login", 
-    upload.none(), (req, res) => {
-        const userQuery  = db.prepare("SELECT * FROM users WHERE email = ? AND password = ?").get([req.body.email, req.body.password]);
+router.post("/login", upload.none(), (req, res) => {
+        const userQuery  = checkUserExist(req.body.email, req.body.password);
         if (userQuery === undefined) { return res.status(401).json({ success: false, message: "Invalid credentials" });}
-        console.log("User found: ", userQuery);
         const token = jwt.sign(
             { email : userQuery.email, username : userQuery.username },
             process.env.JWT_SECRET,
@@ -53,7 +61,7 @@ router.post("/login",
             maxAge: parseFloat(process.env.JWT_TOKEN_EXPIRES_IN)*60*60*1000 //N*hours
 
         });
-
+        console.log("Logged in \x1b[36m", userQuery.username, "\x1b[0m")
         res.json({success : true, message: "Login successful", username : userQuery.username});
     });
 
@@ -61,7 +69,6 @@ router.post("/login",
 router.post("/verifyToken", (req, res) => {
     const token = req.cookies.token;
     if (!token) {
-        console.log("Access denied. No token provided.");
         return res.status(401).json({ error: "Access denied. No token provided." });}
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
@@ -77,4 +84,17 @@ router.post("/logout", (req, res) => {
     res.clearCookie("token");
     res.json({success : true, message: "Logout successful"});
 });
+
+router.post("/is-admin", (req, res) => {
+    const token = req.cookies.token;
+    if (!token) {
+        return res.status(401).json({ error: "Access denied. No token provided." });}
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+        res.json(getUserRole(decoded.email) === 'admin')
+    }catch (err) {
+        console.error("Error verifying token:", err);
+        res.status(401).json({ error: "Invalid token." });
+    }
+})
 module.exports = router;

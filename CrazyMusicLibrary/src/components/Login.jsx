@@ -80,6 +80,7 @@ const Register = () => {
             <button type="submit">Login </button>
         </form>
         <RequestStatus/>
+        <p>Don't have an account?</p><button onClick={()=> {navigate('/register')}}>Register</button>
         </div>
     );
 }

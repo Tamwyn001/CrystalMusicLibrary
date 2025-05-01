@@ -61,6 +61,7 @@ console.log(`✅ Auth routes initialized`);
 const { router : readWriteRouter, runServerStats } = require("./routes/read-write.js");
 const cookieParser = require("cookie-parser");
 const { fileURLToPath } = require("url");
+const { default: checkDiskSpace } = require("check-disk-space");
 // -----------------------------------
 // 🛠️ Path handling for ESM & pkg
 // -----------------------------------
@@ -172,11 +173,18 @@ const PORT = 4590;
 runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n
-\x1b[92m. 🚀     Crazy Music Library Server online\x1b[0m\n
-✅ Open this link to access the \x1b[105mCrazy Music Library\x1b[0m\x1b[96m http://${localIP}:${PORT}\x1b[0m\n
+\x1b[92m. 🚀     Crystal Music Library Server online\x1b[0m\n
+✅ The library can be accesed at \x1b[96m http://${localIP}:${PORT}\x1b[0m\n
 ==========================================`);
 });
+const writeNewStorageEnv = async () => {
+  const {free, size} = await checkDiskSpace(resolvedDataPath);
 
+  process.env.CML_TOTAL_STORAGE = size;
+  process.env.CML_FREE_STORAGE = free;
+  console.log(`  . 💾     Storage space: ${process.env.CML_TOTAL_STORAGE} bytes`);
+}
+writeNewStorageEnv();
 
 
 

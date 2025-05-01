@@ -29,3 +29,6 @@ docker.cmd
 /db/*
 !db/*.sql
 /pkg-dist
+GitBanner.pdn
+GitBanner.png
+GitBanner_trans.png

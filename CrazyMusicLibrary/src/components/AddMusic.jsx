@@ -156,15 +156,17 @@ const AddMusic = ({closeOverlay}) => {
     };
 
     const fetchMetadata = async () => {
-        const tracks = pendingTracksForMetaFetch.current;
+        const rawTracks = pendingTracksForMetaFetch.current;
+        const tracks = Array.from(rawTracks)
         setActiveIndex(1);
         let localMetadatas = [];
         let modifiedMetas = trackMetaOverwrite;
+        const relativeShift =  trackMetaOverwrite.length - tracks.length; //get the index just before the new tracks
         //fetch the filenames from the files and parse them
         await Promise.all(
-            Array.from(tracks).map(async (track, index) => {
+            tracks.map(async (track, index) => {
             let meta = await parseBlob(track);
-            let modifiedMeta = modifiedMetas[index];
+            let modifiedMeta = modifiedMetas[index + relativeShift]; //get the modified metadata from the list
             if(!meta.common.title){
                 meta.common.title = track.name;
                 console.log("No title found, using filename: " + track.name);
@@ -183,7 +185,7 @@ const AddMusic = ({closeOverlay}) => {
             setFinishedMeta(localMetadatas.length);
         }));       
         setTrackMetaOverwrite(modifiedMetas); //add the modified metadata to the list
-        return localMetadatas;
+        return localMetadatas; //this is to rebuild the albums
     }
 
 

@@ -13,7 +13,7 @@ img{
     background-color: aliceblue;
     border-radius: 20px;
     padding: 10px 20px;
-    height: 600px;
+    height: calc(100% - 60px);
 }
 .authDiv > svg{
     max-width: 200px;

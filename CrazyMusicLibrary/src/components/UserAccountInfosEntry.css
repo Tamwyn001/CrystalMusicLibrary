@@ -1,0 +1,13 @@
+.user-account-infos-entry{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 30px;
+    background-color: white;
+    border-radius: 20px;
+}
+
+.user-account-infos-entry p {
+    margin: 0;
+}

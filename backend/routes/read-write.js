@@ -1,10 +1,12 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
 const { getMulterInstance } = require('../multerConfig.js');
+const { stat } = require("fs/promises");
+const jwt = require("jsonwebtoken");
 
 const router = express.Router();
 const isPkg = typeof process.pkg !== 'undefined';
@@ -32,14 +34,20 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
         file.year = meta.year;
         file.no = meta.no;   
         file.duration = meta.duration;
+        let addedBy = null;
+        try{
+            const token = req.cookies.token;
+            if (token) {
+                    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+                    addedBy = decoded.email;
+                    addTracks([file], addedBy);
+                    resolve(file.title);
+            }
 
-    try{
-        addTracks([file]);
-        resolve(file.title);
-    }catch(err){
-        console.error("Error adding tracks to the database:", err);
-        reject(err);
-    }
+        }catch(err){
+            console.error("Error adding tracks to the database:", err);
+            reject(err);
+        }
     });
     musicFileProcess.then((trackName) => {console.log("Processed track: " + trackName);});
     res.json({ message: "Files uploaded successfully" });
@@ -175,5 +183,16 @@ router.get("/serverStats", async (req, res) => {
     res.json({date, tracksByteUsage, coversByteUsage, free, size});
 });
 
+router.get("/diskSpace", async (req, res) => {
+    const {free, size} = await checkDiskSpace(process.cwd());
+    res.json({free, size});
+});
+
+router.get("/user-data-usage/:id", async (req, res) => {
+    const userId = req.params.id;
+    const paths = getTracksAddedByUsers(userId);
+    res.json((await Promise.all(paths.map(async ({path}) =>  stat(path))))
+    .reduce((accumulator, { size } ) => accumulator + size, 0));
+});
 
 module.exports = {router, runServerStats};

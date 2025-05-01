@@ -15,7 +15,7 @@
   },
   "type": "commonjs",
   "bin": "server.js",
-  "name": "crazy-music-library",
+  "name": "crystal-music-library",
   "pkg": {
     "assets": [
       "dist/**/*",

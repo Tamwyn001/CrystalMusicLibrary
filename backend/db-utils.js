@@ -8,14 +8,12 @@ const batchInsert = (table, columns, params, ignore = false) => {
     db.prepare(`INSERT ${ignore? "OR IGNORE" : ''} INTO ${table} (${columns}) VALUES ${placeholders}`).run(params.flat().flat());
     
 }
- const addTracks = (tracks) => {
-
+ const addTracks = (tracks, userAdding) => {
     // Function to add tracks to the database
-    // console.log(tracks);6
     const localTime = currentDate();
-
-    batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration", 
-        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime, track.no, track.duration]));
+    const {id : userAddingId} = db.prepare("SELECT id FROM users WHERE email = ?").get(userAdding);
+    batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration, uploaded_by", 
+        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime, track.no, track.duration, userAddingId || 1]));
 }
 
 
@@ -109,7 +107,6 @@ const batchInsert = (table, columns, params, ignore = false) => {
 }
 
  const getTrackCoverPath = (trackId) => {
-    console.log("fetching cover for song", trackId);
     const query = `
         SELECT a.cover AS cover
         FROM tracks AS t JOIN albums AS a ON t.album = a.id
@@ -143,7 +140,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
  const latestServerStats = () => {
     const query = `
         SELECT date, tracks_byte_usage, covers_byte_usage
-        FROM serverStats
+        FROM server_stats
         ORDER BY date DESC
         LIMIT 1
     `;
@@ -151,7 +148,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
 }
 
  const insertNewServerState = (tracksByteUsage, coversByteUsage) => {
-    const query =  `INSERT OR IGNORE INTO serverStats (date, covers_byte_usage, tracks_byte_usage) VALUES (?,?,?)`;
+    const query =  `INSERT OR IGNORE INTO server_stats (date, covers_byte_usage, tracks_byte_usage) VALUES (?,?,?)`;
     db.prepare(query).run([currentDate(), coversByteUsage, tracksByteUsage] );
 }
 
@@ -197,6 +194,39 @@ const batchInsert = (table, columns, params, ignore = false) => {
     return tracks;
 }
 
+const getUserRole = (email) =>{
+    const query = `SELECT role FROM users WHERE email = ?`
+    const res = db.prepare(query).get(email);
+    return res.role
+}
+
+const getUsersCount = () => {
+    const res = db.prepare("SELECT COUNT(*) as total FROM users").get();
+    return res.total
+}
+
+const getAllUsers = () => {
+    const res = db.prepare("SELECT id, username, email, role FROM users ORDER BY id ASC").all();
+    return res
+}
+
+const checkUserExist = (email, password) =>{
+    return db.prepare("SELECT * FROM users WHERE email = ? AND password = ?").get([email, password]);
+}
+
+const registerNewUser = (email, password, name) => {
+    const isFirstUser = getUsersCount() === 0;
+    const role = isFirstUser ? "admin" : "user";
+    const query = "INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)";
+    db.prepare(query).run([email, password, name ,role, currentDate()]);
+}
+
+const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/album/playlist mapping, please use ...
+    const query = `SELECT path from tracks WHERE uploaded_by = ?`;
+    return db.prepare(query).all(id);
+}
+
+
 module.exports = {addTracks,
     addAlbums,
     getAlbums,
@@ -212,4 +242,10 @@ module.exports = {addTracks,
     getTrackNameCover,
     getArtists,
     getArtist,
-    getArtistTracks };
+    getArtistTracks,
+    getUserRole,
+    getUsersCount,
+    checkUserExist,
+    registerNewUser,
+    getAllUsers,
+    getTracksAddedByUsers };
