@@ -226,22 +226,6 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
     return db.prepare(query).all(id);
 }
 
-const findAudioEntity = (id) => {
-    const queryTracks = `
-        SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
-        JOIN albums a ON t.album = a.id
-        WHERE t.title LIKE ?;
-    `;
-    const queryAlbums = `
-        SELECT a.id AS id, a.title as name, a.cover as path FROM albums a WHERE a.title LIKE ?;
-    `;
-    const queryArtsits = `
-        SELECT a.id AS id, a.name as name FROM artists_descs a WHERE a.name LIKE ?;
-    `;
-
-    return ({tracks: db.prepare(queryTracks).all(`%${id}%`), albums : db.prepare(queryAlbums).all(`%${id}%`), artists: db.prepare(queryArtsits).all(`%${id}%`)});
-}
-
 
 module.exports = {addTracks,
     addAlbums,
@@ -264,5 +248,4 @@ module.exports = {addTracks,
     checkUserExist,
     registerNewUser,
     getAllUsers,
-    getTracksAddedByUsers,
-    findAudioEntity };
+    getTracksAddedByUsers };

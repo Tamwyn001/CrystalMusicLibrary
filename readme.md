@@ -46,6 +46,6 @@
 If you want to share this with your local network, just register new users, when these open the link.
 
 ## Roadmap
-- **v2.0.0**: 💿 Playlists (tagging), genres, edit albums, searchbar
-- **v3.0.0**: 🛠️ Relocate songs, cross fading, internet radio
-- **v4.0.0**: 📈 Library graph, complexe song use analysis
+- **v2.0.0**: 💿 Playlists (tagging), genres, edit albums, search-bar
+- **v3.0.0**: 🛠️ Relocate songs, cross-fading, internet radio
+- **v4.0.0**: 📈 Library graph, complex song use analysis

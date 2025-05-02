@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails } from '@tabler/icons-react'
+import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
@@ -98,6 +98,16 @@ const Header = () => {
             { queueShown && <MusicQueue hideComponent={() => setQueueShown(false)}/>}
         </div>
         <div className="headerRight">
+            <div className="serach-button-div">
+                <div className='keyboard-key'>
+                    <span>CTRL</span>
+                </div>
+                <span>+</span>
+                <div className='keyboard-key' style={{marginRight: 'auto'}}>
+                    <span>K</span>
+                </div>
+                <IconSearch/>
+            </div>
             <IconMusicPlus className="addMusicButton buttonRound" onClick={() => openNewMusic()}/>
             <UserDropdown />
         </div>

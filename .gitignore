@@ -26,7 +26,7 @@ backend/.env
 docker.cmd
 /backend/data
 
-/db/*
+db
 !db/*.sql
 pkg-dist/
 GitBanner.pdn

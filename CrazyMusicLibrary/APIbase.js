@@ -5,5 +5,5 @@ const getApiBase = () => {
     }
     return `http://${hostname}:4590`; // assume same host on local network
   };
-  const apiBase = getApiBase();
+const apiBase = getApiBase();
 export default apiBase;

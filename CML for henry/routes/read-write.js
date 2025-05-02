@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -194,9 +194,5 @@ router.get("/user-data-usage/:id", async (req, res) => {
     res.json((await Promise.all(paths.map(async ({path}) =>  stat(path))))
     .reduce((accumulator, { size } ) => accumulator + size, 0));
 });
-
-router.get("/search/:query", async (req, res) => {
-    res.json(findAudioEntity(req.params.query));
-})
 
 module.exports = {router, runServerStats};

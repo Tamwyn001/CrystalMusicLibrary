@@ -81,7 +81,7 @@ export const AudioPlayerProvider = ({ children }) => {
             credentials: 'include'
         });
         if (!res.ok) {
-            throw new Error('Network response was not ok');
+            throw new Error('Network response was not ok'); 
         }
         const data = await res.json();
         // console.log('Adding album to queue', data);

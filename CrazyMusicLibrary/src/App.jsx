@@ -14,27 +14,30 @@ import Account from './pages/Account';
 import Settings from './pages/Settings';
 import AdminPannel from './pages/AdminPannel';
 import Register from './components/Register';
+import GlobalActionBar from './GlobalActionBar';
 function App() {
 
 
     return (
-        <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
-            <Routes>    
-                <Route path="/" element={<Authentification />} />
-                <Route path="register" element={<Register />} />
-                    <Route element={<Layout />}>
-                        <Route path='home' element={<Home />}/>
-                        <Route path="albums" element={<Albums />}/>
-                        <Route path="albums/:albumId" element={<AlbumView />}/>
-                        <Route path="artists" element={<Artist />} />
-                        <Route path="artists/:artistId" element={<ArtistView />}/>
-                    </Route>
-                    <Route path="account" element={<Account />} /> 
-                    <Route path="settings" element={<Settings />} /> 
-                    <Route path="admin-pannel" element={<AdminPannel />} />
-                    <Route path="*" element={<NotFound />} /> 
-            </Routes>
-        </AudioPlayerProvider>
+        <GlobalActionBar>
+            <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
+                <Routes>    
+                    <Route path="/" element={<Authentification />} />
+                    <Route path="register" element={<Register />} />
+                        <Route element={<Layout />}>
+                            <Route path='home' element={<Home />}/>
+                            <Route path="albums" element={<Albums />}/>
+                            <Route path="albums/:albumId" element={<AlbumView />}/>
+                            <Route path="artists" element={<Artist />} />
+                            <Route path="artists/:artistId" element={<ArtistView />}/>
+                        </Route>
+                        <Route path="account" element={<Account />} /> 
+                        <Route path="settings" element={<Settings />} /> 
+                        <Route path="admin-pannel" element={<AdminPannel />} />
+                        <Route path="*" element={<NotFound />} /> 
+                </Routes>
+            </AudioPlayerProvider>
+        </GlobalActionBar>
     );
 }
 
