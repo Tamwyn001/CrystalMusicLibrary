@@ -16,12 +16,19 @@
 1. Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
 2. Unzip the files to a folder.
 3. Open the ```.env``` file and set the variables:
-
-    ```CML_DATA_PATH``` : Where the music files and the album covers are stored. This can be a heavy directory the more music you add. Default, just next the executable.
-
-    ```CML_DATABASE_PATH``` : Where the database files are stored. Less heavy, they just make some relations between the musics.
-    Default, just next the executable.
-
+    ```env
+    CML_DATA_PATH = './data';
+    # Where the music files and the album covers are stored.
+    # This can be a heavy directory the more music you add.
+    # Default, just next the executable.
+    ```
+    ```env
+    CML_DATABASE_PATH = './db';
+    # Where the database files are stored. 
+    # Less heavy, they just make some relations between the musics.
+    # Default, just next the executable.
+    ```
+    
     ```CML_PORT``` : [Not supported for now] The port where the server will be hosted. Default is 4590. 
 
 4. Run the ```crystal-music.library.exe``` file on Windows or similar for other OS.
