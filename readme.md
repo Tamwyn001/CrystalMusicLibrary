@@ -13,7 +13,6 @@
 </p>
 
 ## Setup
-
 1. Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
 2. Unzip the files to a folder.
 3. Open the ```.env``` file and set the variables:
@@ -38,3 +37,8 @@
 
 ## User system
 If you want to share this with your local network, just register new users, when these open the link.
+
+## Roadmap
+- **v2.0.0**: 💿 Playlists (tagging), genres, edit albums, searchbar
+- **v3.0.0**: 🛠️ Relocate songs, cross fading, internet radio
+- **v4.0.0**: 📈 Library graph, complexe song use analysis
