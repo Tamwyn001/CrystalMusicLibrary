@@ -1,18 +1,29 @@
-import { createContext, use, useContext, useEffect, useRef, useState } from "react";
-import { IconChevronRight, IconPlayerPlay, IconSearch } from "@tabler/icons-react";
+import { createContext, use, useContext, useEffect, useRef, useState, memo } from "react";
+import { IconArrowsShuffle, IconCheck, IconChevronRight, IconInfoCircle, IconPlayerPlay, IconSearch, IconX } from "@tabler/icons-react";
 import ActionBarEntry from "./components/ActionBarEntry";
 import apiBase  from "../APIbase.js";
+import { useAudioPlayer } from "./GlobalAudioProvider.jsx";
 const GlobalActionBarContext = createContext();
-
+import { v4 as uuidv4 } from "uuid";
+import { useNavigate } from "react-router-dom";
 const commandCodes = {
     SEARCH : 'search',
     OPEN_ACTION_BAR : 'open_action_bar',
     CLOSE_ACTION_BAR : 'close_action_bar',
+    PLAY_SONG : 'play_song',
+    OPEN_ALBUM : 'open_album',
+    OPEN_ARTIST : 'open_artist',
+    PLAY_LIBRARY_RANDOM : 'play_library_random',
+    TOGGLE_PLAY_PAUSE : 'toggle_play_pause',
 }
-
+const notifTypes = {
+    SUCCESS : 'success',
+    ERROR : 'error',
+    INFO : 'info'
+}
 const actions = [ //!! very important, keep order
     {
-        name: 'search',
+        name: 'Search',
         code: commandCodes.SEARCH,
         description: 'Search for a song, an album, a genra, an artist',
         key: 'k',
@@ -29,30 +40,73 @@ const actions = [ //!! very important, keep order
         keywords: []
     },
     {
-        name: 'open action bar',
-        code: commandCodes.CLOSE_ACTION_BAR,
+        name: 'Play the library in shuffle',
+        code: commandCodes.PLAY_LIBRARY_RANDOM,
         description: '',
-        key:"Escape", //spacebar
+        key:"r", //spacebar
+        modifier: 'ctrl',
+        keywords: ["play", "shuffle", "random", "library", "all", "all songs", "all albums", "all artists"],
+        icon: () => {return <IconArrowsShuffle className="action-bar-current-logo" />} 
+    },
+    {
+        name: 'Toggle Play pause',
+        code: commandCodes.TOGGLE_PLAY_PAUSE,
+        description: '',
+        key:" ", //spacebar
         modifier: '',
-        keywords: []
-    }
-]
+        keywords: ["pause", "play", "toggle", "play/pause", "play pause"],
+        icon: () => {return <IconArrowsShuffle className="action-bar-current-logo" />} 
+    },
+];
 
 const GlobalActionBar = ({children}) => {
     const boundEvents = useRef([]); //{callback, code}
     const [showActionBar, setShowActionBar] = useState(false);
+    const showActionBarRef = useRef(showActionBar); // to avoid infinite loop
     const [actionBarCommand, setActionBarCommand] = useState(null);
     const [showingActionLogo, setShowingActionLogo] = useState(false);
     const [currentCommand, setCurrentCommand] = useState(null); //elem of actions
     const [proposedCommands  , setProposedCommands] = useState([]); //elem of actions
+    const [currentActionLogo, setCurrentActionLogo] = useState(null); //elem of actions
+    const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused} = useAudioPlayer();
+    const navigate = useNavigate();
+    const [currentNotification, setCurrentNotification] = useState(null); //{message, state} state = "success" | "error" | "info"
+
+    const addNotification = (message, state) => {
+        setCurrentNotification({message, state});
+        setTimeout(() => {
+            const elem =  document.getElementById("notification-parent");
+            elem.setAttribute("direction","");
+            void elem.offsetWidth; // <== forces reflow
+            elem.setAttribute("direction", "hide");
+
+            setTimeout(() => {
+                setCurrentNotification(null);
+            }, 300);
+        }, 2000);
+    }
+
+    useEffect(() => {
+        if(!currentNotification) {return}
+        document.getElementById("notification-parent").setAttribute("direction","show");
+    },[currentNotification]);
     const keyCallbackBinder = (e) => {
-        if(e.key == "Control") {return}
-        const actionToCall = actions.find((action) => { return (
-             ((e.key === action.key) && (
-                    (!action.modifier || action.modifier == '') ? true : ((action.modifier === 'ctrl' ? e.ctrlKey : true) 
-                                      || (action.modifier === 'shift' ? e.shiftKey : true)
-                                      || (action.modifier === 'alt' ? e.altKey : true)
-                                      || (action.modifier === 'meta' ? e.metaKey : true)))))}
+        if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
+        if(e.key == "Control" || currentCommand) {return}
+        const actionToCall = actions.find( (action) => {
+            const keyMatch = e.key === action.key;
+          
+            if (!keyMatch) return false;
+            if (!action.modifier || action.modifier === "") return true;
+          
+            const modifiers = {
+              ctrl: e.ctrlKey,
+              shift: e.shiftKey,
+              alt: e.altKey,
+              meta: e.metaKey,
+            };
+          
+            return modifiers[action.modifier];}
         );   
         if(!actionToCall) {return}
     
@@ -74,16 +128,21 @@ const GlobalActionBar = ({children}) => {
         }
         boundEvents.current.push(event);
     }
+    const toggleTrackPauseRef = useRef(toggleTrackPaused);
+    toggleTrackPauseRef.current = toggleTrackPaused; 
+
     const registerDefaultEvents = () => {
         registerNewEvent(() => {setShowActionBar(true); setActionBarCommand(null)}, commandCodes.OPEN_ACTION_BAR);
         registerNewEvent(() => {setShowActionBar(false); setActionBarCommand(null)}, commandCodes.CLOSE_ACTION_BAR);
         registerNewEvent(() => {setShowActionBar(true); setActionBarCommand(commandCodes.SEARCH);}, commandCodes.SEARCH);
+        registerNewEvent(() => {toggleTrackPauseRef.current()}, commandCodes.TOGGLE_PLAY_PAUSE); //wee need the ref, otherwise it memorizes the value of the function at load: false
     }
 
     useEffect(() => {
         if (showActionBar) {
             document.getElementById("actionbar-searchbar").focus();
         }
+        showActionBarRef.current = showActionBar;
     },[showActionBar]);
     useEffect(() => {console.log(actionBarCommand)},[actionBarCommand]);
     useEffect(() => {
@@ -96,16 +155,18 @@ const GlobalActionBar = ({children}) => {
             // }
         }
     }, []);
-
-    const CurrentCommandPrefix = () => {
-        if (actionBarCommand === commandCodes.SEARCH) {
+    useEffect(() => {
+        switch (actionBarCommand) {
+        case commandCodes.SEARCH:
+          setShowingActionLogo(true);
+          setCurrentActionLogo(() => <div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>);
+          break;
+        default:
             setShowingActionLogo(true);
-
-            return(<div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>)
+            setCurrentActionLogo(null)
         }
-        setShowingActionLogo(false);
-        return null;
-    }
+      }, [actionBarCommand]);
+
 
     const findMatchingCommands = (e) => {
         const input = e.target.value;
@@ -115,6 +176,7 @@ const GlobalActionBar = ({children}) => {
         }
         if(actionBarCommand === commandCodes.SEARCH){
             fetchSearchResults(input);
+            return;
         }
         const possibleActions = actions.filter((action) => {
             return (action.keywords?.length > 0 && action.keywords.some((keyword) => keyword.includes(input)))
@@ -152,18 +214,25 @@ const GlobalActionBar = ({children}) => {
             const remappedTrack = [...data.tracks.map(track => {return({type : "track", ...track})}),
                                    ...data.albums.map(track => {return({type : "album", ...track})}),
                                    ...data.artists.map(track => {return({type : "artist", ...track})})]
-                .map((item) => {
+                .map((item) => { const fileName = item.path?.split('\\').pop();
+                    const trackName = item.trackPath?.split('\\').pop();
+                    const {trackPath, ...itemSorted} = item;
                     return {icon : () => {return <img className="action-bar-entry-logo" 
-                            src={`${apiBase}/${item.type === 'artist' ? "artist" : "covers"}/${item.path?.split('//').pop()}`} 
+                            src={`${apiBase}/${item.type === 'artist' ? "artist" : "covers"}/${fileName}`} 
                              alt={item.name} />},
                              tooltip : getTooltipOnSearchResult,
-                            ...item }});
+                             code : item.type === 'artist' ? commandCodes.OPEN_ARTIST :
+                                    item.type === 'album' ? commandCodes.OPEN_ALBUM :
+                                    commandCodes.PLAY_SONG,
+                             fileName : fileName,
+                             trackName : trackName,
+                             ...itemSorted}});
             setProposedCommands(remappedTrack);
         })
     }
 
-    const handleActionBarEntryClick = (code) => {
-        switch (code) {
+    const handleActionBarEntryClick = (item) => {
+        switch (item.code) {
             case commandCodes.SEARCH:
                 setShowActionBar(true);
                 setActionBarCommand(commandCodes.SEARCH);
@@ -173,35 +242,91 @@ const GlobalActionBar = ({children}) => {
                 setProposedCommands([]);
                 break;
             case commandCodes.CLOSE_ACTION_BAR:
-                setShowActionBar(false);
-                setActionBarCommand(null);
+                closeActionBar();
+                break;
+            case commandCodes.PLAY_SONG:
+                console.log("Playing song", item);
+                playTrackNoQueue(item.trackName);
+                closeActionBar();
+                break;
+            case commandCodes.OPEN_ALBUM:
+                closeActionBar();
+                navigate(`/albums/${item.id}`);
+                break;
+            case commandCodes.OPEN_ARTIST:
+                closeActionBar();
+                navigate(`/artists/${item.id}`);
+                break;
+            case commandCodes.PLAY_LIBRARY_RANDOM:
+                addNotification("Playing the library in shuffle", notifTypes.INFO);
+                playLibraryShuffle();
+                closeActionBar();
                 break;
             default:
                 break;
         }
     }
+    const closeActionBar = () => {
+        setShowActionBar(false);
+        setActionBarCommand(null);
+        setProposedCommands([]);
+    }
+    const openSearchBar = () => {
+        setShowActionBar(true);
+        setActionBarCommand(commandCodes.SEARCH);
+        setCurrentCommand(actions[0]);
+        document.getElementById("actionbar-searchbar").value = "";
+        document.getElementById("actionbar-searchbar").focus();
+        setProposedCommands([]);
+    }
+    const Notification = () => {
+        if(!currentNotification) {return null}
+        const NotifIcon = () => {
+            switch (currentNotification.state) {
+                case notifTypes.SUCCESS:
+                    return <IconCheck className="notification-icon" />
+                case notifTypes.ERROR:
+                    return <IconX className="notification-icon" />
+                case notifTypes.INFO:
+                    return <IconInfoCircle className="notification-icon" />
+                default:
+                    return null
+            }
+        }
+        return(
+        <div className="notification-parent" id="notification-parent">
+            <div className="notification" is-open={currentNotification ? "true" : "false"} >
+                <NotifIcon />
+                <span>{currentNotification.message}</span>
+            </div>
+        </div>)
+    }
     return (
         <GlobalActionBarContext.Provider
-            value={{commandCodes}}>
+            value={{commandCodes,
+             openSearchBar,
+             notifTypes,
+             addNotification}}>
             <div className="action-bar-app-parent">
+                
+                {children}
+                <Notification/>
                 {(showActionBar) && <div className="global-action-bar">
                     <div className="action-bar">
                         <div className="action-bar-research">
                             
-                            <CurrentCommandPrefix />
+                            {(currentActionLogo)? currentActionLogo : null}
                         
-                            <input logo={`${showingActionLogo}`} type="text" id="actionbar-searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
+                            <input  type="text" id="actionbar-searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
 
                         </div>
 
                         <div className="action-bar-results">
-                                {proposedCommands.map((action) => <ActionBarEntry key={action.code} entry={action} onClick={handleActionBarEntryClick}/>)}
-
+                                {proposedCommands.map((action) => <ActionBarEntry key={uuidv4()} entry={action} onClick={handleActionBarEntryClick}/>)}
                         </div>
                         
                     </div>
                 </div>}
-                {children}
             </div>
         </GlobalActionBarContext.Provider>
     )

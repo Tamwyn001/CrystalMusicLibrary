@@ -68,7 +68,9 @@
   align-items: center;
   display: flex;
   flex-direction: column;
+  top: 0;
   margin-top: 40vh;
+  z-index: 1000;
 }
 
 .action-bar-research{
@@ -113,7 +115,7 @@
   background-color: rgb(255, 255, 255);
   position: absolute; 
   left: -30px;
-  z-index: 1 ;
+  z-index: 8 ;
   animation: showActionCurrent ease 0.4s forwards;
 }
 
@@ -143,7 +145,7 @@
   width: 100%;
   border-radius: 12px;
   height: 50px;
-  padding-left: 10px;
+  padding: 0px 10px 0px 10px;
 }
 
 .action-bar-entry:hover{
@@ -178,4 +180,38 @@
   height: 20%; */
   border-radius: 7px;
   background-color: none;
+}
+
+.notification-parent{
+  width: 100%;
+  position: fixed;
+  bottom: 0px;
+  align-content: center;
+}
+.notification{
+  margin: 0px auto 30px auto;
+  background-color: rgb(255, 255, 255);
+  border-radius: 20px;
+  width: fit-content;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+
+  padding: 10px;
+  gap: 10px;
+}
+.notification-parent[direction="show"]{
+  animation: toggleNotification ease 0.4s forwards;
+}
+.notification-parent[direction="hide"]{
+  animation: toggleNotification ease 0.4s reverse;
+}
+@keyframes toggleNotification{
+  0%{
+    bottom: -100px;
+  }
+  100%{
+    bottom: 0px;
+  }
+
 }

@@ -19,8 +19,8 @@ function App() {
 
 
     return (
-        <GlobalActionBar>
-            <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
+        <AudioPlayerProvider> {/* this is the context provider for the audio player, the authentification is not */ }
+            <GlobalActionBar>
                 <Routes>    
                     <Route path="/" element={<Authentification />} />
                     <Route path="register" element={<Register />} />
@@ -35,9 +35,9 @@ function App() {
                         <Route path="settings" element={<Settings />} /> 
                         <Route path="admin-pannel" element={<AdminPannel />} />
                         <Route path="*" element={<NotFound />} /> 
-                </Routes>
-            </AudioPlayerProvider>
-        </GlobalActionBar>
+                </Routes>  
+            </GlobalActionBar>
+        </AudioPlayerProvider>
     );
 }
 

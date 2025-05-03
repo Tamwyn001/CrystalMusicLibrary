@@ -1,15 +1,14 @@
 //Arto Steffan 2025
 //Database conenction setup
-const {existsSync} = require( "fs");
+const {existsSync, readFileSync} = require( "fs");
 
 const Database = require("better-sqlite3");
-const fs = require("fs");
 const path = require("path");
 
 let dbInstance = null
 
 const resetDatabase = (dbPath, setupPath) => {
-    const sqlScript = fs.readFileSync(setupPath, "utf8");
+    const sqlScript = readFileSync(setupPath, "utf8");
     const db = new Database(dbPath, {fileMustExist: false}); // Create a new database connection
 
     try {

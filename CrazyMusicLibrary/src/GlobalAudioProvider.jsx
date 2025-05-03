@@ -34,14 +34,18 @@ export const AudioPlayerProvider = ({ children }) => {
     }, [queuePointer]);
 
     const toggleTrackPaused = () => {
+        console.log(queuePointer);
         if (isPlaying) {
             audioRef.current.pause();
             setIsPlaying(false);
         } else {
-            audioRef.current.play();
             setIsPlaying(true);
+            if (queuePointer === -1 && playQueue.length !== 0 ) {
+                setQueuePointer(0);
+                return;
+            }
+            audioRef.current.play();
         }
-        console.log('toggleTrackPaused', isPlaying);
     }
 
     const getNextSongsFromAlbum = (index) => {
@@ -55,6 +59,11 @@ export const AudioPlayerProvider = ({ children }) => {
             setQueuePointer(index); //we do this here to this when the useEffect fires, both are updated.
         });
     }
+
+    const playTrackNoQueue = (trackPath) => {
+        setPlayQueue([trackPath]);
+        setQueuePointer(0);
+    };
 
     useEffect(() => {
         if (justAddedNewToQueue) {
@@ -238,6 +247,16 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(0); // Set the queue pointer to the first track
     }
 
+    const playLibraryShuffle = async () => {
+        fetch(`${apiBase}/read-write/all-songs`, { method: 'GET' })
+        .then(response => response.json())
+        .then(data => {
+            console.log('setting play queue', data);
+            setPlayQueue(_.shuffle(data));
+            setQueuePointer(0); // Set the queue pointer to the first track
+        });
+    }
+
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -259,7 +278,9 @@ export const AudioPlayerProvider = ({ children }) => {
             jumpToQueueTrack,
             deleteQueue,
             addArtistToQueue,
-            shuffleArtistToQueue
+            shuffleArtistToQueue,
+            playTrackNoQueue,
+            playLibraryShuffle
             }}>
             {children}
         </AudioPlayerContext.Provider>
