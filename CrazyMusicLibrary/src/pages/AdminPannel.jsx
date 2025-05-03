@@ -4,7 +4,7 @@ import Header from "../components/Header";
 import { IconArrowBackUp } from "@tabler/icons-react";
 import UserAccountInfosEntry from "../components/UserAccountInfosEntry";
 import { useNavigate } from "react-router-dom";
-import './adminPannel.css';
+import './AdminPannel.css';
 
 const AdminPannel = () => {
     const [isAdmin, setIsAdmin] = useState(false);

@@ -3,7 +3,7 @@ import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useParams } from "react-router-dom";
 import {IconArrowBackUp, IconArrowsShuffle, IconCodePlus} from "@tabler/icons-react";
-import "./albumView.css";
+import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
 import CML_logo from "../components/CML_logo";

@@ -18,7 +18,7 @@ const MusicQueue = ({hideComponent}) => {
         console.log("Queue: ", playQueue);
     }, [playQueue]);
 
-    const getTrack = useCallback((trackId) => cache.get(trackId), [cache]);
+    const getTrack = useCallback((trackId) => cache.get(trackId), [cache]); 
     const setTrack = useCallback((trackId, trackData) => {
         setCache((prevCache) => new Map(prevCache).set(trackId, trackData));
     }, []);
@@ -54,7 +54,7 @@ const MusicQueue = ({hideComponent}) => {
                         width={'100%'}
                         >
                         {({ index, style }) => (
-                            <MusicQueueEntry style={style} index={index} key={playQueue[index]} trackId={playQueue[index].split('.')[0]} /> 
+                            <MusicQueueEntry style={style} index={index} key={playQueue[index]} trackId={playQueue[index]} /> 
                         )}
                         </List>
                     :

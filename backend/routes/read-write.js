@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -79,11 +79,11 @@ router.get("/artist-all-tracks/:id",  (req, res) => {
 });
 
 router.get("/music/:id", async (req, res) => {
-    const filePath = `./data/music/${req.params.id}`;
+    const filePath = getTrackPath(req.params.id).path;
     const fileStats = statSync(filePath);
-        const range = req.headers.range;
-        if(range){
-            const [start, end] = range.replace(/bytes=/, "").split("-");
+    const range = req.headers.range;
+    if(range){
+        const [start, end] = range.replace(/bytes=/, "").split("-");
         const chunkStart = parseInt(start, 10);
         const chunkEnd = end ? parseInt(end, 10) : fileStats.size - 1;
         res.writeHead(206, { //https://developer.mozilla.org/fr/docs/Web/HTTP/Reference/Status/206 : partial content
@@ -125,11 +125,9 @@ router.get("/nextSongs/:isPlaylist/:containerId", (req, res) => {
     const nextSongs = (isPlaylist === "true") ?
         getNextSongsFromPlayist(containerId) : getNextSongsFromAlbum(containerId);
 
-    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()})});
+    res.json({queue: nextSongs.map((song) => {return song.id})});
     return;
     
-    res.json({queue: nextSongs.map((song) => {return song.path.split('\\').pop()}),
-    currentIndex : getTrackIndex(trackId).track_number - 1});
 });
 
 router.get("/trackCover/:id", (req, res) => {

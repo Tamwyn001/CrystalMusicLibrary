@@ -9,6 +9,7 @@ import AudioControls from './AudioControls'
 import CML_logo from './CML_logo.jsx'
 import MusicQueue from './MusicQueue.jsx'
 import { useNavigate } from 'react-router-dom'
+import { useGlobalActionBar } from '../GlobalActionBar.jsx'
 
 
 const Header = () => {
@@ -18,6 +19,7 @@ const Header = () => {
     const [queueShown, setQueueShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl} = useAudioPlayer();
+    const { openSearchBar } = useGlobalActionBar();
     const navigate = useNavigate();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
@@ -98,7 +100,7 @@ const Header = () => {
             { queueShown && <MusicQueue hideComponent={() => setQueueShown(false)}/>}
         </div>
         <div className="headerRight">
-            <div className="serach-button-div">
+            <div className="serach-button-div" onClick={openSearchBar}>
                 <div className='keyboard-key'>
                     <span>CTRL</span>
                 </div>

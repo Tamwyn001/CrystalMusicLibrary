@@ -67,7 +67,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
         WHERE a.id = ?
     `;
     const tracksInfos = `
-        SELECT t.path AS path, t.title AS title, t.track_number AS track_number, t.duration AS rawDuration
+        SELECT t.id AS id, t.title AS title, t.track_number AS track_number, t.duration AS rawDuration
         FROM tracks AS t 
         WHERE t.album = ?
         ORDER BY track_number ASC
@@ -98,7 +98,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
 
  const getNextSongsFromAlbum = (albumId) => {
     const query = `
-        SELECT path from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+        SELECT id from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
     return db.prepare(query).all(albumId);
 }
 
@@ -181,7 +181,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
         WHERE ad.id = ?
     `;
     const queryTracks = `
-        SELECT t.path AS path, t.track_number
+        SELECT t.id AS id, t.track_number
         FROM tracks AS t 
         WHERE t.album = ?
         ORDER BY track_number ASC
@@ -228,7 +228,7 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
 
 const findAudioEntity = (id) => {
     const queryTracks = `
-        SELECT t.id AS id, t.title as name, a.cover as path, t.path as trackPath FROM tracks t
+        SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
         JOIN albums a ON t.album = a.id
         WHERE t.title LIKE ?;
     `;
@@ -243,8 +243,13 @@ const findAudioEntity = (id) => {
 }
 
 const getAllTracks = () => {
-    const query = `SELECT path FROM tracks;`;
-    return db.prepare(query).all().map((track) => track.path.split("\\").pop());
+    const query = `SELECT id FROM tracks;`;
+    return db.prepare(query).all().map((track) => track.id);
+}
+
+const getTrackPath = (id)  =>{
+    const query = `SELECT path FROM tracks WHERE id = ?`;
+    return db.prepare(query).get(id);
 }
 
 
@@ -271,4 +276,5 @@ module.exports = {addTracks,
     getAllUsers,
     getTracksAddedByUsers,
     findAudioEntity,
-    getAllTracks };
+    getAllTracks,
+    getTrackPath };

@@ -1,4 +1,4 @@
-import './albumCard.css';
+import './AlbumCard.css';
 
 import {IconPencil, IconFileMusic, IconTrash} from "@tabler/icons-react";
 

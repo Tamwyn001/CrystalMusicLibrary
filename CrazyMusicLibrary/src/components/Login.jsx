@@ -1,5 +1,5 @@
 import { useNavigate  } from "react-router-dom"   
-import './auth.css'
+import './Auth.css'
 import apiBase from "../../APIbase";
 import CML_logo from "./CML_logo";
 import ThreePointsLoader from "./ThreePointsLoader";

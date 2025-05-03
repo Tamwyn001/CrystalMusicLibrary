@@ -23,7 +23,6 @@ export const AudioPlayerProvider = ({ children }) => {
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
 
-
     useEffect(() => {
         playQueueRef.current = playQueue;
         console.log('PlayCueue updated', playQueueRef.current);
@@ -65,6 +64,7 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(0);
     };
 
+
     useEffect(() => {
         if (justAddedNewToQueue) {
             setJustAddedNewToQueue(false); // Reset the flag after processing
@@ -94,7 +94,7 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         const data = await res.json();
         // console.log('Adding album to queue', data);
-        const tracks = data.tracks.map((track) => track.path.split('\\').pop()); // Extract the track paths from the response
+        const tracks = data.tracks.map((track) => track.id); // Extract the track paths from the response
         setPlayQueue((prevQueue) => [...prevQueue, ...tracks]);
     }
 
@@ -230,7 +230,7 @@ export const AudioPlayerProvider = ({ children }) => {
             throw new Error('Network response was not ok');
         }
         const data = await res.json();
-        const tracks = data.map((track) => track.path.split('\\').pop()); // Extract the track name from the response
+        const tracks = data.map((track) => track.id); // Extract the track name from the response
         setPlayQueue((prevQueue) => [...prevQueue, ...tracks]);
     }
     const shuffleArtistToQueue = async (artistID) => {
@@ -242,7 +242,7 @@ export const AudioPlayerProvider = ({ children }) => {
             throw new Error('Network response was not ok');
         }
         const data = await res.json();
-        const tracks = data.map((track) => track.path.split('\\').pop()); // Extract the track name from the response
+        const tracks = data.map((track) => track.id); // Extract the track name from the response
         setPlayQueue(_.shuffle(tracks));
         setQueuePointer(0); // Set the queue pointer to the first track
     }

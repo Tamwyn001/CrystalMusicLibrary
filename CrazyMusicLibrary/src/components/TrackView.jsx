@@ -5,7 +5,7 @@ import { parseAudioDuration } from "../../lib";
 const TrackView = ({ index, track, containerId, isPlaylistView,playIconId }) => {
   const { title, track_number, rawDuration } = track;
   const {playTrack, playingTrack} = useAudioPlayer();
-  const trackName = track.path.split('\\').pop()
+  const trackName = track.id
   const handleClick = () => { 
     playTrack(trackName, containerId, isPlaylistView, index ); // Extract the file name from the path
   };

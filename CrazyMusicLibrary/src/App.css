@@ -92,18 +92,16 @@
 
 .action-bar-results{
   background-color: rgb(233, 233, 233);
-  width: calc(100% - 40px);
-  padding: 10px 20px;
+  width:calc(100% - 20px);
+  height: fit-content;
   border-radius: 0px 0px 20px 20px;
   display: flex;
   transform: translateY(-20px);
-  padding-top:30px ;
+  padding: 20px 10px 0px 10px ;
   flex-direction: column;
   align-items: center;
   position: relative;
-  height: 45vh;
-  overflow-y: auto;
-  overflow-x: hidden;
+  height: fit-content;
 }
 
 .action-bar-logo-container{
@@ -142,9 +140,8 @@
   flex-direction: row;
   align-items: center;
   gap : 10px;
-  width: 100%;
   border-radius: 12px;
-  height: 50px;
+
   padding: 0px 10px 0px 10px;
 }
 
