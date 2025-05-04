@@ -10,6 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import AlbumWrapping from './AddMusic/AlbumWrapping';
 import axios from 'axios';
 import apiBase from '../../APIbase';
+import { useGlobalActionBar } from '../GlobalActionBar';
 
 
 
@@ -58,7 +59,7 @@ const AddMusic = ({closeOverlay}) => {
     const [totalMbUpload, setTotalMbUpload] = useState(0);
     const [percentageUpload, setPercentageUpload] = useState(0);
     const [sendingFile, setSendingFile] = useState('');
-
+    const {addNotification, notifTypes } = useGlobalActionBar();
      //contains all the metadatas that the user changed, used to avoid sending all the metas with the song with fetch
     const [trackMetaOverwrite, setTrackMetaOverwrite] = useState([]);
     
@@ -128,7 +129,7 @@ const AddMusic = ({closeOverlay}) => {
                 const newUuid = uuidv4();
                 localAlbums.push(new Album(
                     metadata.common.album,
-                    (metadata.common.artist) ? metadata.common.artist : 'Unknown artist',
+                    (metadata.common.artist) ? [metadata.common.artist] : ['Unknown artist'],
                     metadata.common.year,
                     [trackInfo],
                     metadata.common.picture?.[0],
@@ -234,10 +235,11 @@ const AddMusic = ({closeOverlay}) => {
                 album.tracks = album.tracks.filter(track => track.id !== trackId); //remove the track from the old album
             }
             return album;});
-        const newAlbum = new Album(newAlbumName, 'Unknown artist', '', [{id: trackId, name: trackName}], null, newUuid);
+        const newAlbum = new Album(newAlbumName, ['Unknown artist'], '', [{id: trackId, name: trackName}], null, newUuid);
         albumLocal.push(newAlbum); //add the new album to the list
         setTrackMetaOverwrite(metaLocal);
         updateAlbums(albumLocal);
+        addNotification(`Track ${trackName.substring(0,60)} got moved to album ${newAlbumName}.`, notifTypes.INFO);
     }
 
     const moveTrackToAlbum = (track, newAlbumId) => {
@@ -245,7 +247,7 @@ const AddMusic = ({closeOverlay}) => {
         const { id: trackId, name: trackName } = track;
 
         console.log("Moving track: " + trackId + +" from " + editingAlbum +" to album: " + newAlbumId);
-        
+        const albumName = albums.find(album => album.uuid === newAlbumId).name;
         metaLocal = metaLocal.map((track) => {
             if (track.id === trackId) track.albumUuid = newAlbumId;
             return track;}); //update the albumId of the track
@@ -259,6 +261,7 @@ const AddMusic = ({closeOverlay}) => {
             return album;});
         setTrackMetaOverwrite(metaLocal);
         updateAlbums(albumLocal);
+        addNotification(`Track ${trackName.substring(0,60)} got moved to album ${albumName}.`, notifTypes.INFO);
     }
 
     const publish = async () => {
@@ -335,7 +338,7 @@ const AddMusic = ({closeOverlay}) => {
                     const uploadPercentage = (loadedSizeInMB / totalSizeInMB) * 100;
                    
                     setPercentageUpload(uploadPercentage.toFixed(2));
-                    console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
+                    // console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
                 },
               }).catch((error) => {
                 console.error("Error uploading track:", error);});

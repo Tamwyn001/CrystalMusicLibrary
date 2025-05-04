@@ -36,6 +36,10 @@ input, textarea, select{
     caret-color: #000;      /* optional: change blinking cursor color */
 
 }
+input[type="submit"]:hover{
+    background-color: #def9fd;
+    cursor: pointer;
+}
 
 .loginFeedback{
     display: flex;

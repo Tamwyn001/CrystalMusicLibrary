@@ -72,3 +72,10 @@
     opacity: 1;
     transition: opacity 0.3s;
 }
+
+.album-wrapping-track{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 10px;
+}

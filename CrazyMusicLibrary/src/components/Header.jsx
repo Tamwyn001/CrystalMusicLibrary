@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch } from '@tabler/icons-react'
+import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2 } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
@@ -10,6 +10,7 @@ import CML_logo from './CML_logo.jsx'
 import MusicQueue from './MusicQueue.jsx'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalActionBar } from '../GlobalActionBar.jsx'
+import VolumeBar from './VolumeBar.jsx'
 
 
 const Header = () => {
@@ -17,8 +18,9 @@ const Header = () => {
     const [musicPaused, setMusicPaused] = useState(false)
     const [newMusicShown, setNewMusicShown] = useState(false);
     const [queueShown, setQueueShown] = useState(false);
+    const [volumeShown, setVolumeShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
-    const {currentTrackData, trackCoverUrl} = useAudioPlayer();
+    const {currentTrackData, trackCoverUrl, volume} = useAudioPlayer();
     const { openSearchBar } = useGlobalActionBar();
     const navigate = useNavigate();
     function playPauseVisibility(visible){
@@ -41,6 +43,10 @@ const Header = () => {
     function toggleQueueShown(){
         setQueueShown(!queueShown);
     } 
+
+    function toggleVolumeShown(){
+        setVolumeShown(!volumeShown);
+    }
 
     const TrackOverlay = () =>{
         if (!currentTrackData || Object.keys(currentTrackData).length === 0){
@@ -98,6 +104,11 @@ const Header = () => {
         <div className='mobile-gost'>
             <IconListDetails id="playlist-button" className="buttonRound" onClick={() => toggleQueueShown(true)}/>
             { queueShown && <MusicQueue hideComponent={() => setQueueShown(false)}/>}
+
+            {(volume <= 1e-5 ) ? <IconVolume3 className="buttonRound" onClick={() => toggleVolumeShown(true)}/> 
+            :(volume < 0.5 ) ? <IconVolume2 className="buttonRound" onClick={() => toggleVolumeShown(true)}/>
+            : <IconVolume id="volume-button" className="buttonRound" onClick={() => toggleVolumeShown(true)}/>}
+            { volumeShown && <VolumeBar hideComponent={() => setVolumeShown(false)}/>} 
         </div>
         <div className="headerRight">
             <div className="serach-button-div" onClick={openSearchBar}>

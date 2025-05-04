@@ -1,5 +1,5 @@
 import './ProgressBar.css';
-const ProgressBar = ({percent, showPercent, isMarquee = false, fillColor = "#fffdff", style, initialising = false, onClickPercentage = null}) => {
+const ProgressBar = ({percent, showPercent=false, isMarquee = false, fillColor = "#fffdff", style={}, initialising = false, onClickPercentage = null}) => {
     const calcClickedPrecent = (e) => { 
         if (initialising || (!onClickPercentage))  return;
         const progressBar = e.currentTarget;

@@ -5,16 +5,47 @@
     flex: 1;
     width: calc(100% - 30px);
 }
-
+.genre-album{
+    background-color: #f0f0f0;
+    padding: 5px 10px;
+    border-radius: 10px;
+    cursor: pointer;
+}
+.genre-album:hover{
+    background-color:#c6ccfc5e;
+}
+.genres-album-div{
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.album-artists{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+.album-artists span{
+    cursor: pointer;
+}
+.album-artists span:hover{
+    color: #c6497d;
+}
 .track-view{
     display: flex;
     flex-direction: row;
     border-radius: 10px;
     justify-content: flex-start;
-    background-color: #f0f0f0;
+    background-color: #f0f0f0c4;
     padding: 10px;
     width: calc(100% - 20px);
     gap: 20px;
+    border: solid 2px #f0f0f0;
+}
+.track-view:hover{
+    background-color:   #d0f0ff;;
 }
 .track-view p{
     margin-top: 2px;
@@ -67,10 +98,11 @@ to {
     to {
         stroke-dashoffset: 0;
     }}
-.album-content > img, .album-content > svg{
+.album-content .cover-image{
     padding: 5px;
-    width: 200px;
-    height: 200px;
+    width: auto;
+    height: 400px;
+    margin: 60px;
     border-radius: 20px;
     animation: rotate 5s linear infinite;
 }
@@ -105,6 +137,21 @@ to {
     margin: 5px;
 }
 
+.background-image{
+    object-fit: cover;
+    position: fixed;
+    mask-image: linear-gradient(to left, rgba(0,0,0,1), rgba(0,0,0,0));
+    /* -webkit-mask-image: -webkit-gradient(linear, left top, 
+    left bottom, from(rgba(0,0,0,1)), to(rgba(0,0,0,0))); */
+    top: 85px;
+    filter: blur(5px);
+    right: 0px;
+    height: 100%;
+    width: auto;
+    transform: translateX(25%);
+    pointer-events: none;
+}
+
 
 .album-content{
     display: flex;
@@ -113,6 +160,7 @@ to {
     width: 100%;
     align-items: center;
     border-radius: 20px;
+    z-index: 1;
 }
 @media screen and (min-width: 450px) {
     .album-content{

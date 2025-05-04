@@ -19,7 +19,10 @@ const commandCodes = {
     OPEN_ARTIST : 'open_artist',
     PLAY_LIBRARY_RANDOM : 'play_library_random',
     TOGGLE_PLAY_PAUSE : 'toggle_play_pause',
-    OPEN_SETTINGS : 'open_settings'
+    OPEN_SETTINGS : 'open_settings',
+    VOLUME_UP : 'volume_up',
+    VOLUME_DOWN : 'volume_down',
+    OPEN_GENRE : 'open_genre'
 }
 const notifTypes = {
     SUCCESS : 'success',
@@ -70,6 +73,24 @@ const actions = [ //!! very important, keep order
         modifier: 'ctrl',
         keywords: ["settings", "configuration", "config", "preferences", "options"],
         icon: () => {return <IconSettingsHeart className="action-bar-current-logo" />}
+    },
+    {
+        name: 'Volume up',
+        code: commandCodes.VOLUME_UP,
+        description: '',
+        key:"ArrowUp", //spacebar
+        modifier: '',
+        keywords: [],
+        icon: () => {}
+    },
+    {
+        name: 'Volume down',
+        code: commandCodes.VOLUME_DOWN,
+        description: '',
+        key:"ArrowDown", //spacebar
+        modifier: '',
+        keywords: [],
+        icon: () => {}
     }
 ];
 
@@ -82,9 +103,30 @@ const GlobalActionBar = ({children}) => {
     const [currentCommand, setCurrentCommand] = useState(null); //elem of actions
     const [proposedCommands, setProposedCommands] = useState([]); //elem of actions
     const [currentActionLogo, setCurrentActionLogo] = useState(null); //elem of actions
-    const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused} = useAudioPlayer();
+    const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused, setVolume, volume} = useAudioPlayer();
+    const volumeRef = useRef(volume); // when mounted, it will always use the default value if we dont use ref
     const navigate = useNavigate();
     const [currentNotification, setCurrentNotification] = useState(null); //{message, state} state = "success" | "error" | "info"
+    const wrapperRef = useRef(null);
+    const actionLocation = useRef(null); //command/search bar, to know if we close. 
+
+    useEffect(() => {
+        window.addEventListener("keydown", keyCallbackBinder)
+        registerDefaultEvents();
+        const handleClickedOutside = (e) =>{            
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+               closeActionBar();
+            }}
+
+        document.addEventListener("mousedown", handleClickedOutside);
+        document.addEventListener("touchstart", handleClickedOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickedOutside);
+            document.removeEventListener("touchstart", handleClickedOutside);
+            window.removeEventListener("keydown", keyCallbackBinder);
+            boundEvents.current = []; //clear the events
+        }
+    },[]);
 
     const addNotification = (message, state) => {
         setCurrentNotification({message, state});
@@ -106,15 +148,15 @@ const GlobalActionBar = ({children}) => {
     },[currentNotification]);
 
     const keyCallbackBinder = (e) => {
-        console.log(e.key === " " && e.ctrlKey);
-        if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
+        // console.log("Key pressed", e);
+        // if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
         if(e.key == "Control" || currentCommand) {return}
-        if(e.key === " " && document.activeElement.id === "actionbar-searchbar") {return} //to avoid closing the action bar when pressing space in the search bar
+        if(e.key === " " && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && document.activeElement.nodeName === "INPUT") {return} //to avoid closing the action bar when pressing space in the search bar
     
         const actionToCall = actions.find( (action) => {
             const keyMatch = e.key === action.key;
-          
+            
             if (!keyMatch) return false;
             if (!action.modifier || action.modifier === "") return true;
           
@@ -133,7 +175,6 @@ const GlobalActionBar = ({children}) => {
         boundEvents.current.forEach((event) => {
             if (event.code === actionToCall.code) {
                 event.callback(e);
-                console.log("Event triggered", event.code, actionToCall.code);
                 e.preventDefault();
             }
         });
@@ -151,15 +192,37 @@ const GlobalActionBar = ({children}) => {
     toggleTrackPauseRef.current = toggleTrackPaused; 
 
     const openCommandBar = () => {
-        setShowActionBar(true); setActionBarCommand(null); setProposedCommands(getMostUsedCommands());
+        setShowActionBar(true); setActionBarCommand(null); setProposedCommands(getMostUsedCommands()); actionLocation.current = "command";
     }
 
+    useEffect(() => {
+        volumeRef.current = volume;
+      }, [volume]); // keep the ref up to date
+
     const registerDefaultEvents = () => {
-        registerNewEvent(() => {openCommandBar();}, commandCodes.OPEN_ACTION_BAR);
-        registerNewEvent(() => {closeActionBar()}, commandCodes.CLOSE_ACTION_BAR);
-        registerNewEvent(() => {setShowActionBar(true); setActionBarCommand(commandCodes.SEARCH);}, commandCodes.SEARCH);
+        registerNewEvent(() => {
+            if(actionLocation.current === "command"){
+                closeActionBar();
+                return;
+            }
+            openCommandBar();
+            
+        }, commandCodes.OPEN_ACTION_BAR);
+        registerNewEvent(() => {closeActionBar(); }, commandCodes.CLOSE_ACTION_BAR);
+        registerNewEvent(() => {
+            // console.log("action current loc : ",actionLocation.current);
+            if(actionLocation.current === "search"){
+                closeActionBar();
+                return;
+            }
+            setShowActionBar(true);
+            setActionBarCommand(commandCodes.SEARCH);
+            actionLocation.current="search";
+        }, commandCodes.SEARCH);
         registerNewEvent(() => {toggleTrackPauseRef.current()}, commandCodes.TOGGLE_PLAY_PAUSE); //wee need the ref, otherwise it memorizes the value of the function at load: false
         registerNewEvent(() => {navigate('/settings');}, commandCodes.OPEN_SETTINGS);
+        registerNewEvent(() => {setVolume(Number(volumeRef.current + 0.1));}, commandCodes.VOLUME_UP);
+        registerNewEvent(() => {setVolume(Number(volumeRef.current - 0.1));}, commandCodes.VOLUME_DOWN);
     }
 
     useEffect(() => {
@@ -168,17 +231,9 @@ const GlobalActionBar = ({children}) => {
         }
         showActionBarRef.current = showActionBar;
     },[showActionBar]);
-    useEffect(() => {console.log(actionBarCommand)},[actionBarCommand]);
-    useEffect(() => {
-        window.addEventListener("keydown", keyCallbackBinder)
-        registerDefaultEvents();
-        return () => {
-            window.removeEventListener("keydown", keyCallbackBinder)
-            // boundEvents.forEach((event) => {
-            //     window.removeEventListener(event.type, event.callback)
-            // }
-        }
-    }, []);
+
+    // useEffect(() => {console.log(actionBarCommand)},[actionBarCommand]);
+
     useEffect(() => {
         switch (actionBarCommand) {
         case commandCodes.SEARCH:
@@ -222,6 +277,8 @@ const GlobalActionBar = ({children}) => {
                 return <div className="action-tooltip-div"> <span style={{margin: "0"}}>View album</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
             case 'artist':
                 return <div className="action-tooltip-div"> <span style={{margin: "0"}}>View artist</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+            case 'genre':
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>View genre</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
             default:
                 return null
             }
@@ -241,8 +298,10 @@ const GlobalActionBar = ({children}) => {
         .then((data) => {
             const remappedTrack = [...data.tracks.map(track => {return({type : "track", ...track})}),
                                    ...data.albums.map(track => {return({type : "album", ...track})}),
-                                   ...data.artists.map(track => {return({type : "artist", ...track})})]
-                .map((item) => { const fileName = item.path?.split('\\').pop();
+                                   ...data.artists.map(track => {return({type : "artist", ...track})}),
+                                   ...data.genres.map(track => {return({type : "genre", ...track})})]
+                .map((item) => { 
+                    const fileName = item.path?.split('\\').pop();
                     const trackName = item.id;
                     const {trackPath, ...itemSorted} = item;
                     return {icon : () => {return ((fileName) ? <img className="action-bar-entry-logo" 
@@ -251,6 +310,7 @@ const GlobalActionBar = ({children}) => {
                              tooltip : getTooltipOnSearchResult,
                              code : item.type === 'artist' ? commandCodes.OPEN_ARTIST :
                                     item.type === 'album' ? commandCodes.OPEN_ALBUM :
+                                    item.type === 'genre' ? commandCodes.OPEN_GENRE :
                                     commandCodes.PLAY_SONG,
                              fileName : fileName,
                              trackName : trackName,
@@ -265,6 +325,7 @@ const GlobalActionBar = ({children}) => {
                 setShowActionBar(true);
                 setActionBarCommand(commandCodes.SEARCH);
                 setCurrentCommand(actions[0]);
+                actionLocation.current = "search";
                 document.getElementById("actionbar-searchbar").value = "";
                 document.getElementById("actionbar-searchbar").focus();
                 setProposedCommands([]);
@@ -285,6 +346,11 @@ const GlobalActionBar = ({children}) => {
                 closeActionBar();
                 navigate(`/artists/${item.id}`);
                 break;
+            case commandCodes.OPEN_GENRE:
+                console.log("Opening genre", item);
+                closeActionBar();
+                navigate(`/genres/${item.id}`);
+                break;
             case commandCodes.PLAY_LIBRARY_RANDOM:
                 addNotification("Playing the library in shuffle", notifTypes.INFO);
                 playLibraryShuffle();
@@ -301,12 +367,14 @@ const GlobalActionBar = ({children}) => {
     const closeActionBar = () => {
         setShowActionBar(false);
         setActionBarCommand(null);
+        actionLocation.current = null;
         setProposedCommands([]);
     }
     const openSearchBar = () => {
         setShowActionBar(true);
         setActionBarCommand(commandCodes.SEARCH);
         setCurrentCommand(actions[0]);
+        actionLocation.current = "search";
         document.getElementById("actionbar-searchbar").value = "";
         document.getElementById("actionbar-searchbar").focus();
         setProposedCommands([]);
@@ -343,8 +411,8 @@ const GlobalActionBar = ({children}) => {
                 
                 {children}
                 <Notification/>
-                {(showActionBar) && <div className="global-action-bar">
-                    <div className="action-bar">
+                {(showActionBar) && <div  className="global-action-bar">
+                    <div className="action-bar" ref={wrapperRef}>
                         <div className="action-bar-research">
                             
                             {(currentActionLogo)? currentActionLogo : null}

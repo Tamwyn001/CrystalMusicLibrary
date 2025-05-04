@@ -22,6 +22,11 @@ export const AudioPlayerProvider = ({ children }) => {
     const [justAddedNewToQueue, setJustAddedNewToQueue] = useState(false); // Flag to indicate if a new track was added to the queue
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
+    const [volume, setVolume] = useState(() => {
+        // Only runs once on mount
+        const stored = parseFloat(localStorage.getItem('volume'));
+        return isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));
+      });
 
     useEffect(() => {
         playQueueRef.current = playQueue;
@@ -214,6 +219,8 @@ export const AudioPlayerProvider = ({ children }) => {
         const playNextTrackOnEnd = () => { playNextSong(true); }
         audio.addEventListener("timeupdate", updateTime);
         audio.addEventListener("ended", playNextTrackOnEnd);
+        console.log(parseFloat(localStorage.getItem('volume')));
+        setVolume(parseFloat(localStorage.getItem('volume')) || 0.5)
         return () => {
             audio.removeEventListener("timeupdate", updateTime);
             audio.removeEventListener("ended", playNextTrackOnEnd);
@@ -257,6 +264,13 @@ export const AudioPlayerProvider = ({ children }) => {
         });
     }
 
+    useEffect(() => {
+        // Avoid setting state here again! Just apply it.
+        const clamped = Math.min(1, Math.max(0, volume));
+        audioRef.current.volume = (clamped).toFixed(4) * 0.75;
+        localStorage.setItem('volume', clamped);
+    }, [volume]);
+    
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -280,7 +294,9 @@ export const AudioPlayerProvider = ({ children }) => {
             addArtistToQueue,
             shuffleArtistToQueue,
             playTrackNoQueue,
-            playLibraryShuffle
+            playLibraryShuffle,
+            setVolume,
+            volume
             }}>
             {children}
         </AudioPlayerContext.Provider>

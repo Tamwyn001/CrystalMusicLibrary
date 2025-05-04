@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import CML_logo from '../CML_logo';
 import './AlbumWrapping.css'
-
 import { IconMountain, IconFolderPlus, IconDirections } from '@tabler/icons-react';
 import { useAddMusicContext } from '../AddMusic';
 import TrackRemapAlbum from './TrackRemapAlbum';
+import { FixedSizeList as List } from 'react-window';
+
 
 const AlbumWrapping = ({setEditUid, albumClass}) => {
     const [showTrackRemap, setShowTrackRemap] = useState({visible: false});
@@ -20,11 +21,11 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
     const handleApply = () => {
         const form = document.getElementById("editAlbumInfos");
         albumClass.name = form.albumName.value;
-        albumClass.artist = form.artistName.value;
+        albumClass.artist = form.artistName.value.split(",").map((g) => g.trim());
         albumClass.year = form.releaseDate.value;
-        albumClass.genre = form.genre.value;
+        albumClass.genre = form.genre.value.split(",").map((g) => g.trim()).map(g => g.charAt(0).toUpperCase() + g.slice(1));
         albumClass.description = form.description.value;
-
+        console.log( albumClass.genre);
         //switch to the album overview
         setEditUid(null);
     }
@@ -54,16 +55,16 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
             <form className="albumDetails" id='editAlbumInfos' >
                 <label htmlFor="albumName">Album name</label>
                 <input type="text" id="albumName" placeholder="Enter album name" defaultValue={albumClass.name} />
-                <label htmlFor="artistName">Artist name</label>
-                <input type="text" id="artistName" placeholder="Enter artist name" defaultValue={albumClass.artist}/>
+                <label htmlFor="artistName">Artists name</label>
+                <input type="text" id="artistName" placeholder="Enter artist name" defaultValue={albumClass.artist?.toString().replace(/,/g, ', ')}/>
                 <div className="albumType">
                     <div className="albumTypeOption">
                         <label htmlFor="releaseDate">Release date</label>
                         <input type="date" id="releaseDate" defaultValue={albumClass.year}/>
                     </div>
                     <div className="albumTypeOption">
-                        <label htmlFor="genre">Genre</label>
-                        <input type="text" id="genre" placeholder="Enter genre" defaultValue={albumClass.genre}/>
+                        <label htmlFor="genre">Genres</label>
+                        <input type="text" id="genre" placeholder="Enter genres: G1, G2,..." defaultValue={albumClass.genre?.toString().replace(/,/g, ', ')}/>
                     </div>
                     <div className="albumTypeOption">
                         <label htmlFor="description">Description</label>
@@ -76,17 +77,23 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
                     
                 </div>
                 <div className="albumTracks">
-                    {albumClass.tracks.map((track, index) => {
-                        return (
-                            <div key={index} className="albumTrack">
-                                <span>{track.name}</span>
-                                <IconDirections className="trackIcon" onClick={() => {openTrackRemap(track)}}/>
-                            </div>
-                        )
-                    })}
+                    <List
+                        className="albumTrackList"
+                        height={250}
+                        itemCount={albumClass.tracks.length}
+                        itemSize={35}
+                        width={"100%"}
+                    >
+                        {({ index, style }) => (
+                            <div key={index} style={style} className="album-wrapping-track">
+                             <span>{albumClass.tracks[index].name}</span>
+                             <IconDirections className="trackIcon" onClick={() => {openTrackRemap(albumClass.tracks[index])}}/>
+                         </div>
+                        )}
+                    </List>
                 </div>
             </form>
-            {showTrackRemap.visible && < TrackRemapAlbum track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
+            {showTrackRemap.visible && < TrackRemapAlbum onClose={() => {setShowTrackRemap({visible: false})}} track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
 
         </div>
     )

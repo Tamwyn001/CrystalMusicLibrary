@@ -6,7 +6,7 @@ const Loading = ({text, progressBar = {useProgressBar: false}}) => {
     return (
         <div className="loading-container">
 
-            <h1>{text}</h1>
+            <h2>{text}</h2>
             {(progressBar.useProgressBar) ? 
                 <ProgressBar 
                     percent={progressBar.percent} 

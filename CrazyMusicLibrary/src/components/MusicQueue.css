@@ -8,7 +8,6 @@
     background-color: rgb(223, 246, 232);
     border-radius: 10px;
     width: 300px;
-    right: 150px;
     z-index: 10;
 
 }
@@ -23,6 +22,7 @@
     border-radius: 5px;
     display: flex;
     flex-direction: row;
+    align-items: center;
 }
 .music-queue-entry[is-passed='true']{
     background-color: #d1e7dd;

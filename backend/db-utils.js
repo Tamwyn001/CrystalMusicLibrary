@@ -23,26 +23,28 @@ const batchInsert = (table, columns, params, ignore = false) => {
     let artists = [];
     for(let i =0; i < albums.length; i++){
         if(!albums[i].artist){artists.push([null]);continue;}
-        for(const artist of albums[i].artist.split(",")){artists.push([artist]);} //need an array otherwise row.map is not a function
+        for(const artist of albums[i].artist){artists.push([artist]);} //need an array otherwise row.map is not a function
     }
     console.log("Adding albums to the database...");
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
     batchInsert("albums", "id, title, release_date, cover, description", 
         albums.map((album) => [album.uuid, album.name, localTime, (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description]));
-    if(albums[0].genre){
+
+    //insert into albums_to_genres
+    albums[0].genre.forEach((genre) => {
         const queryGenre = "INSERT OR IGNORE INTO genres (name) VALUES (?)";
-        db.prepare(queryGenre).run(albums[0].genre);
+        db.prepare(queryGenre).run(genre);
         const queryA2G = "INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES ((SELECT id from albums WHERE id = ?) , (SELECT id from genres WHERE name = ?))";
-        db.prepare(queryA2G).run(albums[0].uuid, albums[0].genre);
-    }
+        db.prepare(queryA2G).run(albums[0].uuid, genre);
+    });
     const queryA2A = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
     const insertA2A = db.prepare(queryA2A);
     console.log(albums);
     for(let i = 0; i < albums.length; i++){
-        const album = albums[i];
-        if(!album.artist) continue;
-        insertA2A.run(album.artist, album.uuid);
+        albums[i].artist.forEach((artist) => {
+            insertA2A.run(artist, albums[i].uuid);
+        })
     }
 
     return
@@ -50,10 +52,16 @@ const batchInsert = (table, columns, params, ignore = false) => {
 
  const getAlbums = ()  => {
     const query = `
-        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
+        SELECT a.id AS id, a.title AS title,
+        json_group_array(json_object(
+            'id', ad.id,
+            'name', ad.name
+        )) AS artists,
+        a.cover AS cover
         FROM albums AS a 
         JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
         JOIN artists_descs AS ad ON A2A.artist = ad.id
+        GROUP BY a.id, a.title, a.cover;
     `;
     return db.prepare(query).all(); 
 }
@@ -66,13 +74,51 @@ const batchInsert = (table, columns, params, ignore = false) => {
         JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE a.id = ?
     `;
+    const genresInfos =`
+        SELECT g.name as genreName, g.id as genreId
+        FROM albums AS a 
+        JOIN albums_to_genres AS A2G ON a.id = A2G.album
+        JOIN genres AS g ON A2G.genre = g.id
+        WHERE a.id = ?
+    `;
     const tracksInfos = `
         SELECT t.id AS id, t.title AS title, t.track_number AS track_number, t.duration AS rawDuration
         FROM tracks AS t 
         WHERE t.album = ?
         ORDER BY track_number ASC
     `;
-    return {albumInfos : db.prepare(queryAlbumInfos).get(id), tracks : db.prepare(tracksInfos).all(id)};
+
+    const artistInfos = `
+        SELECT ad.id AS id, ad.name AS name
+        FROM albums AS a
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        WHERE a.id = ?
+    `;
+    return {
+        albumInfos : db.prepare(queryAlbumInfos).get(id),
+        genres : db.prepare(genresInfos).all(id),
+        tracks : db.prepare(tracksInfos).all(id),
+        artists : db.prepare(artistInfos).all(id)};
+}
+
+const getGenreAlbums = (id) => {
+    const queryAlbums = `
+        SELECT a.id AS id, a.title AS title,
+        json_group_array(json_object(
+            'id', ad.id,
+            'name', ad.name
+        )) AS artists,
+        a.cover AS cover
+        FROM albums AS a 
+        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        JOIN albums_to_genres AS A2G ON a.id = A2G.album
+        WHERE A2G.genre = ?
+        GROUP BY a.id, a.title, a.cover;`;
+    const queryInfos = `SELECT name FROM genres WHERE id = ?`;
+    return {albums : db.prepare(queryAlbums).all(id), 
+            name : db.prepare(queryInfos).get(id).name};
 }
 
  const getTrackNameCover = (id) => {
@@ -238,8 +284,16 @@ const findAudioEntity = (id) => {
     const queryArtsits = `
         SELECT a.id AS id, a.name as name FROM artists_descs a WHERE a.name LIKE ?;
     `;
+    const queryGenre = `
+        SELECT g.id AS id, g.name as name FROM genres g WHERE g.name LIKE ?;
+    `;
 
-    return ({tracks: db.prepare(queryTracks).all(`%${id}%`), albums : db.prepare(queryAlbums).all(`%${id}%`), artists: db.prepare(queryArtsits).all(`%${id}%`)});
+    return ({
+        tracks: db.prepare(queryTracks).all(`%${id}%`),
+        albums : db.prepare(queryAlbums).all(`%${id}%`),
+        artists: db.prepare(queryArtsits).all(`%${id}%`),
+        genres: db.prepare(queryGenre).all(`%${id}%`)
+    });
 }
 
 const getAllTracks = () => {
@@ -277,4 +331,5 @@ module.exports = {addTracks,
     getTracksAddedByUsers,
     findAudioEntity,
     getAllTracks,
-    getTrackPath };
+    getTrackPath,
+    getGenreAlbums };

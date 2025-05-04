@@ -81,7 +81,7 @@
     display: none;
 }
 @media screen and (min-width: 450px) {
-    .mobile-gost{display: inline-block; width: 140px;}
+    .mobile-gost{display: flex; width: 140px; gap: 10px}
     .trackinfo-desktop{
     width: 100%;
     display: flex;
@@ -161,4 +161,14 @@
 
 .serach-button-div:hover{
     background-color: rgb(212, 219, 253);
+}
+
+.volume-bar{
+    position: absolute;
+    top: 60px;
+    width: 200px;
+    background-color: white;
+    padding: 15px 20px;
+    border-radius: 20px;
+    z-index: 10;
 }

@@ -1,8 +1,23 @@
+
+.trackRemapAlbum-container{
+    border-radius: 10px;
+    padding: 25px;
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    align-content: center;
+}
+
 .trackRemapAlbum{
     background-color: rgb(255, 240, 255);
     border-radius: 10px;
-    position: absolute;
     padding: 25px;
+    position: relative;
+    margin: auto;
+    width: calc(50%);
+
 }
 .trackRemapAlbum form{
     display: flex;

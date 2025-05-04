@@ -32,7 +32,6 @@ CREATE TABLE albums(
     title VARCHAR(255) NOT NULL,
     release_date DATE,
     cover VARCHAR(255),
-    genre int,
     description TEXT,
     PRIMARY KEY (id)
 );

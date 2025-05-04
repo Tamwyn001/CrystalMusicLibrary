@@ -15,6 +15,7 @@ import Settings from './pages/Settings';
 import AdminPannel from './pages/AdminPannel';
 import Register from './components/Register';
 import GlobalActionBar from './GlobalActionBar';
+import GenreView from './pages/GenreView';
 function App() {
 
 
@@ -30,6 +31,7 @@ function App() {
                             <Route path="albums/:albumId" element={<AlbumView />}/>
                             <Route path="artists" element={<Artist />} />
                             <Route path="artists/:artistId" element={<ArtistView />}/>
+                            <Route path="genres/:genreId" element={<GenreView />} />
                         </Route>
                         <Route path="account" element={<Account />} /> 
                         <Route path="settings" element={<Settings />} /> 
