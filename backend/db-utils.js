@@ -13,7 +13,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
     const localTime = currentDate();
     const {id : userAddingId} = db.prepare("SELECT id FROM users WHERE email = ?").get(userAdding);
     batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration, uploaded_by", 
-        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path,localTime, track.no, track.duration, userAddingId || 1]));
+        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path, localTime, track.no, track.duration, userAddingId || 1]));
 }
 
 
@@ -29,7 +29,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
     batchInsert("albums", "id, title, release_date, cover, description", 
-        albums.map((album) => [album.uuid, album.name, localTime, (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description]));
+        albums.map((album) => [album.uuid, album.name, album.year , (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description]));
 
     //insert into albums_to_genres
     albums[0].genre.forEach((genre) => {
@@ -68,7 +68,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
 
  const getAlbum = (id) => {
     const queryAlbumInfos = `
-        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover
+        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover, a.description AS description, a.release_date AS release_date
         FROM albums AS a 
         JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
         JOIN artists_descs AS ad ON A2A.artist = ad.id
@@ -307,6 +307,32 @@ const getTrackPath = (id)  =>{
 }
 
 
+const applyAlbumsEdit = (album) => {
+    console.log(album);
+    // for the many to one relationships, we need to delete all the old occurence and insert the new ones
+    // todo for the cover change, query the old one, delete file and update with newly uploaded one
+    const updateAlbum = `UPDATE albums SET title = ?, release_date = ?, description = ? WHERE id = ?`;
+    db.prepare(updateAlbum).run([album.name, album.year, album.description, album.id]);
+
+    const updateGenres = `DELETE FROM albums_to_genres WHERE album = ?;`
+    db.prepare(updateGenres).run(album.id);
+    batchInsert("genres", "name", album.genre.map((genre) => [genre]), true);
+
+    const insertA2G = db.prepare("INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES (? , (SELECT id from genres WHERE name = ?))")
+    for(const genre of album.genre){
+        insertA2G.run(album.id, genre);
+    }
+
+    const updateArtists = `DELETE FROM artists_to_albums WHERE taking_part = ?;`
+    db.prepare(updateArtists).run(album.id);
+    batchInsert("artists_descs", "name", album.artist.map((artist) => [artist]), true);
+    const insertA2A = db.prepare("INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)");
+    for(const artist of album.artist.filter((artist) => artist.trim() !== '')){
+        insertA2A.run(artist, album.id);
+    }
+    return;
+}
+
 module.exports = {addTracks,
     addAlbums,
     getAlbums,
@@ -332,4 +358,5 @@ module.exports = {addTracks,
     findAudioEntity,
     getAllTracks,
     getTrackPath,
-    getGenreAlbums };
+    getGenreAlbums,
+    applyAlbumsEdit };

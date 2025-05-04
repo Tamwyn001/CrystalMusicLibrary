@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useNavigate, useParams } from "react-router-dom";
-import {IconArrowBackUp, IconArrowsShuffle, IconCodePlus} from "@tabler/icons-react";
+import {IconArrowBackUp, IconArrowsShuffle, IconCodePlus, IconEdit} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
@@ -17,10 +17,16 @@ const AlbumView = () => {
     const [artists, setArtists] = useState([]);
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
-    const { addAlbumToQueue, playSuffle } = useAudioPlayer();
+    const { addAlbumToQueue, playSuffle, editAlbum, setAlbumAskRefresh } = useAudioPlayer();
     const navigate = useNavigate();
     const albumId = useParams().albumId;
+
     useEffect(() => {
+        refetchAlbum();        
+    }, [albumId]);
+    
+
+    const refetchAlbum = () => {
         fetch(`${apiBase}/read-write/album/${albumId}`, {
             method: "GET",
             credentials: "include"
@@ -30,14 +36,15 @@ const AlbumView = () => {
             return res.json();
         })
         .then(data => {setAlbum(data.albumInfos);
-             setTracks(data.tracks);
+            setTracks(data.tracks);
             setGenres(data.genres);
             setArtists(data.artists);
             console.log(data.albumInfos);
             setCurrentPlayIcon(Math.floor(Math.random() * 3));
         })
-        
-    }, [albumId]);
+    };
+    useEffect(() => {setAlbumAskRefresh(refetchAlbum);}, []);
+
     const handleAddToQueue = async () => {
         const res = await addAlbumToQueue(albumId);
         return res;
@@ -45,6 +52,9 @@ const AlbumView = () => {
     const handleShuffle = async () => {
         playSuffle(albumId, false);
     }
+    const openEdit = () => {
+        editAlbum(albumId);
+    };
     return (
         <div className="album-view">
             <button className="roundButton" onClick={() => window.history.back()}>
@@ -78,7 +88,9 @@ const AlbumView = () => {
                             <div className="track-list-header">
                                 <ButtonWithCallback text={'Add to queue'} icon={<IconCodePlus/>} onClick={handleAddToQueue}/>
                                 <ButtonWithCallback text={'Random'} icon={<IconArrowsShuffle />} onClick={handleShuffle}/>
-
+                                <button className="button-with-callback" onClick={openEdit}>
+                                    <IconEdit/>
+                                </button>
                             </div>
                             {tracks.map((track, index) => (<TrackView key={track.path} index={index} track={track} containerId={albumId}
                              isPlaylistView={false} playIconId={currentPlayIcon} />))}

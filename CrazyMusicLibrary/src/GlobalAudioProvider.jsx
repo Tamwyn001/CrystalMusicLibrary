@@ -4,6 +4,8 @@ import { parseAudioDuration } from "../lib.js";
 import { preconnect } from "react-dom";
 
 import _, { floor } from "lodash";
+import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
+
 const AudioPlayerContext = createContext();
 
 //this is only for the top level component
@@ -22,6 +24,8 @@ export const AudioPlayerProvider = ({ children }) => {
     const [justAddedNewToQueue, setJustAddedNewToQueue] = useState(false); // Flag to indicate if a new track was added to the queue
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
+    const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
+    const albumAskRefreshRef = useRef(null); // Contains the refresh callback 
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
@@ -264,12 +268,53 @@ export const AudioPlayerProvider = ({ children }) => {
         });
     }
 
+    const editAlbum = (albumID) => {
+        console.log('Editing album', albumID);
+        fetch(`${apiBase}/read-write/album/${albumID}`, {
+            method: 'GET', credentials: 'include'})
+        .then(res=> res.json())
+        .then((data) => {
+            console.log(data);
+            const {albumInfos, genres, tracks, artists} = data;
+            console.log('Album data', data);
+            setEditingAlbum({
+                id: albumID,
+                coverURL: `${apiBase}/covers/${albumInfos.cover}`,
+                tracks,
+                name: albumInfos.title,
+                artist: artists.map((artist) => artist.name),
+                year: albumInfos.release_date,
+                description: albumInfos.description,
+                genre: genres.map((genre) => genre.genreName)});
+    });
+        return;
+    }
+
     useEffect(() => {
         // Avoid setting state here again! Just apply it.
         const clamped = Math.min(1, Math.max(0, volume));
         audioRef.current.volume = (clamped).toFixed(4) * 0.75;
         localStorage.setItem('volume', clamped);
     }, [volume]);
+
+    const applyAlbumsChanges = (albumClass) => {
+        if(!albumClass) { //no changes made
+            console.log('No changes made');
+            setEditingAlbum(null);
+            return;
+        }
+        const data = new FormData();
+        data.append('album', JSON.stringify(albumClass));
+        fetch(`${apiBase}/read-write/editAlbum`, 
+            {method: 'POST',
+            credentials: 'include',
+            body: data})
+        .then(()=> {
+            setEditingAlbum(null); 
+            albumAskRefreshRef.current();    
+        })
+    }
+
     
     return (
         <AudioPlayerContext.Provider 
@@ -296,9 +341,14 @@ export const AudioPlayerProvider = ({ children }) => {
             playTrackNoQueue,
             playLibraryShuffle,
             setVolume,
-            volume
+            volume,
+            editAlbum,
+            setAlbumAskRefresh : (fn) => {
+                albumAskRefreshRef.current = fn;
+            },
             }}>
             {children}
+            {(editingAlbum) && <EditAlbumInfos applyCanges={applyAlbumsChanges} albumClass={editingAlbum}/>}
         </AudioPlayerContext.Provider>
     );
 }
