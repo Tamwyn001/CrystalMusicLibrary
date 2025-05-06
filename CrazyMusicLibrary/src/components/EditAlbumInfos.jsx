@@ -61,7 +61,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     return(
         <div className="albumWrapping-library-container">
             <div className="albumWrapping-library">
-                <div className="albumCover">
+                <div className="albumCover"  edit="true">
                     <div className="albumCoverImageEdit">
                         {(coverURL)? <img id="coverPicture" src={coverURL} style={{width: "100%"}}/>
                         : <CML_logo id="coverPicture" style={{width: "100%"}}/>}

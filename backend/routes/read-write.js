@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -68,10 +68,11 @@ router.get("/album/:id",  (req, res) => {
     res.json(album);
 });
 
-router.get("/playlist/:id",  (req, res) => {
+router.get("/playlist/:id{/:shortInfos}",  (req, res) => {
     const token = req.cookies.token;
+    const shortInfos = req.params.shortInfos || false;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
-    const playlist = getPlaylist(req.params.id, decoded.email);
+    const playlist = getPlaylist(req.params.id, decoded.email, shortInfos);
     res.json(playlist);
 });
 
@@ -137,12 +138,14 @@ router.get("/shortTrackInfos/:id", async (req, res) => {
     res.json(getTrackNameCover(req.params.id));
 });
 
-router.get("/nextSongs/:isPlaylist/:containerId", (req, res) => {
-    const { isPlaylist, containerId } = req.params;
-    const nextSongs = (isPlaylist === "true") ?
-        getNextSongsFromPlayist(containerId) : getNextSongsFromAlbum(containerId);
+router.get("/nextSongs/:containerType/:containerId", (req, res) => {
+    const { containerType, containerId } = req.params;
+    const nextSongs = 
+        (containerType === "playlist") ? getNextSongsFromPlayist(containerId) 
+        : (containerType === "album") ? getNextSongsFromAlbum(containerId) 
+        : [];
 
-    res.json({queue: nextSongs.map((song) => {return song.id})});
+    res.json( nextSongs.map(song => song.id));
     return;
     
 });
@@ -218,8 +221,15 @@ router.get("/all-songs", async (req, res) => {
     res.json(getAllTracks());
 });
 
-router.post("/editAlbum", upload.single("cover"), (req, res) => {
-    applyAlbumsEdit( JSON.parse(req.body.album), req.file?.filename);
+router.post("/editContainer/:type", upload.single("cover"), (req, res) => {
+    switch(req.params.type){
+        case "album" :
+            applyAlbumsEdit(JSON.parse(req.body.album), req.file?.filename);
+            break;
+        case "playlist" :
+            applyPlaylistEdit(JSON.parse(req.body.playlist), req.file?.filename);
+            break
+    }
     res.json({ message: "Album edited successfully" });
 });
 

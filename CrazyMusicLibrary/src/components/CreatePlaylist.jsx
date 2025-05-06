@@ -8,10 +8,10 @@ import apiBase from '../../APIbase';
 import { v4 as uuidv4} from 'uuid';
 
 
-const CreatePlaylist = ({applyCanges}) => {
+const CreatePlaylist = ({applyCanges, editPlaylistClass}) => { //preFeed is for editing a playlist
     const [coverURL, setCoverURL] = useState(null);
     const [fileOverwrite, setFileOverwrite] = useState(null);
-    const [playlistClass, setPlaylistClass] = useState({uuid : uuidv4()});
+    const [playlistClass, setPlaylistClass] = useState((editPlaylistClass) ? editPlaylistClass : {id : uuidv4()});
     const [possibleCollaborators, setPossibleCollaborators] = useState([])
     const [collaborators, setCollaborators] = useState([]);
 
@@ -19,13 +19,20 @@ const CreatePlaylist = ({applyCanges}) => {
     useEffect(() => {
         if (playlistClass) {
             setCoverURL(playlistClass.coverURL);
+           
+        }
+        if(playlistClass.collaborators){
+            setCollaborators(playlistClass.collaborators);
         }
     }, [playlistClass]);
     const handleApply = () => {
+        console.log("before:",playlistClass.collaborators)
+        console.log("after:",collaborators)
         const form = document.getElementById("editAlbumInfos");
         let changeOperated = ((form.playlistName.value !== playlistClass.name) 
             || (playlistClass.description !== form.description.value)
-            || (fileOverwrite));
+            || (fileOverwrite)
+            || (playlistClass.collaborators.map(colab => !collaborators.includes(colab)).filter(cond => cond) ));
         if (!changeOperated) {
             applyCanges(null);
             return;
@@ -71,7 +78,7 @@ const CreatePlaylist = ({applyCanges}) => {
     return(
         <div className="albumWrapping-library-container">
             <div className="albumWrapping-library">
-                <div className="albumCover">
+                <div className="albumCover" edit="true">
                     <div className="albumCoverImageEdit">
                         {(coverURL)? <img id="coverPicture" src={coverURL} style={{width: "100%"}}/>
                         : <CML_logo id="coverPicture" style={{width: "100%"}}/>}
@@ -94,13 +101,13 @@ const CreatePlaylist = ({applyCanges}) => {
                     <label htmlFor='new-collab'>Add collaborators</label>
                     <select onChange={addNewCollab}>
                         <option value="pickUsers" key={"root"}>Pick users</option>
-                        {possibleCollaborators.map((user) => <option key={user.id} value={user.id}>{user.username}</option>)}
+                        {possibleCollaborators.map((user) => <option key={user.id} value={user.id}>{user.name}</option>)}
                     </select>
                     <label>Collaborators:</label>
                     <div>
-                        {collaborators.map((user) => {return (
+                        {collaborators?.map((user) => {return (
                             <div key={user?.id} >
-                                <span>{user?.username}</span>
+                                <span>{user?.name}</span>
                                 <IconUserMinus className='buttonRound' onClick={() => {removeCollab(user.id)}}/>
                             </div>    
                         )})}

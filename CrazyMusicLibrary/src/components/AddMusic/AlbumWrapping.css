@@ -28,7 +28,7 @@
     margin: auto;
     top: 300px;
     height: fit-content;
-    width: fit-content;
+    width: 800px;
     border-radius: 20px;
 }
 
@@ -41,6 +41,9 @@
     height: auto;
     aspect-ratio: 1;
     gap: 10px;
+}
+.albumCover[edit="true"]{
+    width: 400px;
 }
 .albumCoverImage{
     width: 100%;

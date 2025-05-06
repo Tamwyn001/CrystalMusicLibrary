@@ -68,7 +68,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
     return db.prepare(query).all(); 
 }
 
-const getPlaylist = (id, usermail) => {
+const getPlaylist = (id, usermail, shortInfos) => {
     const playlistInfos = `
         SELECT id, name as title, cover, description, created_at, modified_at, created_by
         FROM playlists_descs
@@ -78,8 +78,22 @@ const getPlaylist = (id, usermail) => {
         SELECT p2o.owner_id as id, u.username as name
         FROM playlists_to_owners as p2o
         JOIN users as u ON u.id = p2o.owner_id 
-        WHERE playlist_id = ?
+        WHERE playlist_id = ? AND (u.email != ?)
     `
+    const ownerInfos = `
+        SELECT u.username as name, u.id as id, u.email as email 
+        FROM users u
+        JOIN playlists_descs pd ON pd.created_by =  u.id
+        WHERE pd.id = ?;`;
+    console.log(db.prepare(ownerInfos).get(id));
+    const {email : ownerEmail, ...owner} = db.prepare(ownerInfos).get(id);
+    if(shortInfos){
+        return {
+            playlistInfos : db.prepare(playlistInfos).get(id),
+            collaborators : db.prepare(collaboratorsInfos).all([id, usermail]),
+            owner : owner,
+            isOwner: ownerEmail === usermail}
+    }
 
     const tracksInfos = `
         SELECT t.id AS id, t.title AS title, t2p.track_no AS track_number, t.duration AS rawDuration, EXISTS (
@@ -90,13 +104,15 @@ const getPlaylist = (id, usermail) => {
         WHERE t2p.playlist_id = ?
         ORDER BY t2p.track_no ASC
     `;
-    const favid = db.prepare("SELECT favorites_playlist as playlistId FROM users WHERE email = ? ").get(usermail)?.playlistId;
 
     return {
         playlistInfos : db.prepare(playlistInfos).get(id),
-        collaborators : db.prepare(collaboratorsInfos).all(id),
+        collaborators : db.prepare(collaboratorsInfos).all([id, usermail]),
         tracks : db.prepare(tracksInfos).all([usermail, id]),
-        isFavPlaylist: db.prepare("SELECT favorites_playlist as playlistId FROM users WHERE email = ? ").get(usermail).playlistId === id}
+        isFavPlaylist: db.prepare("SELECT favorites_playlist as playlistId FROM users WHERE email = ? ").get(usermail).playlistId === id,
+        owner : owner,
+        isOwner: ownerEmail === usermail
+    }
 };
 
  const getAlbum = (id, usermail) => {
@@ -184,7 +200,11 @@ const getGenreAlbums = (id) => {
 }
 
  const getNextSongsFromPlayist = (playlistId) => {
-    return;
+    const query = `
+        SELECT t2p.track_id as id 
+        FROM tracks_to_playlists t2p
+        WHERE t2p.playlist_id = ?  ORDER BY track_no ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+    return db.prepare(query).all(playlistId);
 }
 
  const getTrackCoverPath = (trackId) => {
@@ -352,7 +372,7 @@ const applyAlbumsEdit = (album, newCoverName = null) => {
     const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
     const oldCover = db.prepare("SELECT cover FROM albums WHERE id = ?").get(album.id);
 
-    if(oldCover.cover && newCoverName){
+    if(oldCover?.cover && newCoverName){
         try{
             // console.log("delteing cover at", path.join(uploadPath, 'covers' , oldCover.cover));
             unlinkSync(path.join(uploadPath, 'covers' , oldCover.cover));
@@ -384,6 +404,34 @@ const applyAlbumsEdit = (album, newCoverName = null) => {
     return;
 }
 
+const applyPlaylistEdit = (playlist, newCoverName = null) => {
+    // for the many to one relationships, we need to delete all the old occurence and insert the new ones
+    // need to delete old cover. Even if uuid matches, the extension might not be the same
+    const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
+    const oldCover = db.prepare("SELECT cover FROM albums WHERE id = ?").get(playlist.id);
+
+    if(oldCover?.cover && newCoverName){
+        try{
+            // console.log("delteing cover at", path.join(uploadPath, 'covers' , oldCover.cover));
+            unlinkSync(path.join(uploadPath, 'covers' , oldCover.cover));
+        } catch{ (err) => {
+            throw new Error("Error deleting old cover: ", err);
+        }}
+    }
+    const updateAlbum = `UPDATE playlists_descs SET name = ?, modified_at = ?, description = ? ${(newCoverName) ? ", cover = ?": ""} WHERE id = ?`;
+    const updateAlbumArgs = [playlist.name, currentDate(), playlist.description, playlist.id];
+    const updateAlbumArgsFile = [playlist.name, currentDate(), playlist.description, newCoverName, playlist.id];
+    db.prepare(updateAlbum).run((newCoverName) ? updateAlbumArgsFile : updateAlbumArgs);
+
+    const updateCollabs = `DELETE FROM playlists_to_owners WHERE playlist_id = ? AND (owner_id NOT IN (SELECT created_by from playlists_descs WHERE id = ?));`
+    db.prepare(updateCollabs).run([playlist.id, playlist.id]);
+    if(playlist.collaborators.length > 0){
+        batchInsert("playlists_to_owners", "playlist_id, owner_id", playlist.collaborators.map((colab) => [playlist.id, colab]), true);
+    }
+    return;
+}
+
+
 const setFavorite = (id, usermail, favorite) => {
     const query = (favorite) ?
         `INSERT OR IGNORE INTO favorites (entry_id, user_id) VALUES (?, (SELECT id FROM users WHERE email = ?));`
@@ -410,23 +458,23 @@ const getGenres = () => db.prepare("SELECT name, id FROM genres;").all();
 
 const getPlaylists = () => db.prepare("SELECT name, id, description, cover FROM playlists_descs").all();
 
-const getUsers = () => db.prepare("SELECT id, username, email FROM users").all();
+const getUsers = () => db.prepare("SELECT id, username as name, email FROM users").all();
 
 const createPlaylist = (playlist, email, fileName = null) => {
-
+    console.log(playlist);
     const creatorId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
     const addQuery = `
         INSERT INTO playlists_descs 
         (id, name, cover, description, created_at, created_by)
         VALUES (?,?,?,?,?,?)`;
-    db.prepare(addQuery).run([playlist.uuid, playlist.name, fileName, playlist.description, currentDate(), creatorId]);
+    db.prepare(addQuery).run([playlist.id, playlist.name, fileName, playlist.description, currentDate(), creatorId]);
     playlist.collaborators.push(creatorId)
     for(const contrib of playlist.collaborators){
-        db.prepare("INSERT OR IGNORE INTO playlists_to_owners (playlist_id, owner_id) VALUES (?,?)").run([playlist.uuid, contrib]);
+        db.prepare("INSERT OR IGNORE INTO playlists_to_owners (playlist_id, owner_id) VALUES (?,?)").run([playlist.id, contrib]);
     }
 }
 const addTrackToPlaylist = (trackId, playlistId, addAllToFavorite) => {
-    insertFoundTracksToPlaylist ([trackId],playlistId);
+    insertFoundTracksToPlaylist ([trackId],playlistId, addAllToFavorite);
 }
 const addAlbumToPlaylist = (albumId, playlistId, addAllToFavorite) => {
     const albumQuery = `
@@ -464,7 +512,7 @@ const addGenreToPlaylist = (genreId, playlistId, addAllToFavorite) => {
     const genreQuery = `
     SELECT t.id as id FROM tracks t
     JOIN albums_to_genres a2g ON t.album = a2g.album
-    JOIN genres g ON g.id = a2f.genre
+    JOIN genres g ON g.id = a2g.genre
     WHERE g.id = ?
     `;
     const tracks = db.prepare(genreQuery).all(genreId)?.map((track) => track.id);
@@ -480,7 +528,7 @@ const insertFoundTracksToPlaylist = (tracks, playlistId, addAllToFavorite) => {
         return;
     }
     const addingId = db.prepare("SELECT COUNT(*) as length FROM tracks_to_playlists WHERE playlist_id = ?;").get(playlistId).length;
-    batchInsert("tracks_to_playlists", [ "playlist_id", "track_id", "track_no"], tracks.map((trackId, index) => {return [playlistId, trackId, addingId + index + 1]}) ,true);
+    batchInsert("tracks_to_playlists",  "playlist_id, track_id, track_no", tracks.map((trackId, index) => {return [playlistId, trackId, addingId + index + 1]}) ,true);
 
     return;
 }
@@ -517,6 +565,7 @@ module.exports = {
     getTrackPath,
     getGenreAlbums,
     applyAlbumsEdit,
+    applyPlaylistEdit,
     setFavorite,
     getGenres,
     getPlaylists,

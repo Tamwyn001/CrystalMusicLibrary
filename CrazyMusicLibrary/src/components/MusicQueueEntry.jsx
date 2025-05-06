@@ -26,7 +26,6 @@ const MusicQueueEntry = ({index, trackId,style}) => {
                 return res.json();
             })
             .then(data => {
-                console.log("Track data: ", data);
                 setTrackInfo(data);
                 setTrack(trackId, data); //cache the values
             })

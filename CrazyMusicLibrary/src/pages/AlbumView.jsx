@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useNavigate, useParams } from "react-router-dom";
-import {IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconSearch} from "@tabler/icons-react";
+import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
@@ -22,7 +22,7 @@ const AlbumView = ({isPlaylist = false}) => {
     const [artists, setArtists] = useState([]);
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
-    const { addAlbumToQueue, playSuffle, editAlbum, setAlbumAskRefresh } = useAudioPlayer();
+    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, setAlbumAskRefresh } = useAudioPlayer();
     const wrapperRef = useRef(null) ;
     const navigate = useNavigate();
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
@@ -47,14 +47,16 @@ useEffect(() => {
         })
         .then(data => {
             setCurrentPlayIcon(Math.floor(Math.random() * 3));
-            console.log(data.albumInfos);
+            
             if(isPlaylist){
+                console.log(data.playlistInfos);
                 setAlbum(data.playlistInfos);
                 setTracks(data.tracks);
-                setArtists(data.collaborators);
+                setArtists([data.owner, ...data.collaborators]);
                 setIsFavPlaylist(data.isFavPlaylist)
                 return;
             }
+            console.log(data.albumInfos);
             setAlbum(data.albumInfos);
             setTracks(data.tracks);
             setGenres(data.genres);
@@ -65,13 +67,17 @@ useEffect(() => {
     useEffect(() => {setAlbumAskRefresh(refetchAlbum);}, []);
 
     const handleAddToQueue = async () => {
-        const res = await addAlbumToQueue(albumId);
+        const res = await addContainerToQueue(albumId, isPlaylist ? "playlist" : "album");
         return res;
     }
     const handleShuffle = async () => {
-        playSuffle(albumId, false);
+        playContainerSuffle(albumId, isPlaylist ? "playlist" : "album");
     }
     const openEdit = () => {
+        if(isPlaylist){
+            editPlaylist(albumId)
+            return;
+        }       
         editAlbum(albumId);
     };
 
@@ -86,13 +92,15 @@ useEffect(() => {
     const getTooltipOnSearchResult = (type) => {
         switch (type) {
             case 'track':
-                return <IconChevronRight className="action-bar-entry-tooltip-logo" />;
+                return <IconMusicPlus className="action-bar-entry-tooltip-logo" />;
             case 'album':
-                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add album</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add album</span> <IconFolderPlus className="action-bar-entry-tooltip-logo"/></div>;
             case 'artist':
-                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add artist's discography</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add artist's discography</span> <IconAddressBook className="action-bar-entry-tooltip-logo"/></div>;
             case 'playlist':
-                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add entire playlist</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add entire playlist</span> <IconPlaylistAdd className="action-bar-entry-tooltip-logo"/></div>;
+            case 'genre':
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add entire genre</span> <IconFlagPlus className="action-bar-entry-tooltip-logo"/></div>;
             default:
                 return null
             }
@@ -212,9 +220,11 @@ useEffect(() => {
                             <div className="track-list-header">
                                 <ButtonWithCallback text={'Add to queue'} icon={<IconCodePlus/>} onClick={handleAddToQueue}/>
                                 <ButtonWithCallback text={'Random'} icon={<IconArrowsShuffle />} onClick={handleShuffle}/>
-                                <button className="button-with-callback" onClick={openEdit}>
-                                    <IconEdit/>
-                                </button>
+                                {(!isFavPlaylist) &&
+                                    <button className="button-with-callback" onClick={openEdit}>
+                                        <IconEdit/>
+                                    </button>
+                                }
                             </div>
                             {(isPlaylist) &&         
                                 <div className="action-bar" is-playlist-add={"true"} ref={wrapperRef}>

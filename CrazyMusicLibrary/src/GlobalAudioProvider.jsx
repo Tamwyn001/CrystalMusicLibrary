@@ -93,34 +93,33 @@ export const AudioPlayerProvider = ({ children }) => {
             return; // Don't play the previous song if the current time is less than 3 seconds
         }
         setQueuePointer(queuePointer - 1); // Move to the previous track in the queue
-    }
-    const addAlbumToQueue = async (albumID) => {
+    };
+
+    const addContainerToQueue = (containerId, containerType) => {
         setJustAddedNewToQueue(true);
-        const res = await fetch(`${apiBase}/read-write/album/${albumID}`, {
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, {
             method: 'GET',
             credentials: 'include'
-        });
-        if (!res.ok) {
-            throw new Error('Network response was not ok'); 
-        }
-        const data = await res.json();
-        // console.log('Adding album to queue', data);
-        const tracks = data.tracks.map((track) => track.id); // Extract the track paths from the response
-        setPlayQueue((prevQueue) => [...prevQueue, ...tracks]);
-    }
-
-    const playSuffle = (containerId, isPlaylist) => {
-        context.containerId = containerId;
-        context.isPlaylist = isPlaylist;
-        fetch(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}`, { 
-            method: 'GET'
-        }).then(response => response.json())
+        })
+        .then(res => res.json())
         .then(data => {
-            console.log('setting play queue', data.queue);
-            setPlayQueue(_.shuffle(data.queue));
+            setPlayQueue((prevQueue) => [...prevQueue, ...data]);        
+        });
+    };
+
+    const playContainerSuffle = (containerId, containerType) => {
+        context.containerId = containerId;
+        context.isPlaylist = containerType === "playlist";
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, { 
+            method: 'GET',
+            credentials : "include"
+        }).then(res => res.json())
+        .then(data => {
+            setPlayQueue(_.shuffle(data));
             setQueuePointer(0); //we do this here to this when the useEffect fires, both are updated.
         });
-    }
+    };
+
     const playNextSong = (useRefs = false) => {
         const queue = useRefs ? playQueueRef.current : playQueue;
         const pointer = useRefs ? queuePointerRef.current : queuePointer;
@@ -276,19 +275,36 @@ export const AudioPlayerProvider = ({ children }) => {
             method: 'GET', credentials: 'include'})
         .then(res=> res.json())
         .then((data) => {
-            console.log(data);
             const {albumInfos, genres, tracks, artists} = data;
-            console.log('Album data', data);
             setEditingAlbum({
                 id: albumID,
                 coverURL: `${apiBase}/covers/${albumInfos.cover}`,
                 tracks,
+                type : "album",
                 name: albumInfos.title,
                 artist: artists.map((artist) => artist.name),
                 year: albumInfos.release_date,
                 description: albumInfos.description,
                 genre: genres.map((genre) => genre.genreName)});
-    });
+        });
+        return;
+    }
+
+    const editPlaylist = (playlistId) => {
+        fetch(`${apiBase}/read-write/playlist/${playlistId}/${true}`, {
+            method: 'GET', credentials: 'include'})
+        .then(res=> res.json())
+        .then((data) => {
+            const {playlistInfos, collaborators} = data;
+            setEditingAlbum({
+                id: playlistInfos.id,
+                type : "playlist",
+                coverURL: `${apiBase}/covers/${playlistInfos.cover}`,
+                name: playlistInfos.title,
+                description: playlistInfos.description,
+                collaborators : collaborators
+            });
+        });
         return;
     }
 
@@ -299,19 +315,19 @@ export const AudioPlayerProvider = ({ children }) => {
         localStorage.setItem('volume', clamped);
     }, [volume]);
 
-    const applyAlbumsChanges = (albumClass, file = null) => {
-        if(!albumClass) { //no changes made
+    const applyContainerChanges = (containerClass, file = null) => {
+        if(!containerClass) { //no changes made
             console.log('No changes made');
             setEditingAlbum(null);
             return;
         }
         const data = new FormData();
-        data.append('album', JSON.stringify(albumClass));
+        data.append(`${containerClass.type}`, JSON.stringify(containerClass));
         //for uploading a new cover we need an object album.uuid, album.ext
         if(file) {
             data.append('cover', file);
         }
-        fetch(`${apiBase}/read-write/editAlbum`, 
+        fetch(`${apiBase}/read-write/editContainer/${containerClass.type}`, 
             {method: 'POST',
             credentials: 'include',
             body: data})
@@ -343,6 +359,8 @@ export const AudioPlayerProvider = ({ children }) => {
             playlistAddedCallback.current();
         })
     }
+
+
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -357,8 +375,8 @@ export const AudioPlayerProvider = ({ children }) => {
             playingTrack,
             jumpTrackSeconds,
             jumpToPercent,
-            addAlbumToQueue,
-            playSuffle,
+            addContainerToQueue,
+            playContainerSuffle,
             playQueue,
             queuePointer,
             jumpToQueueTrack,
@@ -370,6 +388,7 @@ export const AudioPlayerProvider = ({ children }) => {
             setVolume,
             volume,
             editAlbum,
+            editPlaylist,
             setAlbumAskRefresh : (fn) => {
                 albumAskRefreshRef.current = fn;
             },
@@ -379,7 +398,11 @@ export const AudioPlayerProvider = ({ children }) => {
             }
             }}>
             {children}
-            {(editingAlbum) && <EditAlbumInfos applyCanges={applyAlbumsChanges} albumClass={editingAlbum}/>}
+            {(editingAlbum) ? ( 
+                editingAlbum.type === "album" ? <EditAlbumInfos applyCanges={applyContainerChanges} albumClass={editingAlbum}/>
+                : editingAlbum.type === "playlist" ? <CreatePlaylist editPlaylistClass={editingAlbum} applyCanges={applyContainerChanges}/> 
+                : null) : null
+            }
             {(creatingNewPlaylist) && <CreatePlaylist applyCanges={sendNewPlaylist}/>}
         </AudioPlayerContext.Provider>
     );
