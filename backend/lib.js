@@ -28,6 +28,18 @@ const dirSize = async directory => {
     return ( await Promise.all( stats ) ).reduce( ( accumulator, { size } ) => accumulator + size, 0 );
   }
 
+  function interpolateQuery(sql, params) {
+    let i = 0;
+    return sql.replace(/\?/g, () => {
+      const val = params[i++];
+      if (val === null) return 'NULL';
+      if (typeof val === 'number') return val;
+      if (typeof val === 'boolean') return val ? '1' : '0';
+      return `'${String(val).replace(/'/g, "''")}'`; // escape single quotes
+    });
+  }
+
   module.exports = {
     currentDate,
-    dirSize};
+    dirSize,
+    interpolateQuery};

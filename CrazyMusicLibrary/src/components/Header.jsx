@@ -56,7 +56,8 @@ const Header = () => {
         <div className='trackinfos-parent'>
             <div className='trackinfo-desktop'>
                 <span id="songTitle">{currentTrackData.title}</span>
-                <span id="songArtist" style={{fontSize: '13px'}}>{currentTrackData.artist}</span>
+                <span id="songArtist" className="artist-name" style={{fontSize: '13px'}}
+                 onClick={()=>{navigate(`/artists/${currentTrackData.artistId}`)}}>{currentTrackData.artist}</span>
                 <SongProgress />
             </div>
             <div className='trackinfo-mobile'>

@@ -115,7 +115,7 @@ app.use(express.static(publicPath));
 
 
 
-const coversPath = path.join(basePath, "data", "covers");
+const coversPath = path.join(resolvedDataPath, "covers");
 app.use('/covers', express.static(coversPath));
 
 app.use(cors({

@@ -1,15 +1,20 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useNavigate, useParams } from "react-router-dom";
-import {IconArrowBackUp, IconArrowsShuffle, IconCodePlus, IconEdit} from "@tabler/icons-react";
+import {IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconSearch} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
 import CML_logo from "../components/CML_logo";
 import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
-const AlbumView = () => {
+import { FixedSizeList as List } from "react-window";
+import ActionBarEntry from "../components/ActionBarEntry";
+import { useGlobalActionBar } from "../GlobalActionBar";
+
+
+const AlbumView = ({isPlaylist = false}) => {
     //the actual album data
     const [album, setAlbum] = useState(null);
     const [tracks, setTracks] = useState([]);
@@ -18,16 +23,21 @@ const AlbumView = () => {
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
     const { addAlbumToQueue, playSuffle, editAlbum, setAlbumAskRefresh } = useAudioPlayer();
+    const wrapperRef = useRef(null) ;
     const navigate = useNavigate();
-    const albumId = useParams().albumId;
-
-    useEffect(() => {
+    const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
+    const albumId = (isPlaylist) ? useParams().playlistId : useParams().albumId ;
+    const [searchbarFocused, setSearchbarFocused] = useState(null);
+    const searchInputRef = useRef(null);
+    const { notifTypes, addNotification} = useGlobalActionBar();
+    const [isFavPlaylist, setIsFavPlaylist] = useState(false);
+useEffect(() => {
         refetchAlbum();        
     }, [albumId]);
     
 
     const refetchAlbum = () => {
-        fetch(`${apiBase}/read-write/album/${albumId}`, {
+        fetch(`${apiBase}/read-write/${ (isPlaylist) ? "playlist" : "album"}/${albumId}`, {
             method: "GET",
             credentials: "include"
         })
@@ -35,12 +45,21 @@ const AlbumView = () => {
             if (!res.ok) {throw new Error("Network response was not ok");}
             return res.json();
         })
-        .then(data => {setAlbum(data.albumInfos);
+        .then(data => {
+            setCurrentPlayIcon(Math.floor(Math.random() * 3));
+            console.log(data.albumInfos);
+            if(isPlaylist){
+                setAlbum(data.playlistInfos);
+                setTracks(data.tracks);
+                setArtists(data.collaborators);
+                setIsFavPlaylist(data.isFavPlaylist)
+                return;
+            }
+            setAlbum(data.albumInfos);
             setTracks(data.tracks);
             setGenres(data.genres);
             setArtists(data.artists);
-            console.log(data.albumInfos);
-            setCurrentPlayIcon(Math.floor(Math.random() * 3));
+           
         })
     };
     useEffect(() => {setAlbumAskRefresh(refetchAlbum);}, []);
@@ -55,6 +74,108 @@ const AlbumView = () => {
     const openEdit = () => {
         editAlbum(albumId);
     };
+
+    const playlistAddType = {
+        TRACK : "track",
+        ALBUM : "album",
+        ARTIST : "artist",
+        PLAYLIST : "playlist",
+        GENRE : "genre"
+    }
+
+    const getTooltipOnSearchResult = (type) => {
+        switch (type) {
+            case 'track':
+                return <IconChevronRight className="action-bar-entry-tooltip-logo" />;
+            case 'album':
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add album</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+            case 'artist':
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add artist's discography</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+            case 'playlist':
+                return <div className="action-tooltip-div"> <span style={{margin: "0"}}>Add entire playlist</span> <IconChevronRight className="action-bar-entry-tooltip-logo"/></div>;
+            default:
+                return null
+            }
+    };
+
+    const fetchSearchResults = (e) => {
+        const input = e.target.value;
+
+        if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([]);return;} //return if empty or only white spaces
+        console.log(`${apiBase}/read-write/search/${input}`);
+        fetch(`${apiBase}/read-write/search/${input}`, {
+            method: "GET"})
+        .then((res) => {
+            if (res.ok) {
+                return res.json();
+            }
+            throw new Error("Error fetching search results");
+        })
+        .then((data) => {
+            const remappedTrack = [...data.tracks?.map(track => {return({type : "track", ...track})}),
+                                   ...data.albums?.map(track => {return({type : "album", ...track})}),
+                                   ...data.artists?.map(track => {return({type : "artist", ...track})}),
+                                   ...data.genres?.map(track => {return({type : "genre", ...track})}),
+                                   ...data.playlists?.map(track => {return({type : "playlist", ...track})})
+                                        .filter(({id}) => id !== albumId)]
+                .map((item) => { 
+                    const fileName = item.path;
+                    const {trackPath, ...itemSorted} = item;
+                    return {icon : () => {return ((fileName) ? <img className="action-bar-entry-logo" 
+                            src={`${apiBase}/${item.type === 'artist' ? "artist" : "covers"}/${fileName}`} 
+                             alt={item.name}/> : <CML_logo className="action-bar-entry-logo" />) },
+                             tooltip : getTooltipOnSearchResult,
+                             code : item.type === 'artist' ? playlistAddType.ARTIST :
+                                    item.type === 'album' ? playlistAddType.ALBUM :
+                                    item.type === 'genre' ? playlistAddType.GENRE :
+                                    item.type === "playlist" ? playlistAddType.PLAYLIST :
+                                    playlistAddType.TRACK,
+                             fileName : fileName,
+                             ...itemSorted}});
+            console.log(remappedTrack);
+            setProposedEntryToAdd(remappedTrack);
+        })
+        
+    }
+    const onClickArroundSearch = (e) => {
+        if(searchbarFocused){return}
+        setTimeout(() => {
+            requestAnimationFrame(() => {
+              searchInputRef.current?.focus();
+            });
+          }, 0);
+    }
+    const handleActionBarEntryClick = (entry) => {
+        const data = new FormData();
+        data.append("addRequest", JSON.stringify({playlistId : albumId, endpoint : entry.code, entryId : entry.id, addAllToFavorite : isFavPlaylist || false}));
+        fetch(`${apiBase}/read-write/addToPlaylist`, {
+            method : "POST",
+            credentials : "include",
+            body : data
+        })
+        .then(res => res.json())
+        .then(data => {refetchAlbum(); closeSearchBar(); addNotification("Added to playlist", notifTypes.INFO)})
+    };
+
+    useEffect(() => {
+        const handleClickedOutside = (e) =>{            
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                closeSearchBar();
+            }}
+
+        document.addEventListener("mousedown", handleClickedOutside);
+        document.addEventListener("touchstart", handleClickedOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickedOutside);
+            document.removeEventListener("touchstart", handleClickedOutside);
+        }
+    },[]);
+
+    const closeSearchBar = () => {
+        setSearchbarFocused(false);
+        searchInputRef.current.value = ""
+        setProposedEntryToAdd([]);
+    }
     return (
         <div className="album-view">
             <button className="roundButton" onClick={() => window.history.back()}>
@@ -64,17 +185,18 @@ const AlbumView = () => {
             {(album && tracks) ? (
                 <div className="album-details">
                     <h1>{album.title}</h1>
-                    <div className="album-artists">
+                    { <div className="album-artists">
                         {(artists) ? artists.map((artist)=>{
                             return (
-                                <span key={artist.id} className="artist-name" onClick={()=>{navigate(`/artists/${artist.id}`)}}>{artist.name}</span>
+                                <span key={artist.id} className="artist-name" onClick={()=>{navigate(`/${isPlaylist? "users" : "artists"}/${artist.id}`)}}>{artist.name}</span>
                             )
 
-                        }) : (<span className="artist-name">Unknown Artist</span>)}
-                    </div>
-                    {/* <p>{albumId}</p> */}
+                        }) : (<span className="artist-name">Unknown {isPlaylist ? "Members" : "Artist"}</span>)}
+                    </div>}
+                    
                     <div className="album-content">
                         <div className="album-cover-genres">
+                            <div className="album-cover-wrapper">
                             {(album.cover)?
                             <img src={`${apiBase}/covers/${album.cover}`} alt={`${album.title} cover`} className="cover-image" />
                             : <CML_logo className="cover-image" />}
@@ -82,6 +204,8 @@ const AlbumView = () => {
                                 {genres.map((genre, index) => (
                                     <span key={index} className="genre-album" onClick={() => {navigate(`/genres/${genre.genreId}`)}}>{genre.genreName}</span>
                                 ))}
+                            </div>
+                            { (album.description) && <p>{album.description}</p>}
                             </div>
                         </div>
                         <div className="track-list">
@@ -92,6 +216,39 @@ const AlbumView = () => {
                                     <IconEdit/>
                                 </button>
                             </div>
+                            {(isPlaylist) &&         
+                                <div className="action-bar" is-playlist-add={"true"} ref={wrapperRef}>
+                                    <div className="action-bar-research" id="playlist-researchbar" 
+                                        onClick={onClickArroundSearch} >
+                                        <div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>
+                                        <input
+                                            className="searchbar"
+                                            type="text"
+                                            id="playlist-searchbar"
+                                            onChange={fetchSearchResults}
+                                            placeholder="Search for tracks, artists, genres, playlists to add."
+                                            ref={searchInputRef}
+                                            onFocus={() => { setSearchbarFocused(true); }}/>
+                                    </div>
+                                    <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
+                                    <List
+                                        height={300}
+                                        itemCount={proposedEntryToAdd.length}
+                                        itemSize={50}
+                                        width={'calc(100% - 0px)'}
+                                        
+                                        style={{overflowY: "auto", marginBottom: "20px"}}
+                                    >
+                                        {({ index, style }) => 
+                                            <ActionBarEntry key={index} entry={proposedEntryToAdd[index]} 
+                                                style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} 
+                                                onClick={handleActionBarEntryClick}/>
+                                        }
+
+                                    </List>
+                                    </div>
+                                </div>}
+
                             {tracks.map((track, index) => (<TrackView key={track.path} index={index} track={track} containerId={albumId}
                              isPlaylistView={false} playIconId={currentPlayIcon} />))}
                         </div>

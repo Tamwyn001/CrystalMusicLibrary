@@ -107,9 +107,12 @@ const GlobalActionBar = ({children}) => {
     const volumeRef = useRef(volume); // when mounted, it will always use the default value if we dont use ref
     const navigate = useNavigate();
     const [currentNotification, setCurrentNotification] = useState(null); //{message, state} state = "success" | "error" | "info"
+    const [notificationVisible, setNotificationVisible] = useState(null);
     const wrapperRef = useRef(null);
     const actionLocation = useRef(null); //command/search bar, to know if we close. 
-
+    const notificationDivRef = useRef(null);
+    const timeoutRefs = useRef([]);
+    
     useEffect(() => {
         window.addEventListener("keydown", keyCallbackBinder)
         registerDefaultEvents();
@@ -128,32 +131,52 @@ const GlobalActionBar = ({children}) => {
         }
     },[]);
 
-    const addNotification = (message, state) => {
-        setCurrentNotification({message, state});
-        setTimeout(() => {
-            const elem =  document.getElementById("notification-parent");
-            elem.setAttribute("direction","");
-            void elem.offsetWidth; // <== forces reflow
-            elem.setAttribute("direction", "hide");
 
-            setTimeout(() => {
-                setCurrentNotification(null);
-            }, 300);
-        }, 2000);
-    }
+
+    const addNotification = (message, state) => {
+      // Clear previous timeouts
+      timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
+      timeoutRefs.current = [];
+      setCurrentNotification({ message, state });
+      setNotificationVisible(true);
+    
+      const hideTimeout = setTimeout(() => {
+        if (notificationDivRef.current) {
+          notificationDivRef.current.setAttribute("direction", "");
+          void notificationDivRef.current.offsetWidth;
+          notificationDivRef.current.setAttribute("direction", "hide");
+        }
+    
+        const cleanupTimeout = setTimeout(() => {
+          setNotificationVisible(false);
+          setCurrentNotification(null);
+        }, 300);
+    
+        timeoutRefs.current.push(cleanupTimeout);
+      }, 2000);
+    
+      timeoutRefs.current.push(hideTimeout);
+    };
 
     useEffect(() => {
-        if(!currentNotification) {return}
-        document.getElementById("notification-parent").setAttribute("direction","show");
-    },[currentNotification]);
+        if (!currentNotification) return;
+        setNotificationVisible(true);
+      }, [currentNotification]);
+      
+      useEffect(() => {
+        if (!notificationVisible || !notificationDivRef.current) return;
+        
+        notificationDivRef.current.setAttribute("direction", "show");
+      }, [notificationVisible]);
+      
 
     const keyCallbackBinder = (e) => {
         // console.log("Key pressed", e);
         // if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
         if(e.key == "Control" || currentCommand) {return}
-        if(e.key === " " && !(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && document.activeElement.nodeName === "INPUT") {return} //to avoid closing the action bar when pressing space in the search bar
-    
+        if(!(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && document.activeElement.nodeName === "INPUT") {return} //to avoid closing the action bar when pressing space in the search bar
+        console.log(document.activeElement.nodeName);
         const actionToCall = actions.find( (action) => {
             const keyMatch = e.key === action.key;
             
@@ -197,6 +220,7 @@ const GlobalActionBar = ({children}) => {
 
     useEffect(() => {
         volumeRef.current = volume;
+        addNotification(`Volume : ${(volume * 100).toFixed(0)} %`, notifTypes.INFO);
       }, [volume]); // keep the ref up to date
 
     const registerDefaultEvents = () => {
@@ -206,7 +230,6 @@ const GlobalActionBar = ({children}) => {
                 return;
             }
             openCommandBar();
-            
         }, commandCodes.OPEN_ACTION_BAR);
         registerNewEvent(() => {closeActionBar(); }, commandCodes.CLOSE_ACTION_BAR);
         registerNewEvent(() => {
@@ -221,8 +244,8 @@ const GlobalActionBar = ({children}) => {
         }, commandCodes.SEARCH);
         registerNewEvent(() => {toggleTrackPauseRef.current()}, commandCodes.TOGGLE_PLAY_PAUSE); //wee need the ref, otherwise it memorizes the value of the function at load: false
         registerNewEvent(() => {navigate('/settings');}, commandCodes.OPEN_SETTINGS);
-        registerNewEvent(() => {setVolume(Number(volumeRef.current + 0.1));}, commandCodes.VOLUME_UP);
-        registerNewEvent(() => {setVolume(Number(volumeRef.current - 0.1));}, commandCodes.VOLUME_DOWN);
+        registerNewEvent(() => {setVolume(Math.min(Math.max(volumeRef.current + 0.1, 0), 1));}, commandCodes.VOLUME_UP);
+        registerNewEvent(() => {setVolume(Math.min(Math.max(volumeRef.current - 0.1, 0), 1))}, commandCodes.VOLUME_DOWN);
     }
 
     useEffect(() => {
@@ -285,7 +308,8 @@ const GlobalActionBar = ({children}) => {
     };
 
     const fetchSearchResults = async (input) => {
-        if (input === "" || input.split('').filter(char => char!== " ").length === 0) {return;} //return if empty or only white spaces
+        console.log("action bar seacrh")
+        if (input === "" || input.trim().length === 0) {return;} //return if empty or only white spaces
         console.log(`${apiBase}/read-write/search/${input}`);
         fetch(`${apiBase}/read-write/search/${input}`, {
             method: "GET"})
@@ -301,7 +325,7 @@ const GlobalActionBar = ({children}) => {
                                    ...data.artists.map(track => {return({type : "artist", ...track})}),
                                    ...data.genres.map(track => {return({type : "genre", ...track})})]
                 .map((item) => { 
-                    const fileName = item.path?.split('\\').pop();
+                    const fileName = item.path;
                     const trackName = item.id;
                     const {trackPath, ...itemSorted} = item;
                     return {icon : () => {return ((fileName) ? <img className="action-bar-entry-logo" 
@@ -365,6 +389,7 @@ const GlobalActionBar = ({children}) => {
         }
     }
     const closeActionBar = () => {
+        console.log(closeActionBar);
         setShowActionBar(false);
         setActionBarCommand(null);
         actionLocation.current = null;
@@ -380,7 +405,7 @@ const GlobalActionBar = ({children}) => {
         setProposedCommands([]);
     }
     const Notification = () => {
-        if(!currentNotification) {return null}
+        if(!notificationVisible) {return null}
         const NotifIcon = () => {
             switch (currentNotification.state) {
                 case notifTypes.SUCCESS:
@@ -394,7 +419,7 @@ const GlobalActionBar = ({children}) => {
             }
         }
         return(
-        <div className="notification-parent" id="notification-parent">
+        <div ref={notificationDivRef} className="notification-parent" id="notification-parent">
             <div className="notification" is-open={currentNotification ? "true" : "false"} >
                 <NotifIcon />
                 <span>{currentNotification.message}</span>
@@ -417,7 +442,7 @@ const GlobalActionBar = ({children}) => {
                             
                             {(currentActionLogo)? currentActionLogo : null}
                         
-                            <input  type="text" id="actionbar-searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
+                            <input  type="text" id="actionbar-searchbar" className="searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
 
                         </div>
                         <div className="action-bar-results">

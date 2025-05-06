@@ -5,6 +5,7 @@ import { preconnect } from "react-dom";
 
 import _, { floor } from "lodash";
 import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
+import CreatePlaylist from "./components/CreatePlaylist.jsx";
 
 const AudioPlayerContext = createContext();
 
@@ -31,7 +32,8 @@ export const AudioPlayerProvider = ({ children }) => {
         const stored = parseFloat(localStorage.getItem('volume'));
         return isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));
       });
-
+    const [creatingNewPlaylist, setCreatingNewPlaylist] = useState(false)
+    const playlistAddedCallback = useRef(null)
     useEffect(() => {
         playQueueRef.current = playQueue;
         console.log('PlayCueue updated', playQueueRef.current);
@@ -297,7 +299,7 @@ export const AudioPlayerProvider = ({ children }) => {
         localStorage.setItem('volume', clamped);
     }, [volume]);
 
-    const applyAlbumsChanges = (albumClass) => {
+    const applyAlbumsChanges = (albumClass, file = null) => {
         if(!albumClass) { //no changes made
             console.log('No changes made');
             setEditingAlbum(null);
@@ -305,6 +307,10 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         const data = new FormData();
         data.append('album', JSON.stringify(albumClass));
+        //for uploading a new cover we need an object album.uuid, album.ext
+        if(file) {
+            data.append('cover', file);
+        }
         fetch(`${apiBase}/read-write/editAlbum`, 
             {method: 'POST',
             credentials: 'include',
@@ -315,7 +321,28 @@ export const AudioPlayerProvider = ({ children }) => {
         })
     }
 
+    const createNewPlaylist = async () => {
+        setCreatingNewPlaylist(true)
+    } //async bc there is a callback for the button
     
+    const sendNewPlaylist = (playlist, coverFile) => {
+        console.log("sending playlist", playlist)
+        const data = new FormData();
+        data.append("playlist", JSON.stringify(playlist))
+        if(coverFile) {
+            data.append("cover", coverFile);
+            console.log(coverFile);
+        }
+        fetch(`${apiBase}/read-write/newPlaylist`, {
+            method : "POST",
+            credentials : "include",
+            body : data
+        })
+        .then(() => {
+            setCreatingNewPlaylist(false);
+            playlistAddedCallback.current();
+        })
+    }
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -346,9 +373,14 @@ export const AudioPlayerProvider = ({ children }) => {
             setAlbumAskRefresh : (fn) => {
                 albumAskRefreshRef.current = fn;
             },
+            createNewPlaylist,
+            setPlaylistAddedCallback : (fn) => {
+                playlistAddedCallback.current = fn;
+            }
             }}>
             {children}
             {(editingAlbum) && <EditAlbumInfos applyCanges={applyAlbumsChanges} albumClass={editingAlbum}/>}
+            {(creatingNewPlaylist) && <CreatePlaylist applyCanges={sendNewPlaylist}/>}
         </AudioPlayerContext.Provider>
     );
 }

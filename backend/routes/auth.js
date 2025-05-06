@@ -14,7 +14,8 @@ const router = express.Router();
 const {currentDate} = require("../lib.js");
 const jwt = require("jsonwebtoken");
 const { getMulterInstance } = require("../multerConfig.js");
-const { getUserRole, getUsersCount, checkUserExist, registerNewUser, getAllUsers } = require('../db-utils.js')
+const { getUserRole, getUsersCount, checkUserExist, registerNewUser, getAllUsers, getUsers } = require('../db-utils.js');
+const multer = require("multer");
 // import { sanitizeBody } from "../lib.js";
 //fetch auth
 const upload = getMulterInstance(process.env.CML_DATA_PATH_RESOLVED);
@@ -96,5 +97,13 @@ router.post("/is-admin", (req, res) => {
         console.error("Error verifying token:", err);
         res.status(401).json({ error: "Invalid token." });
     }
+});
+
+router.get("/collaborators", (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    res.json(getUsers().filter((user) => user.email !== decoded.email))
 })
+
+
 module.exports = router;

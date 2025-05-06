@@ -90,6 +90,11 @@
   width: 45%;
 }
 
+.action-bar[is-playlist-add="true"]{
+  width: 100%;
+  max-width: 700px;
+}
+
 .action-bar-results{
   background-color: rgb(233, 233, 233);
   width:calc(100% - 20px);
@@ -121,7 +126,7 @@
   margin: 10px;
 }
 
-#actionbar-searchbar{
+.searchbar{
   /* padding: 0px ; */
   width : calc(100% - 40px);
   z-index: 9;
@@ -129,7 +134,7 @@
   transition: margin-left 0.4s ease, width 0.4s ease;
 }
 
-#actionbar-searchbar[logo='true']{
+.searchbar[logo='true']{
   width : calc(100% - 55px);
   margin-left: 15px;
   transition: margin-left 0.4s ease, width 0.4s ease;
@@ -184,6 +189,7 @@
   position: fixed;
   bottom: 0px;
   align-content: center;
+  z-index: 10;
 }
 .notification{
   margin: 0px auto 30px auto;

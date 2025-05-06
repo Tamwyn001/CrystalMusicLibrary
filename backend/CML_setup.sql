@@ -6,7 +6,7 @@ DROP TABLE IF EXISTS genres;
 DROP TABLE IF EXISTS tracks;
 DROP TABLE IF EXISTS artists_to_track;
 DROP TABLE IF EXISTS playlists;
-DROP TABLE IF EXISTS playlists_to_tracks;
+DROP TABLE IF EXISTS tracks_to_playlists;
 DROP TABLE IF EXISTS playlists_to_users;
 
 CREATE TABLE users(
@@ -15,7 +15,8 @@ CREATE TABLE users(
     password VARCHAR(255) NOT NULL,
     email VARCHAR(100) NOT NULL UNIQUE,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    role TEXT CHECK(role IN ('user', 'admin')) DEFAULT 'user'
+    role TEXT CHECK(role IN ('user', 'admin')) DEFAULT 'user',
+    favorites_playlist VARCHAR(36) --this points to a playlist, and the mapping needs to exist as well in playlsit to owner
 );
 
 
@@ -49,7 +50,8 @@ CREATE TABLE artists_to_albums(
 CREATE TABLE genres(
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
-    description TEXT
+    description TEXT,
+    CONSTRAINT UC_genres UNIQUE (name)
 );
 
 CREATE TABLE albums_to_genres(
@@ -67,7 +69,7 @@ CREATE TABLE tracks(
     genre int,
     duration INT,
     release_date DATE,
-    path VARCHAR(255) NOT NULL,
+    path TEXT NOT NULL,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     track_number INT,
     uploaded_by INT,
@@ -83,7 +85,7 @@ CREATE TABLE artists_to_track(
     taking_part VARCHAR(36),
     FOREIGN KEY (artist) REFERENCES artists_descs(id),
     FOREIGN KEY (taking_part) REFERENCES tracks(id)
-);
+); --not used
 
 CREATE TABLE server_stats(
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
@@ -96,6 +98,43 @@ CREATE TABLE server_stats(
     tracks_byte_usage BIGINT DEFAULT 0 --todo add a history with a graph and so :0
 );
 
+CREATE TABLE favorites(
+    entry_id VARCHAR(36) NOT NULL,
+    user_id INT NOT NULL,
+    PRIMARY KEY (entry_id, user_id),
+  --  FOREIGN KEY (entry_id) REFERENCES tracks(id), we omit this key, bc can be track, album or playslit
+    FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE playlists_descs(
+    id VARCHAR(36) PRIMARY KEY,
+    name TEXT,
+    cover TEXT,
+    description TEXT,
+    created_at DATE,
+    modified_at DATE,
+    created_by INT, --for the delete authority
+    FOREIGN KEY (created_by) REFERENCES users(id)
+
+);
+
+CREATE TABLE tracks_to_playlists(
+    playlist_id VARCHAR(36),
+    track_id VARCHAR(36),
+    track_no INT,
+    PRIMARY KEY (playlist_id, track_id),
+    FOREIGN KEY (playlist_id) REFERENCES playlists_descs(id),
+    FOREIGN KEY (track_id) REFERENCES tracks(id)
+);
+
+CREATE TABLE playlists_to_owners(
+    playlist_id VARCHAR(36) NOT NULL,
+    owner_id INT NOT NULL,
+    PRIMARY KEY (playlist_id, owner_id),
+    FOREIGN KEY (owner_id) REFERENCES users(id)
+);
+
+-- todo Split the tracks, playlist and song bewteen the users that asked for access
 
 
 

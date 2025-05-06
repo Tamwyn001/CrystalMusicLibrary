@@ -1,12 +1,13 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
 const { getMulterInstance } = require('../multerConfig.js');
 const { stat } = require("fs/promises");
 const jwt = require("jsonwebtoken");
+const path = require("path")
 
 const router = express.Router();
 const isPkg = typeof process.pkg !== 'undefined';
@@ -61,9 +62,19 @@ router.get("/albums",  (req, res) => {
 });
 
 router.get("/album/:id",  (req, res) => {
-    const album = getAlbum(req.params.id);
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    const album = getAlbum(req.params.id, decoded.email);
     res.json(album);
 });
+
+router.get("/playlist/:id",  (req, res) => {
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    const playlist = getPlaylist(req.params.id, decoded.email);
+    res.json(playlist);
+});
+
 
 router.get("/genre/:id",  (req, res) => {
     const genre = getGenreAlbums(req.params.id);
@@ -142,9 +153,8 @@ router.get("/trackCover/:id", (req, res) => {
 
 
 router.get("/stats", (req, res) => {
-    const musicDir = "./data/music/";
-    const coversDir = "./data/covers/";
-
+    const musicDir = path.join(uploadPath, 'music');
+    const coversDir = path.join(uploadPath, 'covers');
     let totalByte = 0;
     // Get the size of the music directory
     const musicStats = statSync(musicDir);
@@ -201,16 +211,68 @@ router.get("/user-data-usage/:id", async (req, res) => {
 
 router.get("/search/:query", async (req, res) => {
     res.json(findAudioEntity(req.params.query));
-})
+});
 
 
 router.get("/all-songs", async (req, res) => {
     res.json(getAllTracks());
 });
 
-router.post("/editAlbum", upload.none(), (req, res) => {
-    applyAlbumsEdit( JSON.parse(req.body.album));
+router.post("/editAlbum", upload.single("cover"), (req, res) => {
+    applyAlbumsEdit( JSON.parse(req.body.album), req.file?.filename);
     res.json({ message: "Album edited successfully" });
+});
+
+//because we use uuid for tracks, playlists and albums, we can just use one unique parameter for all of them
+router.get("/toggleFavorite/:id/:favorite", (req,res) =>{
+    const token = req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token    
+    const toFav = req.params.favorite === "true"
+    setFavorite(req.params.id, decoded.email, toFav);
+    res.json(toFav);
+});
+
+router.get("/genres", (req,res) =>{
+    res.json(getGenres());
+});
+
+router.get("/playlists", (req, res) =>{
+    res.json(getPlaylists())
+});
+
+router.post("/newPlaylist", upload.single("cover"), (req, res) =>{
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    createPlaylist(JSON.parse(req.body.playlist), decoded.email, req.file?.filename);
+    res.json();
+});
+
+router.post("/addToPlaylist", upload.none(), (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    const {playlistId, endpoint , entryId , addAllToFavorite} = JSON.parse(req.body.addRequest);
+    const addAllToFavoriteObj = { should : addAllToFavorite, email : decoded.email};
+    switch(endpoint){
+        case "track":
+            addTrackToPlaylist(entryId,playlistId,addAllToFavoriteObj );
+            break
+        case "album":
+            addAlbumToPlaylist(entryId, playlistId, addAllToFavoriteObj);
+            break
+        case "playlist":
+            addPlaylistToPlaylist(entryId, playlistId, addAllToFavoriteObj);
+            break
+        case "genre":
+            addGenreToPlaylist(entryId, playlistId, addAllToFavoriteObj);
+            break
+        case "artist":
+            addArtistToPlaylist(entryId, playlistId, addAllToFavoriteObj);
+            break
+        default:
+            console.log("Playlist add request invalid.");
+            break
+    }
+    res.json({message : "Added to playlist"})
 })
 
 module.exports = {router, runServerStats};

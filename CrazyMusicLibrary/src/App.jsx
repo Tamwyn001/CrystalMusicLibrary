@@ -4,7 +4,7 @@ import Home from './pages/Home';
 import Albums from './pages/Albums';
 import Authentification from './pages/Authentification';
 import AlbumView from './pages/AlbumView';
-import Artist from './pages/Artist';
+import ArtistsView from './pages/ArtistsView';
 import ArtistView from './pages/ArtistView';
 import './App.css';
 import './assets/palette.svg'
@@ -16,6 +16,8 @@ import AdminPannel from './pages/AdminPannel';
 import Register from './components/Register';
 import GlobalActionBar from './GlobalActionBar';
 import GenreView from './pages/GenreView';
+import GenresView from './pages/GenresView';
+import PlaylistsView from './pages/PlaylistsView';
 function App() {
 
 
@@ -29,9 +31,12 @@ function App() {
                             <Route path='home' element={<Home />}/>
                             <Route path="albums" element={<Albums />}/>
                             <Route path="albums/:albumId" element={<AlbumView />}/>
-                            <Route path="artists" element={<Artist />} />
+                            <Route path="artists" element={<ArtistsView />} />
                             <Route path="artists/:artistId" element={<ArtistView />}/>
+                            <Route path="genres" element={<GenresView/>}/>   
                             <Route path="genres/:genreId" element={<GenreView />} />
+                            <Route path="playlists" element={<PlaylistsView/>}/>
+                            <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
                         </Route>
                         <Route path="account" element={<Account />} /> 
                         <Route path="settings" element={<Settings />} /> 

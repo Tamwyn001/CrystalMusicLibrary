@@ -1,7 +1,7 @@
 import { useState } from "react";
 import ThreePointsLoader from "./ThreePointsLoader";
 //onClick function should return a promise
-const ButtonWithCallback = ({onClick, text, icon}) => {
+const ButtonWithCallback = ({onClick, text, icon, style}) => {
     const [waitingForResult, setWaitingForResult] = useState(false);
     const handleClick = () => {
         setWaitingForResult(true);
@@ -23,7 +23,7 @@ const ButtonWithCallback = ({onClick, text, icon}) => {
         }
     }
     return (
-        <button className="button-with-callback" onClick={handleClick}>
+        <button className="button-with-callback" style={{...style}} onClick={handleClick}>
             <Inner />
         </button>
     );

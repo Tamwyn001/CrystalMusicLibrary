@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import LibArtistsCard from "../components/LibArtistsCard";
 import apiBase from "../../APIbase";
 
-const Artist = () => {
+const ArtistsView = () => {
     const [artists, setArtists] = useState([]);
     const fetchArtists = () => {
         fetch(`${apiBase}/read-write/artists`, {method: "GET", credentials: "include"})
@@ -27,4 +27,4 @@ const Artist = () => {
         </div>
     )
 }
-export default Artist;
+export default ArtistsView;

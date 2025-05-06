@@ -10,6 +10,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [showTrackRemap, setShowTrackRemap] = useState({visible: false});
     const [coverURL, setCoverURL] = useState(null);
     const [date, setDate] = useState("2000-00-00"); // Set the default date to today
+    const [fileOverwrite, setFileOverwrite] = useState(null);
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -28,7 +29,8 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
             || (albumClass .artist.toString() !== recompiledArtist.toString()) 
             || (albumClass.year !== form.releaseDate.value) 
             || (albumClass.genre.toString() !== recompiledGenre.toString()) 
-            || (albumClass.description !== form.description.value));
+            || (albumClass.description !== form.description.value)
+            || (fileOverwrite));
         if (!changeOperated) {
             applyCanges(null);
             return;
@@ -40,12 +42,16 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
         albumClass.description = form.description.value;
         //switch to the album overview
         const {tracks, coverURL,...updatedAlbum} = albumClass;
-        applyCanges(updatedAlbum);
+        console.log(updatedAlbum);
+        applyCanges(updatedAlbum, fileOverwrite);
     }
     const selectNewImage = (e) => {
         const file = e.target.files[0];
         if(file){
-            setCoverURL(albumClass.setCoverFromFile(file));
+            //for uploading a new cover we need an object album.uuid/id, album.ext
+            albumClass.ext = file.name.split('.').pop();
+            setCoverURL(URL.createObjectURL(file));
+            setFileOverwrite(file);
         }
     }
 
