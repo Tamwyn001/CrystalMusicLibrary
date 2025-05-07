@@ -26,9 +26,9 @@ const resolvedDataPath = path.isAbsolute(rawPathData)
 
 console.log("Data path: ", resolvedDataPath);
 for(const uploadDir of ["music", "covers"]){
-    if (!existsSync(`${resolvedDataPath}/${uploadDir}`)){
-        console.log(`Creating directory ${resolvedDataPath}/${uploadDir}`);
-        mkdirSync(`${resolvedDataPath}/${uploadDir}`, { recursive: true });
+    if (!existsSync(path.join(resolvedDataPath, uploadDir))){
+        console.log(`Creating directory ${path.join(resolvedDataPath, uploadDir)}`);
+        mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
     }
 }
 process.env.CML_DATA_PATH_RESOLVED = resolvedDataPath;
@@ -169,7 +169,7 @@ try {
 // -----------------------------------
 // 🟢 Start server
 // -----------------------------------
-const PORT = 4590;
+const PORT = process.env.PORT || 4590;
 runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n

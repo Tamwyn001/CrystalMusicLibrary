@@ -1,9 +1,7 @@
 import { useEffect, useState } from 'react';
 import CML_logo from './CML_logo';
 import './AddMusic/AlbumWrapping.css'
-import { IconMountain, IconFolderPlus, IconDirections, IconUserMinus } from '@tabler/icons-react';
-import TrackRemapAlbum from './AddMusic/TrackRemapAlbum';
-import { FixedSizeList as List } from 'react-window';
+import { IconFolderPlus, IconUserMinus } from '@tabler/icons-react';
 import apiBase from '../../APIbase';
 import { v4 as uuidv4} from 'uuid';
 

@@ -34,7 +34,6 @@ router.post("/register", upload.none() ,async (req, res) => {
     try{
         registerNewUser(email, password, name);
         console.log("User registered: \x1b[36m", name, "\x1b[0m");
-        res.json({ message: "User registered successfully" });
     }catch (err) {
         if(err.code === 'SQLITE_CONSTRAINT_UNIQUE'){
              res.status(500).json({ error: "Email already in use." });
@@ -42,7 +41,21 @@ router.post("/register", upload.none() ,async (req, res) => {
         }
         console.error("Error registering user:", err);
         res.status(500).json({ error: "Error registering user." });
+        return;
     }
+    const token = jwt.sign(
+        { email : email, username : name },
+        process.env.JWT_SECRET,
+        { expiresIn: process.env.JWT_TOKEN_EXPIRES_IN+"h" });
+    
+    //send the token in a http-only cookie (Prevents JavaScript access)
+    res.cookie("token", token, {
+        httpOnly: true, //cannot be accessed by client side scripts
+        secure: process.env.NODE_ENV === "production", //only sent over HTTPS in production
+        sameSite: "strict", //CSRF protection
+        maxAge: parseFloat(process.env.JWT_TOKEN_EXPIRES_IN)*60*60*1000 //N*hours
+
+    }).json({message : "Register success."});
 
 });
 

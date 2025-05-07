@@ -11,7 +11,7 @@ import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { FixedSizeList as List } from "react-window";
 import ActionBarEntry from "../components/ActionBarEntry";
-import { useGlobalActionBar } from "../GlobalActionBar";
+import { useNotifications } from "../GlobalNotificationsProvider";
 
 
 const AlbumView = ({isPlaylist = false}) => {
@@ -29,11 +29,12 @@ const AlbumView = ({isPlaylist = false}) => {
     const albumId = (isPlaylist) ? useParams().playlistId : useParams().albumId ;
     const [searchbarFocused, setSearchbarFocused] = useState(null);
     const searchInputRef = useRef(null);
-    const { notifTypes, addNotification} = useGlobalActionBar();
+    const { notifTypes, addNotification} = useNotifications();
     const [isFavPlaylist, setIsFavPlaylist] = useState(false);
-useEffect(() => {
-        refetchAlbum();        
-    }, [albumId]);
+    
+    useEffect(() => {
+            refetchAlbum();        
+        }, [albumId]);
     
 
     const refetchAlbum = () => {
@@ -260,7 +261,7 @@ useEffect(() => {
                                 </div>}
 
                             {tracks.map((track, index) => (<TrackView key={track.path} index={index} track={track} containerId={albumId}
-                             isPlaylistView={false} playIconId={currentPlayIcon} />))}
+                             containerType={(isPlaylist) ? "playlist" : "album"} playIconId={currentPlayIcon} />))}
                         </div>
                     </div>
                 </div>

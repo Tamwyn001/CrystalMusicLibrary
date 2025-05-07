@@ -58,14 +58,13 @@ export const AudioPlayerProvider = ({ children }) => {
         }
     }
 
-    const getNextSongsFromAlbum = (index) => {
-        console.log(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}`);
-        fetch(`${apiBase}/read-write/nextSongs/${context.isPlaylist}/${context.containerId}`, {
+    const getNextSongsFromAlbum = (index, containerId, containerType) => {
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, {
             method: 'GET'
         }).then(response => response.json())
         .then(data => {
             console.log('setting play queue');
-            setPlayQueue(data.queue);
+            setPlayQueue(data);
             setQueuePointer(index); //we do this here to this when the useEffect fires, both are updated.
         });
     }
@@ -81,7 +80,7 @@ export const AudioPlayerProvider = ({ children }) => {
             setJustAddedNewToQueue(false); // Reset the flag after processing
             return; // avoid reseting the track to the beggining
         }
-        if(queuePointer === -1 || playQueue.length ===0 )return;
+        if(queuePointer === -1 || playQueue.length === 0 )return;
         resolvetrack(playQueue[queuePointer])
     },[queuePointer, playQueue]); // Update the queue pointer when the play queue changes
 
@@ -164,13 +163,13 @@ export const AudioPlayerProvider = ({ children }) => {
         setCurrentTime(audioRef.current.currentTime); // Update the current time state
     }
 
-    const playTrack = (trackName, containerId, isPlaylist, index) => {
+    const playTrack = (trackName, containerId, containerType, index) => {
         context.trackName = trackName.split('.')[0];
-        context.containerId = containerId;
-        context.isPlaylist = isPlaylist;
+        // context.containerId = containerId;
+        // context.isPlaylist = isPlaylist;
         console.log('new index',index)
 
-        getNextSongsFromAlbum(index);
+        getNextSongsFromAlbum(index, containerId, containerType);
     }
     useEffect(() => {
         if (playQueue.length === 0) return; // No tracks to play

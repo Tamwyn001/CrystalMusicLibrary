@@ -1,6 +1,9 @@
-const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching }) =>{
+import { useState } from "react";
 
+const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching }) =>{
+    const [musicDetected, setMusicDetected ] = useState(false);
     const handleFileChange = (e) => {
+        setMusicDetected(true)
         if (e.target.files) {
             console.log('New tracks')
             tracksSelected(e.target.files);
@@ -24,6 +27,7 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
                     <button className="buttonRound" onClick={initMetadataFetching}>Add</button>
                 </div>
             ) }
+            {(musicDetected) && <p>Hold a sec'.. The metadata fetch is about to beggin.</p>}
         </div>
     )
 }

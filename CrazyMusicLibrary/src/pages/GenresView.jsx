@@ -5,14 +5,28 @@ import GenreCard from "../components/GenreCard";
 
 const GenresView = ({}) => {
     const [genres, setGenres] = useState([]);
-    useEffect(() =>{
+
+    const refetch = () => {
         fetch(`${apiBase}/read-write/genres`, {
             method: "GET",
             credentials: "include"
         }).then(res => res.json())
         .then(data =>{
             setGenres(data);
-        })}
+        })
+    }
+    useEffect(() =>{
+        refetch();
+        const handleMusicUploaded = (e) => {
+            console.log("Music uploaded:", e.detail);
+            refetch(); // your data reload function
+          };
+        
+          window.addEventListener("musicUploaded", handleMusicUploaded);
+          return () => {
+            window.removeEventListener("musicUploaded", handleMusicUploaded);
+          };
+        }
     ,[]);
 
     return( 

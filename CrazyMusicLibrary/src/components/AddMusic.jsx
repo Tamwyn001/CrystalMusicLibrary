@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 import AlbumWrapping from './AddMusic/AlbumWrapping';
 import axios from 'axios';
 import apiBase from '../../APIbase';
-import { useGlobalActionBar } from '../GlobalActionBar';
+import { useNotifications } from '../GlobalNotificationsProvider';
 
 
 
@@ -59,7 +59,7 @@ const AddMusic = ({closeOverlay}) => {
     const [totalMbUpload, setTotalMbUpload] = useState(0);
     const [percentageUpload, setPercentageUpload] = useState(0);
     const [sendingFile, setSendingFile] = useState('');
-    const {addNotification, notifTypes } = useGlobalActionBar();
+    const {addNotification, notifTypes } = useNotifications();
      //contains all the metadatas that the user changed, used to avoid sending all the metas with the song with fetch
     const [trackMetaOverwrite, setTrackMetaOverwrite] = useState([]);
     
@@ -129,7 +129,7 @@ const AddMusic = ({closeOverlay}) => {
                 const newUuid = uuidv4();
                 localAlbums.push(new Album(
                     metadata.common.album,
-                    (metadata.common.artist) ? [metadata.common.artist] : ['Unknown artist'],
+                    (metadata.common.artist) ? metadata.common.artist.split(",").map((g) => g.trim()) : ['Unknown artist'],
                     metadata.common.year,
                     [trackInfo],
                     metadata.common.picture?.[0],
@@ -354,6 +354,8 @@ const AddMusic = ({closeOverlay}) => {
             setEditingAlbum("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
             setPercentageUpload(0);
             console.log("Closing overlay");
+            const event = new CustomEvent("musicUploaded",{});
+            window.dispatchEvent(event)
             closeOverlay();
         }, 750);
 

@@ -16,6 +16,15 @@ const ArtistsView = () => {
     }
     useEffect(() => {
         fetchArtists(); // Trigger when Home is mounted
+        const handleMusicUploaded = (e) => {
+            console.log("Music uploaded:", e.detail);
+            fetchArtists(); // your data reload function
+          };
+        
+          window.addEventListener("musicUploaded", handleMusicUploaded);
+          return () => {
+            window.removeEventListener("musicUploaded", handleMusicUploaded);
+          };
     }, []); // Empty dependency array = only on mount
 
 

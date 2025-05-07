@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
 import CML_logo from './CML_logo';
 import './AddMusic/AlbumWrapping.css'
-import { IconMountain, IconFolderPlus, IconDirections } from '@tabler/icons-react';
-import TrackRemapAlbum from './AddMusic/TrackRemapAlbum';
+import { IconFolderPlus, IconDirections } from '@tabler/icons-react';
 import { FixedSizeList as List } from 'react-window';
+import TrackRemapAlbum from './TrackRemapAlbum';
 
 
 const EditAlbumInfos = ({applyCanges, albumClass}) => {
@@ -11,6 +11,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [coverURL, setCoverURL] = useState(null);
     const [date, setDate] = useState("2000-00-00"); // Set the default date to today
     const [fileOverwrite, setFileOverwrite] = useState(null);
+    const [ remapedSomeTrack, setRemapedSomeTracks ] = useState(false)
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -20,17 +21,19 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
             setDate(albumClass.year);
         }
     }, [albumClass]);
+
     const handleApply = () => {
         const form = document.getElementById("editAlbumInfos");
         const recompiledArtist = form.artistName.value.split(",").map((g) => g.trim());
-        const recompiledGenre = form.genre.value.split(",").map((g) => g.trim()).map(g => g.charAt(0).toUpperCase() + g.slice(1));
+        const recompiledGenre = form.genre.value.split(",").map((g) => g.trim()).map(g => g.charAt(0).toUpperCase() + g.slice(1)).filter(g => g != "");
 
         let changeOperated = ((form.albumName.value !== albumClass.name) 
             || (albumClass .artist.toString() !== recompiledArtist.toString()) 
             || (albumClass.year !== form.releaseDate.value) 
             || (albumClass.genre.toString() !== recompiledGenre.toString()) 
             || (albumClass.description !== form.description.value)
-            || (fileOverwrite));
+            || (fileOverwrite)
+            || remapedSomeTrack);
         if (!changeOperated) {
             applyCanges(null);
             return;
@@ -57,6 +60,14 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
 
     const openTrackRemap = (track) => {
         setShowTrackRemap({visible: !showTrackRemap.visible, ...track});
+    }
+
+    const closeTrackRemap = (remaped) => {
+        console.log(remaped)
+        if(!remapedSomeTrack && remaped) {
+            setRemapedSomeTracks(true);
+        }
+        setShowTrackRemap({visible: false})
     }
     return(
         <div className="albumWrapping-library-container">
@@ -109,7 +120,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
                         </List>
                     </div>
                 </form>
-                {showTrackRemap.visible && < TrackRemapAlbum onClose={() => {setShowTrackRemap({visible: false})}} track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
+                {showTrackRemap.visible && < TrackRemapAlbum onClose={closeTrackRemap} track={{id: showTrackRemap.id, title: showTrackRemap.title}} />}
         </div>                       
     </div>
     )

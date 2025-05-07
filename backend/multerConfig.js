@@ -19,7 +19,6 @@ const getMulterInstance = (dataPath) => multer({
                 cb(null, `${fileName}.${ext}`); // Keep original name
                 file.uuid = fileName;
             } else if (file.fieldname === "cover") {
-                console.log(req.body.album);
                 const album = JSON.parse(req.body.album || (req.body.playlist || req.body.artist)) ;
                 cb(null, `${album.uuid || album.id}.${album.ext}`); // Give the albums name to the cover
             }

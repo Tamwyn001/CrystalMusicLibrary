@@ -7,7 +7,7 @@ const db = getDatabase();
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
     const placeholders = params.map((row) => `(${row.map(() => '?').join(',')})`).join(",");
-    db.prepare(`INSERT ${ignore? "OR IGNORE" : ''} INTO ${table} (${columns}) VALUES ${placeholders}`).run(params.flat().flat());
+    db.prepare(`INSERT ${ignore? "OR IGNORE" : ''} INTO ${table} (${columns}) VALUES ${placeholders};`).run(params.flat().flat());
     
 }
  const addTracks = (tracks, userAdding) => {
@@ -20,14 +20,13 @@ const batchInsert = (table, columns, params, ignore = false) => {
 
 
  const addAlbums = (albums) => {
-    // Function to add albums to the database. These are emnpty albums with no tracks, then call addTracks and pass the id of the album
+    // Function to add albums to the database. These are empty albums with no tracks, then call addTracks and pass the id of the album
 
     let artists = [];
     for(let i =0; i < albums.length; i++){
         if(!albums[i].artist){artists.push([null]);continue;}
         for(const artist of albums[i].artist){artists.push([artist]);} //need an array otherwise row.map is not a function
     }
-    console.log("Adding albums to the database...");
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
     batchInsert("albums", "id, title, release_date, cover, description", 
@@ -42,13 +41,13 @@ const batchInsert = (table, columns, params, ignore = false) => {
     });
     const queryA2A = "INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)";
     const insertA2A = db.prepare(queryA2A);
-    console.log(albums);
+
     for(let i = 0; i < albums.length; i++){
         albums[i].artist?.forEach((artist) => {
             insertA2A.run(artist, albums[i].uuid);
         })
     }
-
+    console.log("Added album \x1b[1m\x1b[38;5;222m", albums[0].name, "\x1b[0m.");
     return
 }
 
@@ -61,8 +60,8 @@ const batchInsert = (table, columns, params, ignore = false) => {
         )) AS artists,
         a.cover AS cover
         FROM albums AS a 
-        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
-        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
         GROUP BY a.id, a.title, a.cover;
     `;
     return db.prepare(query).all(); 
@@ -85,7 +84,7 @@ const getPlaylist = (id, usermail, shortInfos) => {
         FROM users u
         JOIN playlists_descs pd ON pd.created_by =  u.id
         WHERE pd.id = ?;`;
-    console.log(db.prepare(ownerInfos).get(id));
+
     const {email : ownerEmail, ...owner} = db.prepare(ownerInfos).get(id);
     if(shortInfos){
         return {
@@ -119,8 +118,8 @@ const getPlaylist = (id, usermail, shortInfos) => {
     const queryAlbumInfos = `
         SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover, a.description AS description, a.release_date AS release_date
         FROM albums AS a 
-        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
-        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE a.id = ?
     `;
     const genresInfos =`
@@ -142,8 +141,8 @@ const getPlaylist = (id, usermail, shortInfos) => {
     const artistInfos = `
         SELECT ad.id AS id, ad.name AS name
         FROM albums AS a
-        JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
-        JOIN artists_descs AS ad ON A2A.artist = ad.id
+        LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE a.id = ?
     `;
     return {
@@ -195,7 +194,7 @@ const getGenreAlbums = (id) => {
 
  const getNextSongsFromAlbum = (albumId) => {
     const query = `
-        SELECT id from tracks WHERE album = ?  ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+        SELECT id from tracks WHERE album = ? ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
     return db.prepare(query).all(albumId);
 }
 
@@ -327,7 +326,7 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
     return db.prepare(query).all(id);
 }
 
-const findAudioEntity = (id) => {
+const findAudioEntity = (id, restriction = []) => {
     const queryTracks = `
         SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
         JOIN albums a ON t.album = a.id
@@ -346,12 +345,21 @@ const findAudioEntity = (id) => {
     const queryPlaylist = `
         SELECT id, name, cover FROM playlists_descs WHERE name LIKE ?;
     `;
+    if(restriction.length === 0){
+        return ({
+            tracks: db.prepare(queryTracks).all(`%${id}%`),
+            albums : db.prepare(queryAlbums).all(`%${id}%`),
+            artists: db.prepare(queryArtsits).all(`%${id}%`),
+            genres: db.prepare(queryGenre).all(`%${id}%`),
+            playlists : db.prepare(queryPlaylist).all(`%${id}%`)
+        })};
+        
     return ({
-        tracks: db.prepare(queryTracks).all(`%${id}%`),
-        albums : db.prepare(queryAlbums).all(`%${id}%`),
-        artists: db.prepare(queryArtsits).all(`%${id}%`),
-        genres: db.prepare(queryGenre).all(`%${id}%`),
-        playlists : db.prepare(queryPlaylist).all(`%${id}%`)
+        tracks: restriction.includes("tracks") ? db.prepare(queryTracks).all(`%${id}%`) : null,
+        albums : restriction.includes("albums") ? db.prepare(queryAlbums).all(`%${id}%`) : null,
+        artists: restriction.includes("artists") ? db.prepare(queryArtsits).all(`%${id}%`) : null,
+        genres: restriction.includes("genres") ? db.prepare(queryGenre).all(`%${id}%`) : null,
+        playlists : restriction.includes("playlists") ? db.prepare(queryPlaylist).all(`%${id}%`) : null
     });
 }
 
@@ -387,19 +395,22 @@ const applyAlbumsEdit = (album, newCoverName = null) => {
 
     const updateGenres = `DELETE FROM albums_to_genres WHERE album = ?;`
     db.prepare(updateGenres).run(album.id);
-    batchInsert("genres", "name", album.genre.map((genre) => [genre]), true);
+    if(album.genre.length > 0){
+        batchInsert("genres", "name", album.genre.map((genre) => [genre]), true);
 
-    const insertA2G = db.prepare("INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES (? , (SELECT id from genres WHERE name = ?))")
-    for(const genre of album.genre){
-        insertA2G.run(album.id, genre);
+        const insertA2G = db.prepare("INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES (? , (SELECT id from genres WHERE name = ?))")
+        for(const genre of album.genre){
+            insertA2G.run(album.id, genre);
+        }
     }
-
     const updateArtists = `DELETE FROM artists_to_albums WHERE taking_part = ?;`
     db.prepare(updateArtists).run(album.id);
-    batchInsert("artists_descs", "name", album.artist.map((artist) => [artist]), true);
-    const insertA2A = db.prepare("INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)");
-    for(const artist of album.artist.filter((artist) => artist.trim() !== '')){
-        insertA2A.run(artist, album.id);
+    if(album.artist.length > 0){
+        batchInsert("artists_descs", "name", album.artist.map((artist) => [artist]), true);
+        const insertA2A = db.prepare("INSERT INTO artists_to_albums (artist, taking_part) VALUES ((SELECT id from artists_descs WHERE name = ?) , ?)");
+        for(const artist of album.artist.filter((artist) => artist.trim() !== '')){
+            insertA2A.run(artist, album.id);
+        }
     }
     return;
 }
@@ -442,8 +453,12 @@ const setFavorite = (id, usermail, favorite) => {
     const userFavPlaylist = db.prepare("SELECT id as userId, favorites_playlist as playlistId, username FROM users WHERE email = ? ").get(usermail);
     if(!userFavPlaylist.playlistId ){
         userFavPlaylist.playlistId = `${uuidv4()}`;
-        db.prepare("INSERT OR IGNORE INTO playlists_descs (id, name, description) VALUES (?,?,?)")
-            .run([userFavPlaylist.playlistId, `${userFavPlaylist.username}'s favorites.`, `The tracks ${userFavPlaylist.username} likes the most!`])
+        console.log("Creating new favorite playlist \x1b[1m\x1b[38;5;219m<3\x1b[0m for\x1b[36m", userFavPlaylist.username, "\x1b[0m.");
+        db.prepare("INSERT OR IGNORE INTO playlists_descs (id, name, description, created_by) VALUES (?,?,?,?)")
+            .run([userFavPlaylist.playlistId,
+                 `${userFavPlaylist.username}'s favorites.`,
+                  `The tracks ${userFavPlaylist.username} likes the most!`,
+                   userFavPlaylist.userId]);
         db.prepare("UPDATE users SET favorites_playlist = ? WHERE id = ?").run([userFavPlaylist.playlistId, userFavPlaylist.userId]);
     }
     if(favorite){
@@ -461,8 +476,9 @@ const getPlaylists = () => db.prepare("SELECT name, id, description, cover FROM 
 const getUsers = () => db.prepare("SELECT id, username as name, email FROM users").all();
 
 const createPlaylist = (playlist, email, fileName = null) => {
-    console.log(playlist);
-    const creatorId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
+    const {id : creatorId, username} = db.prepare("SELECT id, username FROM users WHERE email = ?").get(email);
+    console.log("New playlist \x1b[1m\x1b[38;5;220m", playlist.name ,"\x1b[0m by \x1b[36m", username, "\x1b[0m.");
+    
     const addQuery = `
         INSERT INTO playlists_descs 
         (id, name, cover, description, created_at, created_by)
@@ -532,7 +548,22 @@ const insertFoundTracksToPlaylist = (tracks, playlistId, addAllToFavorite) => {
 
     return;
 }
+
+const moveTrackToAlbum = (trackId, albumId) => {
+    const query = `UPDATE tracks SET album = ? WHERE id = ?;`;
+    db.prepare(query).run([albumId, trackId]);
+}
+
+const createNewAlbum = (name) => {
+    const id = uuidv4();
+    const query = `INSERT INTO albums (id, title) VALUES (?,?);`;
+    db.prepare(query).run([id, name]);
+    return id;
+}
+
 module.exports = {
+    createNewAlbum,
+    moveTrackToAlbum,
     addTrackToPlaylist,
     addAlbumToPlaylist,
     addPlaylistToPlaylist,

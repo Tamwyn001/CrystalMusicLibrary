@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useAddMusicContext } from "../AddMusic";
 import './TrackRemapAlbum.css';
-const TrackRemapAlbum = ({ track, onClose }) => {
+const TrackRemapAlbumAddMusic = ({ track, onClose }) => {
     const {albums, moveTrackToNewAlbum, moveTrackToAlbum, editingAlbum, setEditingAlbum} = useAddMusicContext();
     const [newAlbumName, setNewAlbumName] = useState(''); //if valid, we want a new album
     const [lastTrack, setLastTrack] = useState(false); //if true, we are the last track of the album
@@ -63,4 +63,4 @@ const TrackRemapAlbum = ({ track, onClose }) => {
     )
 }
 
-export default TrackRemapAlbum;
+export default TrackRemapAlbumAddMusic;

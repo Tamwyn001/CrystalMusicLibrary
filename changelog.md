@@ -6,10 +6,11 @@
 - Change genres and artist during adding process
 - Genre view
 - Album metadatas edit
-- Add/remove favorites
-
-# TODO
+- Add/remove favourites
+- Favourite playlist
 - Change album art
 - Move tracks around
-- Remove ghost artists: no albums attached
 - genres view
+
+# Todo
+- Remove ghost artists: no albums attached

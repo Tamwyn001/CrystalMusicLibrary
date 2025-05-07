@@ -8,6 +8,7 @@ const GlobalActionBarContext = createContext();
 import { useNavigate } from "react-router-dom";
 import { FixedSizeList as List } from "react-window";
 import CML_logo from "./components/CML_logo.jsx";
+import { useNotifications } from "./GlobalNotificationsProvider.jsx";
 
 
 const commandCodes = {
@@ -24,11 +25,7 @@ const commandCodes = {
     VOLUME_DOWN : 'volume_down',
     OPEN_GENRE : 'open_genre'
 }
-const notifTypes = {
-    SUCCESS : 'success',
-    ERROR : 'error',
-    INFO : 'info'
-}
+
 const actions = [ //!! very important, keep order
     {
         name: 'Search',
@@ -94,7 +91,7 @@ const actions = [ //!! very important, keep order
     }
 ];
 
-const GlobalActionBar = ({children}) => {
+export const GlobalActionBar = ({children}) => {
     const boundEvents = useRef([]); //{callback, code}
     const [showActionBar, setShowActionBar] = useState(false);
     const showActionBarRef = useRef(showActionBar); // to avoid infinite loop
@@ -106,12 +103,9 @@ const GlobalActionBar = ({children}) => {
     const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused, setVolume, volume} = useAudioPlayer();
     const volumeRef = useRef(volume); // when mounted, it will always use the default value if we dont use ref
     const navigate = useNavigate();
-    const [currentNotification, setCurrentNotification] = useState(null); //{message, state} state = "success" | "error" | "info"
-    const [notificationVisible, setNotificationVisible] = useState(null);
     const wrapperRef = useRef(null);
     const actionLocation = useRef(null); //command/search bar, to know if we close. 
-    const notificationDivRef = useRef(null);
-    const timeoutRefs = useRef([]);
+    const {addNotification, notifTypes} = useNotifications();
     
     useEffect(() => {
         window.addEventListener("keydown", keyCallbackBinder)
@@ -133,49 +127,14 @@ const GlobalActionBar = ({children}) => {
 
 
 
-    const addNotification = (message, state) => {
-      // Clear previous timeouts
-      timeoutRefs.current.forEach((timeout) => clearTimeout(timeout));
-      timeoutRefs.current = [];
-      setCurrentNotification({ message, state });
-      setNotificationVisible(true);
     
-      const hideTimeout = setTimeout(() => {
-        if (notificationDivRef.current) {
-          notificationDivRef.current.setAttribute("direction", "");
-          void notificationDivRef.current.offsetWidth;
-          notificationDivRef.current.setAttribute("direction", "hide");
-        }
-    
-        const cleanupTimeout = setTimeout(() => {
-          setNotificationVisible(false);
-          setCurrentNotification(null);
-        }, 300);
-    
-        timeoutRefs.current.push(cleanupTimeout);
-      }, 2000);
-    
-      timeoutRefs.current.push(hideTimeout);
-    };
-
-    useEffect(() => {
-        if (!currentNotification) return;
-        setNotificationVisible(true);
-      }, [currentNotification]);
-      
-      useEffect(() => {
-        if (!notificationVisible || !notificationDivRef.current) return;
-        
-        notificationDivRef.current.setAttribute("direction", "show");
-      }, [notificationVisible]);
-      
 
     const keyCallbackBinder = (e) => {
         // console.log("Key pressed", e);
         // if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
         if(e.key == "Control" || currentCommand) {return}
-        if(!(e.ctrlKey || e.shiftKey || e.altKey || e.metaKey) && document.activeElement.nodeName === "INPUT") {return} //to avoid closing the action bar when pressing space in the search bar
+        if(!(e.ctrlKey || e.altKey || e.metaKey) && (document.activeElement.nodeName === "INPUT" || document.activeElement.nodeName === "TEXTAREA")) {return} //to avoid closing the action bar when pressing space in the search bar
         console.log(document.activeElement.nodeName);
         const actionToCall = actions.find( (action) => {
             const keyMatch = e.key === action.key;
@@ -404,38 +363,14 @@ const GlobalActionBar = ({children}) => {
         document.getElementById("actionbar-searchbar").focus();
         setProposedCommands([]);
     }
-    const Notification = () => {
-        if(!notificationVisible) {return null}
-        const NotifIcon = () => {
-            switch (currentNotification.state) {
-                case notifTypes.SUCCESS:
-                    return <IconCheck className="notification-icon" />
-                case notifTypes.ERROR:
-                    return <IconX className="notification-icon" />
-                case notifTypes.INFO:
-                    return <IconInfoCircle className="notification-icon" />
-                default:
-                    return null
-            }
-        }
-        return(
-        <div ref={notificationDivRef} className="notification-parent" id="notification-parent">
-            <div className="notification" is-open={currentNotification ? "true" : "false"} >
-                <NotifIcon />
-                <span>{currentNotification.message}</span>
-            </div>
-        </div>)
-    }
+    
     return (
         <GlobalActionBarContext.Provider
             value={{commandCodes,
-             openSearchBar,
-             notifTypes,
-             addNotification}}>
+             openSearchBar}}>
             <div className="action-bar-app-parent">
                 
                 {children}
-                <Notification/>
                 {(showActionBar) && <div  className="global-action-bar">
                     <div className="action-bar" ref={wrapperRef}>
                         <div className="action-bar-research">
@@ -466,5 +401,10 @@ const GlobalActionBar = ({children}) => {
     )
 }
 
-export default GlobalActionBar;
-export const useGlobalActionBar = () => useContext(GlobalActionBarContext);
+export const useGlobalActionBar = () => {
+    const context = useContext(GlobalActionBarContext);
+    if (!context) {
+      throw new Error("useGlobalActionBar must be used within a GlobalActionBar provider");
+    }
+    return context;
+  };

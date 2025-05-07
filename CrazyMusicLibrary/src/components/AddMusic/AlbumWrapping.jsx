@@ -3,7 +3,7 @@ import CML_logo from '../CML_logo';
 import './AlbumWrapping.css'
 import { IconMountain, IconFolderPlus, IconDirections } from '@tabler/icons-react';
 import { useAddMusicContext } from '../AddMusic';
-import TrackRemapAlbum from './TrackRemapAlbum';
+import TrackRemapAlbumAddMusic from './TrackRemapAlbum';
 import { FixedSizeList as List } from 'react-window';
 
 
@@ -93,7 +93,7 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
                     </List>
                 </div>
             </form>
-            {showTrackRemap.visible && < TrackRemapAlbum onClose={() => {setShowTrackRemap({visible: false})}} track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
+            {showTrackRemap.visible && < TrackRemapAlbumAddMusic onClose={() => {setShowTrackRemap({visible: false})}} track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
 
         </div>
     )

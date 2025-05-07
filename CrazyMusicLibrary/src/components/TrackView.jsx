@@ -5,13 +5,13 @@ import SvgHoverToggle from "./SvgHoverToggle";
 import { useState } from "react";
 import apiBase from "../../APIbase";
 
-const TrackView = ({ index, track, containerId, isPlaylistView, playIconId }) => {
+const TrackView = ({ index, track, containerId, containerType, playIconId }) => {
   const { title, track_number, rawDuration } = track;
   const {playTrack, playingTrack} = useAudioPlayer();
   const trackName = track.id;
   const [trackFavorite, setTrackFavorite] = useState(Boolean(track.is_favorite));
   const handleClick = () => { 
-    playTrack(trackName, containerId, isPlaylistView, index ); // Extract the file name from the path
+    playTrack(trackName, containerId, containerType, index ); // Extract the file name from the path
   };
   const GetRandomPlayIcon = () => {
     switch (playIconId) {

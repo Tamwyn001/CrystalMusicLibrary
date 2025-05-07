@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -17,17 +17,16 @@ const upload = getMulterInstance(uploadPath);
 
 
 router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), async (req, res) =>  {
-    //the subroute for uploading albums 
+ 
     if (req.body.album) {
         addAlbums([JSON.parse(req.body.album)]);
-        res.json({ message: "Albums uploaded successfully" });
+        res.json({ message: "Album uploaded successfully" });
         return;
     }
     //the subroute for uploading tracks
     //link tracks to albumUuid
     const musicFileProcess = new Promise(async (resolve, reject) => {
         const meta = JSON.parse(req.body.trackMeta);
-        console.log(meta);
         let file = req.files.music[0];
         file.uuid = meta.id;
         file.albumId = meta.albumUuid;
@@ -50,7 +49,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
             reject(err);
         }
     });
-    musicFileProcess.then((trackName) => {console.log("Processed track: " + trackName);});
+    musicFileProcess.then((trackName) => {console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m");});
     res.json({ message: "Files uploaded successfully" });
     
     }
@@ -144,8 +143,7 @@ router.get("/nextSongs/:containerType/:containerId", (req, res) => {
         (containerType === "playlist") ? getNextSongsFromPlayist(containerId) 
         : (containerType === "album") ? getNextSongsFromAlbum(containerId) 
         : [];
-
-    res.json( nextSongs.map(song => song.id));
+    res.json(nextSongs.map(song => song.id));
     return;
     
 });
@@ -178,8 +176,8 @@ const runServerStats = () => {
   runningServerStats = true; // Set the flag to true
   console.log("Running server stats...");
   promiseServerStats = Promise.all([
-    dirSize( './data/music' ),
-    dirSize( './data/covers' )
+    dirSize( path.join(uploadPath, 'music') ),
+    dirSize( path.join(uploadPath, 'covers') )
   ]).then( ( [  musicSize, coversSize ] ) => {
     insertNewServerState( musicSize, coversSize );
     runningServerStats = false; // Reset the flag after execution
@@ -212,8 +210,8 @@ router.get("/user-data-usage/:id", async (req, res) => {
     .reduce((accumulator, { size } ) => accumulator + size, 0));
 });
 
-router.get("/search/:query", async (req, res) => {
-    res.json(findAudioEntity(req.params.query));
+router.get("/search/:query{/:restrictionType}", async (req, res) => {
+    res.json(findAudioEntity(req.params.query, req.params.restrictionType?.split(',')));
 });
 
 
@@ -283,6 +281,16 @@ router.post("/addToPlaylist", upload.none(), (req, res) => {
             break
     }
     res.json({message : "Added to playlist"})
+})
+
+router.get("/moveTrackToAlbum/:new/:id/:trackId", (req, res) =>{
+    if(req.params.new == "true"){
+        moveTrackToAlbum(req.params.trackId, createNewAlbum( req.params.id))
+        res.json("track moved to new album");
+        return
+    }
+    moveTrackToAlbum(req.params.trackId, req.params.id)
+    res.json("track moved to exisiting album");
 })
 
 module.exports = {router, runServerStats};
