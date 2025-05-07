@@ -15,7 +15,8 @@
 ## Setup
 1. Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
 2. Unzip the files to a folder.
-3. Open the ```.env``` file and set the variables: *Avoid spaces next to the = signs*
+3. Open the ```.env``` file and set the variables:
+   **Avoid spaces next to the = signs**
     ```env
     CML_DATA_PATH='./data'
     # Where the music files and the album covers are stored.
