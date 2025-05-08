@@ -29,8 +29,8 @@ const batchInsert = (table, columns, params, ignore = false) => {
     }
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
-    batchInsert("albums", "id, title, release_date, cover, description", 
-        albums.map((album) => [album.uuid, album.name, album.year , (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description]));
+    batchInsert("albums", "id, title, release_date, cover, description, added_at", 
+        albums.map((album) => [album.uuid, album.name, album.year , (album.ext) ? `${album.uuid}.${album.ext}` : null, album.description, localTime]));
 
     //insert into albums_to_genres
     albums[0].genre?.forEach((genre) => {
@@ -62,7 +62,8 @@ const batchInsert = (table, columns, params, ignore = false) => {
         FROM albums AS a 
         LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
         LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
-        GROUP BY a.id, a.title, a.cover;
+        GROUP BY a.id, a.title, a.cover
+        ORDER BY a.added_at DESC;
     `;
     return db.prepare(query).all(); 
 }
@@ -327,6 +328,10 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
 }
 
 const findAudioEntity = (id, restriction = []) => {
+    if (restriction.includes("tags")){
+        const queryTags = "SELECT * FROM tags WHERE name LIKE ?";
+        return {tags : db.prepare(queryTags).all(`%${id}%`)}
+    }
     const queryTracks = `
         SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
         JOIN albums a ON t.album = a.id

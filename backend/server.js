@@ -98,12 +98,13 @@ const localIP = getLocalIP();
 // -----------------------------------
 
 const app = express();
-
+const PORT = process.env.PORT || 4590;
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
   `http://${localIP}:4173`,
   `http://${localIP}:4590`,
+  `http://${localIP}:${PORT}`,
   'http://10.24.134.178:4173',
   'http://169.254.160.204:4173',
   "http://192.168.10.134:4173",
@@ -169,7 +170,7 @@ try {
 // -----------------------------------
 // 🟢 Start server
 // -----------------------------------
-const PORT = process.env.PORT || 4590;
+
 runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n

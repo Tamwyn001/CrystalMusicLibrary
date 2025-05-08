@@ -1,0 +1,21 @@
+.radial-container {
+    position: relative;
+    display: inline-block;
+  }
+  
+  .radial-bg,
+  .radial-progress {
+    transition: stroke-dashoffset 0.1s;
+    transform: rotate(-90deg);
+    transform-origin: 50% 50%;
+    stroke-linecap: round;
+  }
+  
+  .radial-label {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-weight: bold;
+    font-size: 1.2em;
+  }

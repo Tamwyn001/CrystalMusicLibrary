@@ -46,7 +46,9 @@ class Album{
 
 const AddMusicContext = createContext();
 
-const AddMusic = ({closeOverlay}) => {
+const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, isMinimize, setMinimized}) => { 
+    //todo a bit dirty, maybe move all in a provider. A lot is implemented so it might cost time to do..
+    //-> So we can access the upload percentage everywhere from.
     const [fromFile, setFromFile] = useState(true);
     const [activeIndex, setActiveIndex] = useState(0);
     const [toAddTracks, setToAddTracks] = useState([]);
@@ -62,7 +64,6 @@ const AddMusic = ({closeOverlay}) => {
     const {addNotification, notifTypes } = useNotifications();
      //contains all the metadatas that the user changed, used to avoid sending all the metas with the song with fetch
     const [trackMetaOverwrite, setTrackMetaOverwrite] = useState([]);
-    
     
     //this avoids fetching the metadate when we remove the songs from the list
     let deleting = false;
@@ -325,6 +326,7 @@ const AddMusic = ({closeOverlay}) => {
             bodyFormData.append("trackMeta", JSON.stringify(trackMetaOverwrite[i])); // Append the metadata, BEFORE the track, otherwise might not be populated yet
             bodyFormData.append("music", track); // Append each file individually
             setSendingFile(track.name);
+            
             await axios({
                 method: "POST",
                 data: bodyFormData,
@@ -335,16 +337,22 @@ const AddMusic = ({closeOverlay}) => {
                     const { total, loaded } = progress;
                     const totalSizeInMB = total / 1000000;
                     const loadedSizeInMB = loaded / 1000000;
+                    uploadPercent(loadedSizeInMB / totalSizeInMB);
                     const uploadPercentage = (loadedSizeInMB / totalSizeInMB) * 100;
                    
                     setPercentageUpload(uploadPercentage.toFixed(2));
                     // console.log("total size in MB ==> ", totalSizeInMB, " upload percentage ==> ", uploadPercentage);
                 },
-              }).catch((error) => {
+              })
+              .then(() => {
+                    uploadProgress({done : i, total: toAddTracks.length });
+                })
+              .catch((error) => {
                 console.error("Error uploading track:", error);});
             bodyFormData = null; //clear the form data to free memory
         }
         console.log("Upload finished");
+        uploadFinished();
         setTimeout(() => {
             setToAddTracks([]);
             setMetadatas([]);
@@ -360,7 +368,13 @@ const AddMusic = ({closeOverlay}) => {
         }, 750);
 
     }
-
+    const handleClose = () => {
+        if(activeIndex !== 4){
+            closeOverlay();
+            return
+        }
+        setMinimized(true);
+    }
     useEffect(() => { if(deleting){deleting = false;}}, [toAddTracks]);
     const MusicWindowState = () => {
         switch(activeIndex){
@@ -374,17 +388,20 @@ const AddMusic = ({closeOverlay}) => {
             case 3:
                 return <AlbumWrapping setEditUid={setEditingAlbum} albumClass={albums.find(album => album.uuid === editingAlbum)}/>;
             case 4:
-                return <Loading text={`Publishing ${sendingFile} ${totalMbUpload}Mb..`} 
-                        progressBar={{useProgressBar: true, showPercent: true, isMarquee: true, 
-                            percent: percentageUpload, fillColor: 'var(--cool-green)'}} />;
+                return (<div style={{padding: "20px"}}>
+                <Loading text={`Publishing ${sendingFile} ${totalMbUpload}Mb..`} 
+                        progressBar={{useProgressBar: true, showPercent: true, isMarquee: false, 
+                            percent: Number(percentageUpload), fillColor: 'var(--cool-green)'}} />
+                            <p>You can close this overlay, the upload will continue. :)</p>
+                        </div>);
             default:
                 return <div className="addMusicSource"><p>Not implemented yet</p></div>;
         }   
     }
     return(
-        <div className="addMusicContainer">
+        <div className="addMusicContainer" style={(isMinimize) ? {display : "none"} : {}}>
             <AddMusicContext.Provider value={{albums, moveTrackToNewAlbum, editingAlbum, moveTrackToAlbum, setEditingAlbum}}>
-                <IconX className="buttonRound closeOverlay" onClick={closeOverlay}/>
+                <IconX className="buttonRound closeOverlay" onClick={handleClose}/>
                 <h2>Add Music</h2>
                 <ActiveIndex context={{name: "AddMusic", length: 5}} active={activeIndex} setActive={null}/>
                 < MusicWindowState />

@@ -19,6 +19,7 @@ import GenreView from './pages/GenreView';
 import GenresView from './pages/GenresView';
 import PlaylistsView from './pages/PlaylistsView';
 import { NotificationsProvider } from './GlobalNotificationsProvider';
+import Cooking from './pages/Cooking';
 function App() {
 
 
@@ -39,6 +40,7 @@ function App() {
                             <Route path="genres/:genreId" element={<GenreView />} />
                             <Route path="playlists" element={<PlaylistsView/>}/>
                             <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
+                            <Route path="cooking" element={<Cooking/>}/>
                         </Route>
                         <Route path="account" element={<Account />} /> 
                         <Route path="settings" element={<Settings />} /> 

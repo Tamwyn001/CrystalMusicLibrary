@@ -359,7 +359,9 @@ export const AudioPlayerProvider = ({ children }) => {
         })
     }
 
-
+    const closeNewPlaylistWindow = () =>{
+        setCreatingNewPlaylist(false);
+    }
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */
@@ -402,7 +404,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 : editingAlbum.type === "playlist" ? <CreatePlaylist editPlaylistClass={editingAlbum} applyCanges={applyContainerChanges}/> 
                 : null) : null
             }
-            {(creatingNewPlaylist) && <CreatePlaylist applyCanges={sendNewPlaylist}/>}
+            {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
         </AudioPlayerContext.Provider>
     );
 }

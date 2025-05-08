@@ -3,6 +3,7 @@ import ProgressBar from './ProgressBar';
 import './Loading.css';
 import CML_logo from './CML_logo';
 const Loading = ({text, progressBar = {useProgressBar: false}}) => {
+
     return (
         <div className="loading-container">
 
@@ -13,7 +14,7 @@ const Loading = ({text, progressBar = {useProgressBar: false}}) => {
                     showPercent={progressBar.showPercent} 
                     isMarquee={progressBar.isMarquee} 
                     fillColor = {progressBar.fillColor} 
-                    style={{width: "500px", height : '25px'}} /> :
+                    style={{ height : '25px'}} /> :
                 <p>Loading...</p>}
         </div>
     );

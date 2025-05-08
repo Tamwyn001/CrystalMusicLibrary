@@ -1,15 +1,5 @@
-DROP TABLE IF EXISTS users;
-DROP TABLE IF EXISTS artists_descs;
-DROP TABLE IF EXISTS albums;
-DROP TABLE IF EXISTS artists_to_albums;
-DROP TABLE IF EXISTS genres;
-DROP TABLE IF EXISTS tracks;
-DROP TABLE IF EXISTS artists_to_track;
-DROP TABLE IF EXISTS playlists;
-DROP TABLE IF EXISTS tracks_to_playlists;
-DROP TABLE IF EXISTS playlists_to_users;
 
-CREATE TABLE users(
+CREATE TABLE  IF NOT EXISTS users(
     id INTEGER PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
     password VARCHAR(255) NOT NULL,
@@ -20,7 +10,7 @@ CREATE TABLE users(
 );
 
 
-CREATE TABLE artists_descs(
+CREATE TABLE  IF NOT EXISTS artists_descs(
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     bio TEXT,
@@ -28,7 +18,7 @@ CREATE TABLE artists_descs(
     CONSTRAINT UC_artists_descs UNIQUE (name)
 );
 
-CREATE TABLE albums(
+CREATE TABLE  IF NOT EXISTS albums(
     id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     release_date DATE,
@@ -39,7 +29,7 @@ CREATE TABLE albums(
 
 
 
-CREATE TABLE artists_to_albums(
+CREATE TABLE  IF NOT EXISTS artists_to_albums(
     id INTEGER PRIMARY KEY,
     artist int NOT NULL,
     taking_part VARCHAR(36),
@@ -47,14 +37,14 @@ CREATE TABLE artists_to_albums(
     FOREIGN KEY (taking_part) REFERENCES albums(id)
 );
 
-CREATE TABLE genres(
+CREATE TABLE  IF NOT EXISTS genres(
     id INTEGER PRIMARY KEY,
     name VARCHAR(255) NOT NULL,
     description TEXT,
     CONSTRAINT UC_genres UNIQUE (name)
 );
 
-CREATE TABLE albums_to_genres(
+CREATE TABLE  IF NOT EXISTS albums_to_genres(
     id INTEGER PRIMARY KEY,
     album VARCHAR(36) NOT NULL,
     genre int,
@@ -62,7 +52,7 @@ CREATE TABLE albums_to_genres(
     FOREIGN KEY (genre) REFERENCES genres(id)
 );
 
-CREATE TABLE tracks(
+CREATE TABLE IF NOT EXISTS tracks(
     id VARCHAR(36) NOT NULL,
     title VARCHAR(255) NOT NULL,
     album VARCHAR(36) NOT NULL,
@@ -79,7 +69,7 @@ CREATE TABLE tracks(
 );
 
 
-CREATE TABLE artists_to_track(
+CREATE TABLE  IF NOT EXISTS artists_to_track(
     id INTEGER PRIMARY KEY,
     artist int NOT NULL,
     taking_part VARCHAR(36),
@@ -87,7 +77,7 @@ CREATE TABLE artists_to_track(
     FOREIGN KEY (taking_part) REFERENCES tracks(id)
 ); --not used
 
-CREATE TABLE server_stats(
+CREATE TABLE  IF NOT EXISTS server_stats(
     date TIMESTAMP DEFAULT CURRENT_TIMESTAMP PRIMARY KEY,
     total_users INT DEFAULT 0,
     total_artists INT DEFAULT 0,
@@ -98,7 +88,7 @@ CREATE TABLE server_stats(
     tracks_byte_usage BIGINT DEFAULT 0 --todo add a history with a graph and so :0
 );
 
-CREATE TABLE favorites(
+CREATE TABLE  IF NOT EXISTS favorites(
     entry_id VARCHAR(36) NOT NULL,
     user_id INT NOT NULL,
     PRIMARY KEY (entry_id, user_id),
@@ -106,7 +96,7 @@ CREATE TABLE favorites(
     FOREIGN KEY (user_id) REFERENCES users(id)
 );
 
-CREATE TABLE playlists_descs(
+CREATE TABLE  IF NOT EXISTS playlists_descs(
     id VARCHAR(36) PRIMARY KEY,
     name TEXT,
     cover TEXT,
@@ -118,7 +108,7 @@ CREATE TABLE playlists_descs(
 
 );
 
-CREATE TABLE tracks_to_playlists(
+CREATE TABLE  IF NOT EXISTS tracks_to_playlists(
     playlist_id VARCHAR(36),
     track_id VARCHAR(36),
     track_no INT,
@@ -127,7 +117,7 @@ CREATE TABLE tracks_to_playlists(
     FOREIGN KEY (track_id) REFERENCES tracks(id)
 );
 
-CREATE TABLE playlists_to_owners(
+CREATE TABLE  IF NOT EXISTS playlists_to_owners(
     playlist_id VARCHAR(36) NOT NULL,
     owner_id INT NOT NULL,
     PRIMARY KEY (playlist_id, owner_id),

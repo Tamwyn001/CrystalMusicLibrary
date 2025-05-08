@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconMountain, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2 } from '@tabler/icons-react'
+import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2 } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
@@ -11,17 +11,22 @@ import MusicQueue from './MusicQueue.jsx'
 import { useNavigate } from 'react-router-dom'
 import { useGlobalActionBar } from '../GlobalActionBar.jsx'
 import VolumeBar from './VolumeBar.jsx'
+import RadialProgressBar from './RadialProgressBar.jsx'
+
 
 
 const Header = () => {
     const [pausePlayVisible, setPausePlayVisible] = useState(false)
     const [musicPaused, setMusicPaused] = useState(false)
-    const [newMusicShown, setNewMusicShown] = useState(false);
+    const [newMusicActive, setNewMusicActive] = useState(false);
     const [queueShown, setQueueShown] = useState(false);
     const [volumeShown, setVolumeShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl, volume} = useAudioPlayer();
     const { openSearchBar } = useGlobalActionBar();
+    const [isAddMusicMinimized, setIsAddMusicMinimized] = useState(false); 
+    const [uploadProgress, setUploadProgress] = useState(null) //{done : Numver, total: Number}
+    const [uploadPercent, setUploadPercent] = useState(null) // Number
     const navigate = useNavigate();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
@@ -33,11 +38,13 @@ const Header = () => {
     }
 
     function openNewMusic (){
-        setNewMusicShown(true);
+        setNewMusicActive(true);
     }
 
     const closeNewMusic = () => {
-        setNewMusicShown(false);
+        setNewMusicActive(false);
+        setUploadPercent(null);
+        setUploadProgress(null);
     }
 
     function toggleQueueShown(){
@@ -78,6 +85,25 @@ const Header = () => {
     ];
         setLogoColors(colors[Math.floor(Math.random() * colors.length)])
     }, []);
+
+    const onUploadFished = () => {
+
+    }
+    const handleClicNewMusic = () => {
+        if(!uploadProgress){
+            if(newMusicActive){
+                closeNewMusic()
+                console.log("deactivate")
+            }else{
+                openNewMusic();
+                console.log("activate")
+            }
+            
+            return
+        }
+        setIsAddMusicMinimized(!isAddMusicMinimized);
+        console.log("toggle")
+    }
 
 
     return(
@@ -122,10 +148,24 @@ const Header = () => {
                 </div>
                 <IconSearch/>
             </div>
-            <IconMusicPlus className="addMusicButton buttonRound" onClick={() => openNewMusic()}/>
+            <div style={{position : "relative" , padding : "5px", display: "flex", justifyContent: "center"}} className='upload-music-header'>
+            {(uploadPercent) &&
+                <RadialProgressBar percent={uploadPercent} size={44} useText={false} style={{position: "absolute", transform:"translate(-1px, -5.5px)"}}/>}
+                <IconMusicPlus style={{zIndex:"10", position: "relative"}}className="addMusicButton buttonRound" onClick={handleClicNewMusic}/>
+                
+                {(uploadProgress) && <span 
+                    style={{position: "absolute", bottom : "-30px", padding : "2px 7px", borderRadius: "10px",backgroundColor:"rgba(255, 255, 255, 0.7)", textAlign : "center"}}>{uploadProgress.done}/{uploadProgress.total}</span>
+                }
+            </div>
             <UserDropdown />
         </div>
-        {newMusicShown && (<AddMusic closeOverlay={closeNewMusic} />) }
+        {newMusicActive && (<AddMusic 
+        uploadPercent={setUploadPercent} 
+        uploadFinished={onUploadFished} 
+        uploadProgress={setUploadProgress}
+        isMinimize={isAddMusicMinimized}
+        setMinimized={ setIsAddMusicMinimized}
+        closeOverlay={closeNewMusic} />) }
 
       </header>    
     )
