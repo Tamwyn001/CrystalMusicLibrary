@@ -48,10 +48,10 @@ const setupDatabase = (dataPath, basePath) => {
   const sqlSetupFilePath = path.join(basePath, "CML_setup.sql");
   const dbPath = path.join(dataPath, "CML_db.sqlite");
 
-  if(existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
-  else{resetDatabase(dbPath, sqlSetupFilePath);}
+  // if(existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}
+  // else{resetDatabase(dbPath, sqlSetupFilePath);}
   dbInstance = new Database(dbPath, {
-      fileMustExist: true,
+      fileMustExist: false,
   });
   console.log("✅ Database mounted");
   upgradeDbVersion();
