@@ -1,14 +1,31 @@
 import { IconLabel, IconSearch } from "@tabler/icons-react";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 import ActionBarEntry from "../components/ActionBarEntry";
 import apiBase from "../../APIbase";
+import CookingTagEntry from "../components/CookingTagEntry";
+
 
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
-    const [searchbarFocused, setSearchbarFocused] = useState(false)
-    const [ proposedEntryToAdd, setProposedEntryToAdd] = useState([])
+    const [searchbarFocused, setSearchbarFocused ] = useState(false);
+    const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
+    const [ currentCookingContent, setCurrentCookingContent ] = useState([]);
+    useEffect(() => {
+        const handleClickedOutside = (e) =>{            
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                closeSearchBar();
+            }}
+
+        document.addEventListener("mousedown", handleClickedOutside);
+        document.addEventListener("touchstart", handleClickedOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickedOutside);
+            document.removeEventListener("touchstart", handleClickedOutside);
+        }
+    },[]);
+    
     const fetchSearchResults = (e) => {
         const input = e.target.value;
 
@@ -30,7 +47,10 @@ const Cooking = () => {
             setProposedEntryToAdd(proposed);})
 
     }
-    const handleActionBarEntryClick = () => {
+    const closeSearchBar = () => {
+        setSearchbarFocused(false);
+    }
+    const handleActionBarEntryClick = (id) => {
 
     }
     return(
@@ -65,6 +85,9 @@ const Cooking = () => {
 
                 </List>
                 </div>
+            </div>
+            <div>
+                {currentCookingContent.map(tag => <CookingTagEntry key={tag.id} tag={tag} onClick={handleActionBarEntryClick}/>)}
             </div>
         </div>
     )

@@ -1,0 +1,34 @@
+.edit-tag{
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    gap: 20px;
+    padding: 10px 30px;
+    background-color: white;
+    border-radius: 20px;   
+    height: fit-content;
+    width:  fit-content;
+    max-width: 500px;
+    position: absolute;
+    top : 100px;
+    z-index: 11;
+    left: 250px
+
+}
+
+.edit-tag-picker{
+    position: absolute;
+    width: 200px;
+    height: 200px;
+    top: -100px;
+    right: -200px;
+}
+
+.small-tag{
+    width: fit-content;
+    padding: 10px 20px;
+    border-radius: 15px;
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+}

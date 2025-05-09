@@ -50,6 +50,11 @@
   gap: 3px;
 }
 
+.button-with-callback[data-is-active='true']{
+  background-color: #6d739a;
+  color: #c9dfff;
+}
+
 .keyboard-key{
   background-color: white;
   padding: 2px 5px;
@@ -190,6 +195,7 @@
   bottom: 0px;
   align-content: center;
   z-index: 10;
+  pointer-events: none;
 }
 .notification{
   margin: 0px auto 30px auto;
@@ -216,5 +222,33 @@
   100%{
     bottom: 0px;
   }
+
+}
+
+.track-actions-div{
+  position: fixed;
+  width: 200px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  background-color: #f1f1f1f3;
+
+  border-radius: 15px;
+  z-index: 10;
+  right: 150px;
+}
+.track-action-entry{
+  display: flex;
+  flex-direction: row;
+  padding: 5px 15px;
+  border-radius: 15px;
+  align-items: center;
+  cursor: pointer;
+}
+.track-action-entry span{
+  flex: 1;
+}
+.track-action-entry:hover{
+  background-color: #c9f0ff;
 
 }

@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useNavigate, useParams } from "react-router-dom";
-import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
+import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconFilterStar, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
@@ -22,7 +22,7 @@ const AlbumView = ({isPlaylist = false}) => {
     const [artists, setArtists] = useState([]);
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
-    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, setAlbumAskRefresh } = useAudioPlayer();
+    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, linkNewContainer } = useAudioPlayer();
     const wrapperRef = useRef(null) ;
     const navigate = useNavigate();
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
@@ -31,11 +31,15 @@ const AlbumView = ({isPlaylist = false}) => {
     const searchInputRef = useRef(null);
     const { notifTypes, addNotification} = useNotifications();
     const [isFavPlaylist, setIsFavPlaylist] = useState(false);
-    
+    const [ showOnlyFavs, setShowOnlyFavs ] = useState(false);
+    const [ favFilterAvaliable, setFavFilterAvaliable ] = useState(false)
     useEffect(() => {
-            refetchAlbum();        
-        }, [albumId]);
-    
+            refetchAlbum();   
+            
+        }, [albumId, showOnlyFavs]);
+    useEffect(() => {
+        linkNewContainer({id: albumId, type: (isPlaylist) ? "playlist" : "album", favPlaylist : isFavPlaylist}, refetchAlbum)     
+    },[isFavPlaylist])
 
     const refetchAlbum = () => {
         fetch(`${apiBase}/read-write/${ (isPlaylist) ? "playlist" : "album"}/${albumId}`, {
@@ -48,31 +52,33 @@ const AlbumView = ({isPlaylist = false}) => {
         })
         .then(data => {
             setCurrentPlayIcon(Math.floor(Math.random() * 3));
-            
+            const tracks = data.tracks.filter(track => {
+                    if(!favFilterAvaliable && track.is_favorite === 1) {setFavFilterAvaliable(true);}
+                    return showOnlyFavs ? track.is_favorite === 1 : true});
             if(isPlaylist){
                 console.log(data.playlistInfos);
                 setAlbum(data.playlistInfos);
-                setTracks(data.tracks);
+                setTracks(tracks);
                 setArtists([data.owner, ...data.collaborators]);
                 setIsFavPlaylist(data.isFavPlaylist)
                 return;
             }
             console.log(data.albumInfos);
             setAlbum(data.albumInfos);
-            setTracks(data.tracks);
+            setTracks(tracks);
             setGenres(data.genres);
             setArtists(data.artists);
+            setIsFavPlaylist(false); //triggers container for the AudioContext
            
         })
     };
-    useEffect(() => {setAlbumAskRefresh(refetchAlbum);}, []);
 
     const handleAddToQueue = async () => {
-        const res = await addContainerToQueue(albumId, isPlaylist ? "playlist" : "album");
+        const res = await addContainerToQueue(albumId, isPlaylist ? "playlist" : "album", showOnlyFavs);
         return res;
     }
     const handleShuffle = async () => {
-        playContainerSuffle(albumId, isPlaylist ? "playlist" : "album");
+        playContainerSuffle(albumId, isPlaylist ? "playlist" : "album", showOnlyFavs);
     }
     const openEdit = () => {
         if(isPlaylist){
@@ -180,6 +186,7 @@ const AlbumView = ({isPlaylist = false}) => {
         }
     },[]);
 
+
     const closeSearchBar = () => {
         setSearchbarFocused(false);
         searchInputRef.current.value = ""
@@ -226,6 +233,11 @@ const AlbumView = ({isPlaylist = false}) => {
                                         <IconEdit/>
                                     </button>
                                 }
+                                 {(!isFavPlaylist) && favFilterAvaliable &&
+                                    <button className="button-with-callback" data-is-active={showOnlyFavs} onClick={() => {setShowOnlyFavs(!showOnlyFavs)}}>
+                                        <IconFilterStar/>
+                                    </button>
+                                }
                             </div>
                             {(isPlaylist) &&         
                                 <div className="action-bar" is-playlist-add={"true"} ref={wrapperRef}>
@@ -260,8 +272,8 @@ const AlbumView = ({isPlaylist = false}) => {
                                     </div>
                                 </div>}
 
-                            {tracks.map((track, index) => (<TrackView key={track.path} index={index} track={track} containerId={albumId}
-                             containerType={(isPlaylist) ? "playlist" : "album"} playIconId={currentPlayIcon} />))}
+                            {tracks.map((track, index) => (
+                                <TrackView key={track.id} index={index} track={track} playIconId={currentPlayIcon} />))}
                         </div>
                     </div>
                 </div>

@@ -1,13 +1,24 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import apiBase from "../APIbase";
 import { parseAudioDuration } from "../lib.js";
-import { preconnect } from "react-dom";
 
-import _, { floor } from "lodash";
+import _, { includes, method } from "lodash";
 import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
 import CreatePlaylist from "./components/CreatePlaylist.jsx";
+import TrackActions from "./components/TrackActions.jsx";
+import { useNotifications } from "./GlobalNotificationsProvider.jsx";
+import { useNavigate } from "react-router-dom";
+import TagEditor from "./components/TagEditor.jsx";
 
 const AudioPlayerContext = createContext();
+const trackActionTypes = {
+    TOP_QUEUE : "top_queue",
+    END_QUEUE : 'end_queue',
+    TAGS : "tags",
+    GOTO_ALBUM :  "goto_album",
+    REMOVE_FROM_PLAYLIST : "remove_from_playlist",
+    NONE : "none"
+}
 
 //this is only for the top level component
 export const AudioPlayerProvider = ({ children }) => {
@@ -20,13 +31,19 @@ export const AudioPlayerProvider = ({ children }) => {
     const [playQueue, setPlayQueue] = useState([]); // Store play queue here
     const [trackCoverUrl, setTrackCoverUrl] = useState('null'); // Store track cover URL here
     const resolveTrackURL = (name) => `${apiBase}/read-write/music/${name}`; // Adjust the path as needed
-    let context = {isPlaylist : false, containerId: '', trackName: ''};
     const [queuePointer, setQueuePointer] = useState(-1); // Pointer to the current track in the queue
     const [justAddedNewToQueue, setJustAddedNewToQueue] = useState(false); // Flag to indicate if a new track was added to the queue
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
     const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
     const albumAskRefreshRef = useRef(null); // Contains the refresh callback 
+    const [ trackActionContext, setTrackActionContext ] = useState(null);
+    const trackActionLoosesFocusRef = useRef(null);
+    const {addNotification, notifTypes} = useNotifications();
+    const navigate = useNavigate();
+    const [ container, setContainer] = useState(null); //{id, type : "album"||"playlist"||..}
+    const [ editingTrackTags, setEdtitingTrackTags ] = useState(null)
+
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
@@ -58,10 +75,11 @@ export const AudioPlayerProvider = ({ children }) => {
         }
     }
 
-    const getNextSongsFromAlbum = (index, containerId, containerType) => {
-        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, {
-            method: 'GET'
-        }).then(response => response.json())
+    const getNextSongsFromAlbum = (index) => {
+        fetch(`${apiBase}/read-write/nextSongs/${container.type}/${container.id}`, {
+            method: 'GET',
+            credentials : "include"
+        }).then(res => res.json())
         .then(data => {
             console.log('setting play queue');
             setPlayQueue(data);
@@ -94,9 +112,9 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(queuePointer - 1); // Move to the previous track in the queue
     };
 
-    const addContainerToQueue = (containerId, containerType) => {
+    const addContainerToQueue = (containerId, containerType, onlyFavs = false) => {
         setJustAddedNewToQueue(true);
-        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, {
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, {
             method: 'GET',
             credentials: 'include'
         })
@@ -106,10 +124,9 @@ export const AudioPlayerProvider = ({ children }) => {
         });
     };
 
-    const playContainerSuffle = (containerId, containerType) => {
-        context.containerId = containerId;
-        context.isPlaylist = containerType === "playlist";
-        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}`, { 
+    const playContainerSuffle = (containerId, containerType, onlyFavs = false) => {
+        console.log(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`);
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, { 
             method: 'GET',
             credentials : "include"
         }).then(res => res.json())
@@ -163,13 +180,8 @@ export const AudioPlayerProvider = ({ children }) => {
         setCurrentTime(audioRef.current.currentTime); // Update the current time state
     }
 
-    const playTrack = (trackName, containerId, containerType, index) => {
-        context.trackName = trackName.split('.')[0];
-        // context.containerId = containerId;
-        // context.isPlaylist = isPlaylist;
-        console.log('new index',index)
-
-        getNextSongsFromAlbum(index, containerId, containerType);
+    const playTrack = (index) => {
+        getNextSongsFromAlbum(index);
     }
     useEffect(() => {
         if (playQueue.length === 0) return; // No tracks to play
@@ -362,10 +374,83 @@ export const AudioPlayerProvider = ({ children }) => {
     const closeNewPlaylistWindow = () =>{
         setCreatingNewPlaylist(false);
     }
+
+    const openTrackActions = (position, track, looseFocusCallback) => {
+        console.log(track, "at", position);
+        setTrackActionContext({track, position});
+        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
+        trackActionLoosesFocusRef.current = looseFocusCallback;
+    }
+
+    const closeTrackActions = () =>{
+        setTrackActionContext(null);
+        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
+    }
+
+    const onClicTrackActionEntry = (type, track) =>{
+        closeTrackActions();
+        console.log(track);
+        console.log(type, track.id);
+        switch(type){
+            case trackActionTypes.TOP_QUEUE:
+                playTrackNext(track);
+                break;
+            case trackActionTypes.END_QUEUE:
+                playTrackEnd(track);
+                break;
+            case trackActionTypes.GOTO_ALBUM:
+                gotoTrackAlbum(track);
+                break;
+            case trackActionTypes.REMOVE_FROM_PLAYLIST:
+                deleteTrackFromPlaylist(track);
+                break;
+            case trackActionTypes.TAGS:
+                setEdtitingTrackTags(track);
+                addNotification(`Avaliable soon :)`, notifTypes.INFO);
+                break
+        }
+    }
+    const gotoTrackAlbum = (track) => {
+        fetch(`${apiBase}/read-write/trackAlbumId/${track.id}`, {method : "GET"})
+                .then(res => res.json())
+                .then(id => {navigate(`albums/${id}`)});
+    }
+    const playTrackNext = (track) =>{
+        const array = playQueue
+        array.splice(queuePointer + 1, 0, track.id);
+        setPlayQueue(array);
+        addNotification(`${track.title} playing next.`, notifTypes.SUCCESS);
+    }
+    const playTrackEnd = (track) => {
+        const array = playQueue
+        array.push(track.id);
+        setPlayQueue(array);
+        addNotification(`${track.title} playing at the end.`, notifTypes.INFO);
+    }
+    const deleteTrackFromPlaylist = (track) => {
+        fetch(`${apiBase}/read-write/deleteTrackFromPlaylist/${container.id}/${track.id}`,
+            {method : "DELETE", credentials: "include"})
+            .then(res => res.json())
+            .then(data => {
+               albumAskRefreshRef.current();
+               addNotification(`${track.title} removed.`, notifTypes.SUCCESS);})
+    }
+
+    const linkNewContainer = (container, refreshCallback) => {
+        albumAskRefreshRef.current = refreshCallback;
+        setContainer(container);
+        console.log(container, refreshCallback);
+    }
+
+
     return (
         <AudioPlayerContext.Provider 
-        value={{/* all function logic */
-            playTrack,
+        value={{/* all function logic */    
+            linkNewContainer,
+            trackActionTypes,
+            onClicTrackActionEntry,
+            openTrackActions,
+            getNextSongsFromAlbum,
             currentTrackData,
             currentTime,
             isPlaying,
@@ -390,13 +475,11 @@ export const AudioPlayerProvider = ({ children }) => {
             volume,
             editAlbum,
             editPlaylist,
-            setAlbumAskRefresh : (fn) => {
-                albumAskRefreshRef.current = fn;
-            },
             createNewPlaylist,
             setPlaylistAddedCallback : (fn) => {
                 playlistAddedCallback.current = fn;
-            }
+            },
+
             }}>
             {children}
             {(editingAlbum) ? ( 
@@ -405,6 +488,8 @@ export const AudioPlayerProvider = ({ children }) => {
                 : null) : null
             }
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
+            {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
+            {(editingTrackTags) && <TagEditor track={editingTrackTags}/>}
         </AudioPlayerContext.Provider>
     );
 }

@@ -26,7 +26,7 @@
     padding: 20px 30px;
     background-color: aliceblue;
     margin: auto;
-    top: 300px;
+    top: calc(50% - 300px);
     height: fit-content;
     width: 800px;
     border-radius: 20px;

@@ -1,17 +1,18 @@
-import { IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSparkles, IconVinyl } from "@tabler/icons-react";
+import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSparkles, IconVinyl } from "@tabler/icons-react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { parseAudioDuration } from "../../lib";
 import SvgHoverToggle from "./SvgHoverToggle";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 
-const TrackView = ({ index, track, containerId, containerType, playIconId }) => {
+const TrackView = ({ index, track, playIconId }) => {
   const { title, track_number, rawDuration } = track;
-  const {playTrack, playingTrack} = useAudioPlayer();
+  const { getNextSongsFromAlbum, playingTrack, openTrackActions} = useAudioPlayer();
   const trackName = track.id;
-  const [trackFavorite, setTrackFavorite] = useState(Boolean(track.is_favorite));
+  const [trackFavorite, setTrackFavorite] = useState(false);
+  const [ actionsOpened, setActionsOpened] = useState(false);
   const handleClick = () => { 
-    playTrack(trackName, containerId, containerType, index ); // Extract the file name from the path
+    getNextSongsFromAlbum(index); 
   };
   const GetRandomPlayIcon = () => {
     switch (playIconId) {
@@ -23,6 +24,9 @@ const TrackView = ({ index, track, containerId, containerType, playIconId }) => 
         return <IconRadio className="track-number" playing="piano"/>;
     }
   };
+  useEffect(() =>{
+    setTrackFavorite(track.is_favorite === 1);
+  },[])
 
   const toggleFavorite = (e) => {
     e.stopPropagation();
@@ -38,8 +42,21 @@ const TrackView = ({ index, track, containerId, containerType, playIconId }) => 
 
   };
 
+
+
+  const looseFocusFromActionBar = () =>{
+    setActionsOpened(false);
+  }
+
+  const clickDots = (event) =>{
+    event.stopPropagation();
+    setActionsOpened(true);
+    openTrackActions({x:event.clientX, y: event.clientY}, track, looseFocusFromActionBar)
+
+  }
+
   return (
-    <div className="track-view" onClick={handleClick}>
+    <div className="track-view" action-bar={(actionsOpened) ? "open" : ''} onClick={handleClick}>
       {trackFavorite && <IconSparkles className="track-favorite" />}
       <SvgHoverToggle className={"track-toggle-favorite" }
         iconHovered={(!trackFavorite) ? IconHeartFilled : IconHeartBroken } 
@@ -48,6 +65,7 @@ const TrackView = ({ index, track, containerId, containerType, playIconId }) => 
      />
       {(playingTrack === trackName) ? GetRandomPlayIcon() : <p className="track-number">{track_number}</p>}
       <p style={{flexGrow : '1'}}>{title}</p>
+      <IconDots className={"track-actions-dots" } onClick={clickDots}/>
       <p style={{paddingRight:'10px'}}>{parseAudioDuration(rawDuration).readable}</p>
     </div>
   );

@@ -59,8 +59,9 @@
     gap: 20px;
     border: solid 2px #f0f0f0;
     position: relative;
+    align-items: center;
 }
-.track-view:hover{
+.track-view:hover, .track-view[action-bar="open"]{
     background-color:   #d0f0ff;;
 }
 
@@ -86,7 +87,7 @@
 .track-view:hover .track-favorite{
     display: none;
 } 
-.track-view:hover .track-toggle-favorite{
+.track-view:hover .track-toggle-favorite, .track-view:hover .track-actions-dots{
     display: inline-block;
 }
 
@@ -94,7 +95,14 @@
     display: none;
     position: absolute;
     cursor: pointer;
+    height: 24px;
 }
+
+.track-actions-dots{
+    display: none;
+    cursor: pointer;
+}
+
 .track-toggle-favorite svg{
     cursor: pointer;
     pointer-events: none;

@@ -45,7 +45,7 @@ const resetDatabase = (dbPath, setupPath) => {
 
 const setupDatabase = (dataPath, basePath) => {
 
-  const sqlSetupFilePath = path.join(basePath, "CML_setup.sql");
+  // const sqlSetupFilePath = path.join(basePath, "CML_setup.sql");
   const dbPath = path.join(dataPath, "CML_db.sqlite");
 
   // if(existsSync(dbPath)) {console.log("Database already exists, skipping setup.");}

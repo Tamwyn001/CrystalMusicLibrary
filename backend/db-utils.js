@@ -193,18 +193,36 @@ const getGenreAlbums = (id) => {
     return db.prepare(query).get(id);
 }
 
- const getNextSongsFromAlbum = (albumId) => {
-    const query = `
-        SELECT id from tracks WHERE album = ? ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
-    return db.prepare(query).all(albumId);
+ const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {
+    const query = (onlyFavs) ? 
+    `SELECT t.id as id 
+    FROM tracks t
+    JOIN favorites f on t.id = f.entry_id
+    JOIN users u ON u.id = f.user_id
+    WHERE t.album = ? AND u.email = ?
+    ORDER BY track_number ASC;
+    `
+    : ` SELECT id from tracks WHERE album = ? ORDER BY track_number ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+    const params = (onlyFavs) ? [albumId,email] : albumId;
+    return db.prepare(query).all(params);
 }
 
- const getNextSongsFromPlayist = (playlistId) => {
-    const query = `
-        SELECT t2p.track_id as id 
+ const getNextSongsFromPlayist = (playlistId, onlyFavs, email) => {
+    const query = onlyFavs ? 
+        `SELECT t2p.track_id as id 
         FROM tracks_to_playlists t2p
-        WHERE t2p.playlist_id = ?  ORDER BY track_no ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
-    return db.prepare(query).all(playlistId);
+        JOIN favorites f on t2p.track_id = f.entry_id
+        JOIN users u ON u.id = f.user_id
+        WHERE t2p.playlist_id = ? AND u.email = ?
+        ORDER BY t2p.track_no ASC;
+        `
+        : `SELECT t2p.track_id as id 
+        FROM tracks_to_playlists t2p
+        WHERE t2p.playlist_id = ?  ORDER BY t2p.track_no ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
+    const params = onlyFavs ? [playlistId,email] : playlistId;
+    console.log(interpolateQuery(query, params));
+
+    return db.prepare(query).all(params);
 }
 
  const getTrackCoverPath = (trackId) => {
@@ -566,7 +584,18 @@ const createNewAlbum = (name) => {
     return id;
 }
 
+const getTrackAlbumId = (trackId) => {
+    return db.prepare("SELECT album FROM tracks WHERE id = ?").get(trackId)?.album;
+}
+
+const removeTrackFromPlaylist = (playlistId, trackId) => {
+    db.prepare("DELETE FROM tracks_to_playlists WHERE track_id = ? AND playlist_id = ?;").run([trackId, playlistId]);
+    return 
+}
+
 module.exports = {
+    removeTrackFromPlaylist,
+    getTrackAlbumId,
     createNewAlbum,
     moveTrackToAlbum,
     addTrackToPlaylist,
