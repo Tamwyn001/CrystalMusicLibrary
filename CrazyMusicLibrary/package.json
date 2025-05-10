@@ -20,6 +20,7 @@
     "react-intersection-observer": "^9.16.0",
     "react-router-dom": "^7.5.0",
     "react-window": "^1.8.11",
+    "standardized-audio-context": "^25.3.77",
     "uuid": "^11.1.0"
   },
   "devDependencies": {

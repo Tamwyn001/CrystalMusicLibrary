@@ -128,25 +128,26 @@ const TagEditor = ({track, apply}) => {
                             placeholder="Search some tags.."
                             ref={searchbarRef}
                             onFocus={() => { setSearchbarFocused(true); }}/>
-                    </div>
-                    <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
+                        <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
                 
-                    <List
-                        height={300}
-                        itemCount={proposedEntryToAdd.length}
-                        itemSize={50}
-                        width={'calc(100% - 0px)'}
-                        
-                        style={{overflowY: "auto", marginBottom: "20px"}}
-                    >
-                        {({ index, style }) =>
-                            <ActionBarEntry key={index} entry={proposedEntryToAdd[index]} 
-                                style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} 
-                                onClick={handleActionBarEntryClick}/>
-                        }
+                <List
+                    height={300}
+                    itemCount={proposedEntryToAdd.length}
+                    itemSize={50}
+                    width={'calc(100% - 0px)'}
+                    
+                    style={{overflowY: "auto", marginBottom: "20px"}}
+                >
+                    {({ index, style }) =>
+                        <ActionBarEntry key={index} entry={proposedEntryToAdd[index]} 
+                            style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} 
+                            onClick={handleActionBarEntryClick}/>
+                    }
 
-                    </List>
+                </List>
+                </div>  
                     </div>
+                    
                 </div>
                 {editingTag ?
                     <div className="edit-tag">

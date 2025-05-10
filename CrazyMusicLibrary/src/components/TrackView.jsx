@@ -7,7 +7,7 @@ import apiBase from "../../APIbase";
 
 const TrackView = ({ index, track, playIconId, isSalad = null }) => {
   const { title, track_number, rawDuration } = track;
-  const { getNextSongsFromAlbum, playingTrack, openTrackActions,jumpToQueueTrack} = useAudioPlayer();
+  const { getNextSongsFromAlbum, playingTrack, openTrackActions, jumpToQueueTrack} = useAudioPlayer();
   const trackName = track.id;
   const [trackFavorite, setTrackFavorite] = useState(false);
   const [ actionsOpened, setActionsOpened] = useState(false);

@@ -380,8 +380,7 @@ export const GlobalActionBar = ({children}) => {
                         
                             <input  type="text" id="actionbar-searchbar" className="searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
 
-                        </div>
-                        <div className="action-bar-results">
+                            <div className="action-bar-results">
                         <List
                             height={300}
                             itemCount={proposedCommands.length}
@@ -395,6 +394,8 @@ export const GlobalActionBar = ({children}) => {
                             }
                         </List>
                         </div>
+                        </div>
+                        
                     </div>
                 </div>}
             </div>

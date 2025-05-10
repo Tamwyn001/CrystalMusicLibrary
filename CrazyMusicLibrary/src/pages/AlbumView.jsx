@@ -252,7 +252,7 @@ const AlbumView = ({isPlaylist = false}) => {
                                             placeholder="Search for tracks, artists, genres, playlists to add."
                                             ref={searchInputRef}
                                             onFocus={() => { setSearchbarFocused(true); }}/>
-                                    </div>
+
                                     <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
                                     <List
                                         height={300}
@@ -270,6 +270,8 @@ const AlbumView = ({isPlaylist = false}) => {
 
                                     </List>
                                     </div>
+                                    </div>
+                                    
                                 </div>}
 
                             {tracks.map((track, index) => (

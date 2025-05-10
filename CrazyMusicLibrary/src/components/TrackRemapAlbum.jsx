@@ -100,8 +100,7 @@ const TrackRemapAlbum = ({onClose, track}) => {
                             placeholder="Search the album you want to move the track to."
                             ref={searchInputRef}
                             onFocus={() => { setSearchbarFocused(true); }}/>
-                    </div>
-                    <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
+                            <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
                     <List
                         height={300}
                         itemCount={proposedEntryToAdd.length}
@@ -118,6 +117,8 @@ const TrackRemapAlbum = ({onClose, track}) => {
 
                     </List>
                     </div>
+                    </div>
+                    
                 </div>
                 {(movingToExistingAlbum)  ?
                     <div style={{height : "90px", alignItems : "center", display : "flex", gap : "10px"}}>

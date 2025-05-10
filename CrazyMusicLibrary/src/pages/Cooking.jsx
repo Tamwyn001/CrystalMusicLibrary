@@ -27,6 +27,10 @@ const Cooking = () => {
                 closeSearchBar();
             }}
 
+        if(currentCookingContent.length === 0 ){
+            setCurrentCookingContent(saladContext || [])
+        }
+
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
@@ -35,12 +39,6 @@ const Cooking = () => {
         }
     },[]);
 
-    useEffect(() => {
-        console.log(saladContext);
-        if(currentCookingContent. length === 0 ){
-            setCurrentCookingContent(saladContext || [])
-        }
-    },[saladContext])
     
     const fetchSearchResults = (e) => {
         const input = e.target.value;
@@ -120,24 +118,25 @@ const Cooking = () => {
                         placeholder="Search some tags.."
                         ref={searchInputRef}
                         onFocus={() => { setSearchbarFocused(true); }}/>
-                </div>
-                <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
-                <List
-                    height={300}
-                    itemCount={proposedEntryToAdd.length}
-                    itemSize={50}
-                    width={'calc(100% - 0px)'}
-                    
-                    style={{overflowY: "auto", marginBottom: "20px"}}
-                >
-                    {({ index, style }) => 
-                        <ActionBarEntry key={index} entry={proposedEntryToAdd[index]} 
-                            style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} 
-                            onClick={handleActionBarEntryClick}/>
-                    }
+                    <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
+                        <List
+                            height={300}
+                            itemCount={proposedEntryToAdd.length}
+                            itemSize={50}
+                            width={'calc(100% - 0px)'}
+                            
+                            style={{overflowY: "auto", marginBottom: "20px"}}
+                        >
+                            {({ index, style }) => 
+                                <ActionBarEntry key={index} entry={proposedEntryToAdd[index]} 
+                                    style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} 
+                                    onClick={handleActionBarEntryClick}/>
+                            }
 
-                </List>
+                        </List>
+                    </div>
                 </div>
+                
             </div>
             <div className="cooking-selection">
                 <div className="cooking-actions">
