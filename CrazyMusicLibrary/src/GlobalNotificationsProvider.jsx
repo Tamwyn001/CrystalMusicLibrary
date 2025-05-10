@@ -1,4 +1,4 @@
-import { IconCheck, IconInfoCircle, IconX } from "@tabler/icons-react";
+import { IconCheck, IconInfoCircle, IconSalad, IconX } from "@tabler/icons-react";
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 
 const NotificationsContext = createContext();
@@ -6,7 +6,8 @@ const NotificationsContext = createContext();
 const notifTypes = {
     SUCCESS : 'success',
     ERROR : 'error',
-    INFO : 'info'
+    INFO : 'info',
+    SALAD : "salad"
 }
 
 export const NotificationsProvider = ({ children }) => {
@@ -61,6 +62,9 @@ export const NotificationsProvider = ({ children }) => {
                 return <IconX className="notification-icon" />
             case notifTypes.INFO:
                 return <IconInfoCircle className="notification-icon" />
+            case notifTypes.SALAD:
+                return <IconSalad className="notification-icon" />
+
             default:
                 return null
         }

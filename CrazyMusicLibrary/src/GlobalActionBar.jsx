@@ -363,10 +363,20 @@ export const GlobalActionBar = ({children}) => {
         document.getElementById("actionbar-searchbar").focus();
         setProposedCommands([]);
     }
+    const openCommands = () => {
+        setShowActionBar(true);
+        setActionBarCommand();
+        setCurrentCommand(actions[0]);
+        actionLocation.current = "search";
+        document.getElementById("actionbar-searchbar").value = "";
+        document.getElementById("actionbar-searchbar").focus();
+        setProposedCommands([]);
+    }
     
     return (
         <GlobalActionBarContext.Provider
             value={{commandCodes,
+                openCommands,
              openSearchBar}}>
             <div className="action-bar-app-parent">
                 

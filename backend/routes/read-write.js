@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -301,6 +301,27 @@ router.get("/moveTrackToAlbum/:new/:id/:trackId", (req, res) =>{
     }
     moveTrackToAlbum(req.params.trackId, req.params.id)
     res.json("track moved to exisiting album");
+});
+
+router.post("/changeTrackTags/:id", upload.none(), (req, res) => {
+    const current = JSON.parse(req.body.current);
+    const deleted = JSON.parse(req.body.deleted);
+
+    const trackId = req.params.id;
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+
+    updateTrackTags(trackId, deleted, current, decoded.email);
+    res.json({message : "Tags updated."})
+});
+
+router.get("/trackTags/:trackId", (req, res) => {
+    res.json(getTrackTags(req.params.trackId));
+})
+
+router.post("/getSalad",upload.none() , (req,res) => {
+    const tags = JSON.parse(req.body.tags);
+    res.json(JSON.stringify(getSaladTracks(tags).map(track => track.id)));
 })
 
 module.exports = {router, runServerStats};

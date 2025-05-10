@@ -180,9 +180,6 @@ export const AudioPlayerProvider = ({ children }) => {
         setCurrentTime(audioRef.current.currentTime); // Update the current time state
     }
 
-    const playTrack = (index) => {
-        getNextSongsFromAlbum(index);
-    }
     useEffect(() => {
         if (playQueue.length === 0) return; // No tracks to play
         console.log('PlayQueue', playQueue);
@@ -439,13 +436,46 @@ export const AudioPlayerProvider = ({ children }) => {
     const linkNewContainer = (container, refreshCallback) => {
         albumAskRefreshRef.current = refreshCallback;
         setContainer(container);
-        console.log(container, refreshCallback);
     }
 
+    const applyTrackEditTags = (tags, track) =>{
+        setEdtitingTrackTags(null);
+        if(!tags){return}
+        console.log("parsed tags:", tags);
+        const data = new FormData();
+        data.append("current", JSON.stringify(tags.current));
+        data.append("deleted", JSON.stringify(tags.deleted));
+
+        fetch(`${apiBase}/read-write/changeTrackTags/${track}`,
+            {method : "POST",
+            credentials:"include",
+            body: data})
+        .then(res => res.json()).then(data => {addNotification("Tags upated!", notifTypes.SUCCESS)})
+    }
+
+    const playAudioSalad = (salad = []) => {
+        if(salad.length === 0 ){return}
+        const data = new FormData();
+        data.append("tags", JSON.stringify(salad));
+        fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
+        .then(res => res.json())
+        .then(data => {
+            const tracks = JSON.parse(data);
+
+            if(tracks.length > 0){
+                setPlayQueue(_.shuffle(tracks));
+                setQueuePointer(0);
+                addNotification("Salad received! Enjoy..", notifTypes.SALAD);
+            } else {
+                addNotification("This salad is empty.. No tracks found.", notifTypes.SALAD);
+            }
+        })
+    }
 
     return (
         <AudioPlayerContext.Provider 
         value={{/* all function logic */    
+            playAudioSalad,
             linkNewContainer,
             trackActionTypes,
             onClicTrackActionEntry,
@@ -489,7 +519,7 @@ export const AudioPlayerProvider = ({ children }) => {
             }
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
             {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
-            {(editingTrackTags) && <TagEditor track={editingTrackTags}/>}
+            {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}
         </AudioPlayerContext.Provider>
     );
 }

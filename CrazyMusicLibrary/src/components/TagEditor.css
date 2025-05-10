@@ -26,9 +26,27 @@
 
 .small-tag{
     width: fit-content;
-    padding: 10px 20px;
+    padding: 10px 40px 10px 20px;
     border-radius: 15px;
     align-items: center;
     display: flex;
     flex-direction: row;
+    position: relative;
+    text-wrap: nowrap;
+}
+.small-tag svg {
+    position: absolute;
+    right: 10px;
+    opacity: 0.2;
+}
+.small-tag:hover svg{
+    opacity: 0.8;
+}
+
+.track-tags-div{
+    display: flex;
+    row-gap: 10px;
+    column-gap: 20px;
+    flex-wrap: wrap;
+
 }

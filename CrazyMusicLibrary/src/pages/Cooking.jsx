@@ -1,10 +1,14 @@
-import { IconLabel, IconSearch } from "@tabler/icons-react";
+import { IconLabel, IconMusicCode, IconSearch, IconTagStarred, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 import ActionBarEntry from "../components/ActionBarEntry";
 import apiBase from "../../APIbase";
 import CookingTagEntry from "../components/CookingTagEntry";
-
+import '../components/TagEditor.css';
+import './Cooking.css';
+import ButtonWithCallback from "../components/ButtonWithCallback";
+import { useAudioPlayer } from "../GlobalAudioProvider";
+import { useNotifications } from "../GlobalNotificationsProvider";
 
 const Cooking = () => {
     const wrapperRef = useRef(null);
@@ -12,6 +16,8 @@ const Cooking = () => {
     const [searchbarFocused, setSearchbarFocused ] = useState(false);
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
     const [ currentCookingContent, setCurrentCookingContent ] = useState([]);
+    const { playAudioSalad } = useAudioPlayer();
+    const {addNotification, notifTypes } = useNotifications();
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -42,22 +48,36 @@ const Cooking = () => {
         .then((data) => {
             
             const proposed = data.tags?.map(tag => {
-                return {...tag, icon : () => <IconLabel/>}
+                return {...tag, icon : () => <IconLabel color={tag.color}/>}
             })
+            console.log(proposed);
             setProposedEntryToAdd(proposed);})
 
     }
     const closeSearchBar = () => {
         setSearchbarFocused(false);
     }
-    const handleActionBarEntryClick = (id) => {
+    const removeTagFromTrack = (id) => {
+        setCurrentCookingContent(prev => prev.filter(tag => tag.id !== id));
+    }
 
+    const handleActionBarEntryClick = (id) => {
+        closeSearchBar();
+        if(currentCookingContent.find(tag => tag.id === id.id)){return}
+        setCurrentCookingContent(prev => [...prev, id]);
+    }
+    const playSalad = async () => {
+        playAudioSalad(currentCookingContent.map(tag => tag.id));
+    }
+
+    const saveSalad = async () =>{
+        addNotification("Avaliale soon :)", notifTypes.SALAD);
     }
     return(
         <div className="cooking-div">
             <h2>Here select some tags and play the music!</h2>
             <div className="action-bar" style={{margin : "auto"}} ref={wrapperRef}>
-                <div className="action-bar-research" id="playlist-researchbar" >
+                <div className="action-bar-research" id="playlist-researchbar" style={{zIndex : "2"}} >
                     <div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>
                     <input
                         className="searchbar"
@@ -86,8 +106,17 @@ const Cooking = () => {
                 </List>
                 </div>
             </div>
-            <div>
-                {currentCookingContent.map(tag => <CookingTagEntry key={tag.id} tag={tag} onClick={handleActionBarEntryClick}/>)}
+            <div className="cooking-selection">
+                <div className="cooking-actions">
+                <ButtonWithCallback text={'Play the salad'} icon={<IconMusicCode/>} onClick={playSalad}/>
+                <ButtonWithCallback text={'Save this salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
+                </div>
+                <div className="cooking-tags">
+                    {currentCookingContent.map(tag =>                     
+                        <div key={tag.id} className="small-tag" style={{backgroundColor : tag.color}}>
+                            <span>{tag.name}</span> <IconX onClick={() => {removeTagFromTrack(tag.id)}}/>
+                        </div>)}
+                </div>
             </div>
         </div>
     )
