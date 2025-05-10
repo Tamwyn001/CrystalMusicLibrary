@@ -6,7 +6,7 @@ import { IconPlaylist, IconAlbum, IconList, IconChefHat, IconSalad, IconCommand,
 import { useGlobalActionBar } from '../GlobalActionBar';
 
 const Sidebar = () => {
-    const { openCommands } = useGlobalActionBar();
+    const { openCommandBar } = useGlobalActionBar();
     return(
         <div className="sidebar">
             <nav>
@@ -17,7 +17,7 @@ const Sidebar = () => {
                 <Link to="/cooking"><IconSalad/>Cooking</Link>
             </nav>
             <StatShort />
-            <div className="serach-button-div" onClick={openCommands} style={{margin : "auto", marginBottom:"20px"}}>
+            <div className="serach-button-div" onClick={openCommandBar} style={{margin : "auto", marginBottom:"20px"}}>
                 <div className='keyboard-key'>
                     <span>CTRL</span>
                 </div>

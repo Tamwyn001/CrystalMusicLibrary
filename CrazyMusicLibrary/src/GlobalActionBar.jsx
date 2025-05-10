@@ -175,6 +175,7 @@ export const GlobalActionBar = ({children}) => {
 
     const openCommandBar = () => {
         setShowActionBar(true); setActionBarCommand(null); setProposedCommands(getMostUsedCommands()); actionLocation.current = "command";
+         setCurrentCommand(actions[1]);
     }
 
     useEffect(() => {
@@ -348,7 +349,6 @@ export const GlobalActionBar = ({children}) => {
         }
     }
     const closeActionBar = () => {
-        console.log(closeActionBar);
         setShowActionBar(false);
         setActionBarCommand(null);
         actionLocation.current = null;
@@ -363,20 +363,11 @@ export const GlobalActionBar = ({children}) => {
         document.getElementById("actionbar-searchbar").focus();
         setProposedCommands([]);
     }
-    const openCommands = () => {
-        setShowActionBar(true);
-        setActionBarCommand();
-        setCurrentCommand(actions[0]);
-        actionLocation.current = "search";
-        document.getElementById("actionbar-searchbar").value = "";
-        document.getElementById("actionbar-searchbar").focus();
-        setProposedCommands([]);
-    }
-    
+
     return (
         <GlobalActionBarContext.Provider
             value={{commandCodes,
-                openCommands,
+                openCommandBar,
              openSearchBar}}>
             <div className="action-bar-app-parent">
                 

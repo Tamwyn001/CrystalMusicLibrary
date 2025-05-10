@@ -27,7 +27,6 @@ const TagEditor = ({track, apply}) => {
         const input = e.target.value;
         setCurrentSearch(input);
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([defaultTagEntry]);return;} //return if empty or only white spaces
-        console.log(`${apiBase}/read-write/search/${input}/tags`);
         fetch(`${apiBase}/read-write/search/${input}/tags`, {
             method: "GET"})
         .then((res) => {

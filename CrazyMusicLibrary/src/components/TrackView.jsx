@@ -1,17 +1,18 @@
-import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSparkles, IconVinyl } from "@tabler/icons-react";
+import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSalad, IconSparkles, IconVinyl } from "@tabler/icons-react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { parseAudioDuration } from "../../lib";
 import SvgHoverToggle from "./SvgHoverToggle";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 
-const TrackView = ({ index, track, playIconId }) => {
+const TrackView = ({ index, track, playIconId, isSalad = null }) => {
   const { title, track_number, rawDuration } = track;
-  const { getNextSongsFromAlbum, playingTrack, openTrackActions} = useAudioPlayer();
+  const { getNextSongsFromAlbum, playingTrack, openTrackActions,jumpToQueueTrack} = useAudioPlayer();
   const trackName = track.id;
   const [trackFavorite, setTrackFavorite] = useState(false);
   const [ actionsOpened, setActionsOpened] = useState(false);
   const handleClick = () => { 
+    if(isSalad){isSalad(index); return}
     getNextSongsFromAlbum(index); 
   };
   const GetRandomPlayIcon = () => {
@@ -22,6 +23,8 @@ const TrackView = ({ index, track, playIconId }) => {
         return <IconVinyl className="track-number" playing="vinyl"/>;
       case 2:
         return <IconRadio className="track-number" playing="piano"/>;
+      case 'salad':
+        return <IconSalad className="track-number" playing="piano"/>
     }
   };
   useEffect(() =>{

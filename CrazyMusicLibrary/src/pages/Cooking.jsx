@@ -9,15 +9,18 @@ import './Cooking.css';
 import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useNotifications } from "../GlobalNotificationsProvider";
-
+import TrackView from "../components/TrackView";
+import _ from 'lodash';
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
     const [searchbarFocused, setSearchbarFocused ] = useState(false);
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
+    const { playAudioSalad, setSaladContext, saladContext } = useAudioPlayer();
     const [ currentCookingContent, setCurrentCookingContent ] = useState([]);
-    const { playAudioSalad } = useAudioPlayer();
+
     const {addNotification, notifTypes } = useNotifications();
+    const [ tracks, setTracks ] = useState([]);
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -31,12 +34,18 @@ const Cooking = () => {
             document.removeEventListener("touchstart", handleClickedOutside);
         }
     },[]);
+
+    useEffect(() => {
+        console.log(saladContext);
+        if(currentCookingContent. length === 0 ){
+            setCurrentCookingContent(saladContext || [])
+        }
+    },[saladContext])
     
     const fetchSearchResults = (e) => {
         const input = e.target.value;
 
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([]);return;} //return if empty or only white spaces
-        console.log(`${apiBase}/read-write/search/${input}/tags`);
         fetch(`${apiBase}/read-write/search/${input}/tags`, {
             method: "GET"})
         .then((res) => {
@@ -67,11 +76,35 @@ const Cooking = () => {
         setCurrentCookingContent(prev => [...prev, id]);
     }
     const playSalad = async () => {
-        playAudioSalad(currentCookingContent.map(tag => tag.id));
+        playAudioSalad(tracks.map(track => track.id))
+        setSaladContext(currentCookingContent)
     }
+
+    useEffect(() => {
+        setSaladContext(currentCookingContent);
+        if(currentCookingContent.length === 0 ){return}
+        const data = new FormData();
+        data.append("tags", JSON.stringify(currentCookingContent.map(tag => tag.id)));
+        fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
+        .then(res => res.json())
+        .then(data => {
+            setTracks(_.shuffle(JSON.parse(data)));
+            if(tracks.length > 0){
+                
+                addNotification("Salad received! Enjoy..", notifTypes.SALAD);
+            } else {
+                addNotification("This salad is empty.. No tracks found.", notifTypes.SALAD);
+            }
+        })
+    },[currentCookingContent])
 
     const saveSalad = async () =>{
         addNotification("Avaliale soon :)", notifTypes.SALAD);
+    }
+
+    const clickedTrack = (id) => {
+        playAudioSalad(tracks.map(track => track.id), id);
+        
     }
     return(
         <div className="cooking-div">
@@ -111,11 +144,15 @@ const Cooking = () => {
                 <ButtonWithCallback text={'Play the salad'} icon={<IconMusicCode/>} onClick={playSalad}/>
                 <ButtonWithCallback text={'Save this salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
                 </div>
-                <div className="cooking-tags">
+                <div className="cooking-tags" style={{marginBottom : "30px"}}>
                     {currentCookingContent.map(tag =>                     
                         <div key={tag.id} className="small-tag" style={{backgroundColor : tag.color}}>
                             <span>{tag.name}</span> <IconX onClick={() => {removeTagFromTrack(tag.id)}}/>
                         </div>)}
+                </div>
+                <div className="track-list">
+                    {tracks.map((track, index) => (
+                                <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} />))}
                 </div>
             </div>
         </div>

@@ -601,27 +601,30 @@ const updateTrackTags = (trackId, deleted, current, email) =>{
         `;
         db.prepare(deleteQuery).run([trackId, ...deleted]);
     }
+    console.log(current);
     if( current.filter(tag => tag.isNew).length > 0){
         batchInsert("tags", "id, name, color", current.filter(tag => tag.isNew).map(tag => [tag.id, tag.name, tag.color]), true);
         const ownerId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
         batchInsert("tags_to_users", "tag_id, owner_id",current.filter(tag => tag.isNew).map(tag => [tag.id, ownerId]),true )
-        batchInsert("tracks_to_tags", "tag_id, track_id",current.filter(tag => tag.isNew).map(tag => [tag.id, trackId]),true )
     }
+    batchInsert("tracks_to_tags", "tag_id, track_id",current.map(tag => [tag.id, trackId]),true )
+
 }
 
 const getTrackTags = (trackId) =>{
     const query = `
-    SELECT tags.id as id, tags.name as name, tags.color as color
-    FROM tags JOIN tracks_to_tags t2t ON t2t.tag_id = tags.id
-    WHERE t2t.track_id = ?;
+        SELECT tags.id as id, tags.name as name, tags.color as color
+        FROM tags JOIN tracks_to_tags t2t ON t2t.tag_id = tags.id
+        WHERE t2t.track_id = ?;
     `
     return db.prepare(query).all(trackId);
 }
 
 const getSaladTracks = (tagsId) => {
     const placeholders = tagsId.map(() => '?').join(', ');
-    const query = `SELECT track_id as id FROM tracks_to_tags WHERE tag_id IN (${placeholders});`
-    console.log(interpolateQuery(query, [...tagsId]));
+    const query = `
+        SELECT DISTINCT t.id as id, t.title as title, t.duration as rawDuration, t.track_number as track_number
+        FROM tracks_to_tags JOIN tracks t ON t.id = track_id WHERE tag_id IN (${placeholders});`
     return db.prepare(query).all([...tagsId]);
 }
 module.exports = {

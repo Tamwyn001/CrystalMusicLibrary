@@ -321,7 +321,7 @@ router.get("/trackTags/:trackId", (req, res) => {
 
 router.post("/getSalad",upload.none() , (req,res) => {
     const tags = JSON.parse(req.body.tags);
-    res.json(JSON.stringify(getSaladTracks(tags).map(track => track.id)));
+    res.json(JSON.stringify(getSaladTracks(tags)));
 })
 
 module.exports = {router, runServerStats};

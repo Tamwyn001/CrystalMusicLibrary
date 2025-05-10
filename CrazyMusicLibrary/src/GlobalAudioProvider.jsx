@@ -43,7 +43,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const navigate = useNavigate();
     const [ container, setContainer] = useState(null); //{id, type : "album"||"playlist"||..}
     const [ editingTrackTags, setEdtitingTrackTags ] = useState(null)
-
+    const [ saladContext, setSaladContext] = useState(null)
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
@@ -90,6 +90,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const playTrackNoQueue = (trackPath) => {
         setPlayQueue([trackPath]);
         setQueuePointer(0);
+        
     };
 
 
@@ -453,28 +454,21 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(res => res.json()).then(data => {addNotification("Tags upated!", notifTypes.SUCCESS)})
     }
 
-    const playAudioSalad = (salad = []) => {
-        if(salad.length === 0 ){return}
-        const data = new FormData();
-        data.append("tags", JSON.stringify(salad));
-        fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
-        .then(res => res.json())
-        .then(data => {
-            const tracks = JSON.parse(data);
+    const playAudioSalad = async (salad = [], index) => {
+        if(salad.length === 0) { return}
+        setPlayQueue(salad);
+        setQueuePointer(index || 0);
+        if(!index){
 
-            if(tracks.length > 0){
-                setPlayQueue(_.shuffle(tracks));
-                setQueuePointer(0);
-                addNotification("Salad received! Enjoy..", notifTypes.SALAD);
-            } else {
-                addNotification("This salad is empty.. No tracks found.", notifTypes.SALAD);
-            }
-        })
+        }
     }
+
 
     return (
         <AudioPlayerContext.Provider 
-        value={{/* all function logic */    
+        value={{/* all function logic */  
+            saladContext,
+            setSaladContext,  
             playAudioSalad,
             linkNewContainer,
             trackActionTypes,
