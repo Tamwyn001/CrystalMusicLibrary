@@ -200,13 +200,13 @@ const upgradeDbVersion = () => {
   if(currentVersion < 2){
     const instructionsToV2 = 
       [ "UPDATE schema_version SET version = 2;",
-        "ALTER TABLE albums ADD added_at DATE",
-       ` CREATE TABLE tags(
+       "ALTER TABLE albums ADD added_at DATE",
+       ` CREATE TABLE IF NOT EXISTS tags(
           id VARCHAR(36) PRIMARY KEY,
           name VARCHAR(255),
           color CHAR(7)
       );`,
-      `CREATE TABLE tags_to_users(
+      `CREATE TABLE IF NOT EXISTS  tags_to_users(
           tag_id VARCHAR(36) NOT NULL,
           owner_id INT NOT NULL,
           PRIMARY KEY (tag_id, owner_id),
@@ -214,7 +214,7 @@ const upgradeDbVersion = () => {
           CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
       );`,
        //Each tag is unique to a user, so the mapped tracks are proper to the users as well.
-      `CREATE TABLE tracks_to_tags( 
+      `CREATE TABLE IF NOT EXISTS  tracks_to_tags( 
           track_id VARCHAR(36) NOT NULL,
           tag_id VARCHAR(36) NOT NULL,
           PRIMARY KEY (track_id, tag_id),

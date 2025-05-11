@@ -148,7 +148,7 @@ export const AudioPlayerProvider = ({ children }) => {
             targetAudioHelperRef.current = targetAudioHelperRef.current === "A" ? "B": "A";
             playbackWithTransition(queuePointer + 1)
         }
-        , (currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime) * 1000);
+        , (Math.min(currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime) * 1000), 0);
     }
 
     //We asume A just started playing. So need an inializer before, like audio A source = ...
