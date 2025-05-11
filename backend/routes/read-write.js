@@ -99,6 +99,7 @@ router.get("/music/:id", async (req, res) => {
     const filePath = getTrackPath(req.params.id).path;
     const fileStats = statSync(filePath);
     const range = req.headers.range;
+    res.setHeader("Access-Control-Allow-Origin", "*");
     if(range){
         const [start, end] = range.replace(/bytes=/, "").split("-");
         const chunkStart = parseInt(start, 10);

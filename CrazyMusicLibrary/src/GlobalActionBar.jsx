@@ -135,7 +135,6 @@ export const GlobalActionBar = ({children}) => {
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
         if(e.key == "Control" || currentCommand) {return}
         if(!(e.ctrlKey || e.altKey || e.metaKey) && (document.activeElement.nodeName === "INPUT" || document.activeElement.nodeName === "TEXTAREA")) {return} //to avoid closing the action bar when pressing space in the search bar
-        console.log(document.activeElement.nodeName);
         const actionToCall = actions.find( (action) => {
             const keyMatch = e.key === action.key;
             

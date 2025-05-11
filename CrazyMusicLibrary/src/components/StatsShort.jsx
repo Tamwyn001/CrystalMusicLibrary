@@ -39,7 +39,7 @@ const StatShort = () => {
         fetch(`${apiBase}/read-write/stats`, {
             method: 'GET'})
             .then(response => response.json())
-            .then(data => {setStats(data); console.log('Stats:', data);})
+            .then(data => {setStats(data);})
             .catch(error => console.error('Error fetching stats:', error));
         fetch(`${apiBase}/read-write/serverStats`, {
             method: 'GET'})

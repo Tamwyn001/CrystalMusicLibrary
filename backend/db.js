@@ -78,7 +78,7 @@ const getDatabaseVersion = () => {
 const upgradeDbVersion = () => {
   const currentVersion = getDatabaseVersion();
   if(currentVersion >= LATEST_DATABASE_VERSION){
-    console.log("   Database up to date: v\x1b[1m\x1b[38;5;222m", currentVersion)
+    console.log("   Database up to date: v\x1b[1m\x1b[38;5;222m", currentVersion,'\x1b[0m.')
     return
   }
   console.log("   Database has version\x1b[1m\x1b[38;5;85m", currentVersion, "\x1b[0m but version\x1b[1m\x1b[38;5;222m", LATEST_DATABASE_VERSION,"\x1b[0m is avaliable. Upgrading.." )

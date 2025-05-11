@@ -56,14 +56,12 @@ const AlbumView = ({isPlaylist = false}) => {
                     if(!favFilterAvaliable && track.is_favorite === 1) {setFavFilterAvaliable(true);}
                     return showOnlyFavs ? track.is_favorite === 1 : true});
             if(isPlaylist){
-                console.log(data.playlistInfos);
                 setAlbum(data.playlistInfos);
                 setTracks(tracks);
                 setArtists([data.owner, ...data.collaborators]);
                 setIsFavPlaylist(data.isFavPlaylist)
                 return;
             }
-            console.log(data.albumInfos);
             setAlbum(data.albumInfos);
             setTracks(tracks);
             setGenres(data.genres);

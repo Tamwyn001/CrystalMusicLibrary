@@ -6,7 +6,6 @@ const ProgressBar = ({percent, showPercent=false, isMarquee = false, fillColor =
         const rectX = progressBar.getBoundingClientRect().x;
         const userX = e.clientX;
         onClickPercentage((userX - rectX) / progressBar.clientWidth * 100);
-        console.log((userX - rectX) / progressBar.clientWidth * 100);
     }
     return(
         <div className="progressBar" style={style} onClick={calcClickedPrecent}>

@@ -14,10 +14,6 @@ const MusicQueue = ({hideComponent}) => {
     const wrapperRef = useRef(null);
     const [cache, setCache] = useState(new Map());
 
-    useEffect(() => {
-        console.log("Queue: ", playQueue);
-    }, [playQueue]);
-
     const getTrack = useCallback((trackId) => cache.get(trackId), [cache]); 
     const setTrack = useCallback((trackId, trackData) => {
         setCache((prevCache) => new Map(prevCache).set(trackId, trackData));
