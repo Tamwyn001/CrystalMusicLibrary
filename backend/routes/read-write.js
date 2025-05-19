@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -323,6 +323,12 @@ router.get("/trackTags/:trackId", (req, res) => {
 router.post("/getSalad",upload.none() , (req,res) => {
     const tags = JSON.parse(req.body.tags);
     res.json(JSON.stringify(getSaladTracks(tags)));
+});
+
+router.get("/mostUsedTags", (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    res.json(getUserMostUsedTags(decoded.email));
 })
 
 module.exports = {router, runServerStats};

@@ -2,11 +2,17 @@
 
     border-radius: 20px;   
     height: fit-content;
-    width:  80%;
+    width:  100%;
     margin: 100px auto auto auto;
     position: relative;
     z-index: 1;
 
+
+}
+@media screen and (min-width: 714px) {
+    .cooking-selection{
+        width:  80%;
+    }
 }
 .cooking-tags{
     display: flex;
@@ -20,6 +26,7 @@
     height: 100%;
     z-index: 2;
     position: relative;
+    flex-wrap: wrap;
 }
 
 .cooking-actions{

@@ -21,7 +21,7 @@ const AdminPannel = () => {
     },[]);
     
     useEffect(() => {
-        if(!isAdmin) return;
+        if(isAdmin.error) return;
         fetch(`${apiBase}/auth/init-admin-pannel`, {
             method: 'POST',
             credentials: 'include'

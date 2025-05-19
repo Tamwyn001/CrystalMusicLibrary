@@ -24,6 +24,7 @@ const Authentification = () => {
             setResult(stauts.ANY_USER);
             const resUsers = await fetch(`${apiBase}/auth/any-user`, {method: 'GET'});
             const parsedUsers = await resUsers.json();
+            console.log('Parsed users', parsedUsers);
             setAreUsers(parsedUsers); 
             console.log(parsedUsers);
             if(parsedUsers === 0) {

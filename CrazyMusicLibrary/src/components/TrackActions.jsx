@@ -1,4 +1,4 @@
-import { IconFolderPin, IconLabel, IconMusicX, IconRowInsertBottom, IconRowInsertTop } from "@tabler/icons-react";
+import { IconFolderPin, IconHeart, IconHeartBroken, IconLabel, IconMusicX, IconRowInsertBottom, IconRowInsertTop } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useLocation } from "react-router-dom";
@@ -19,6 +19,7 @@ const TrackActions = ({trackY, track, isFav}) => {
     const wrapperRef = useRef(null);
     const [top, setTop] = useState(null);
     const location = useLocation();
+    const [ isMobile, setIsMobile ] = useState(() => window.innerWidth < 714);
 
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
@@ -39,9 +40,10 @@ const TrackActions = ({trackY, track, isFav}) => {
     },[]);
 
     useEffect(()=>{
-        const height = isPlaylistView ? 210 : 130
+        const height = isPlaylistView ? 250 : 180
         setTop( Math.min(trackY,  windowDim.height - height));
     },[isPlaylistView])
+
 
 
     return(top && <div className="track-actions-div"  ref={wrapperRef} style={{height : "fit-content", top:top}}>
@@ -65,6 +67,18 @@ const TrackActions = ({trackY, track, isFav}) => {
         <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.TAGS, track)}}>
             <span>Edit tags</span> <IconLabel/>
         </div>
+        {
+           ( isMobile && track.is_favorite) ?
+            <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.REMOVE_FROM_FAVORITES, track)}}>
+                <span>Remove from favorite</span> <IconHeartBroken/>
+            </div> : null
+        }
+        {
+          (  isMobile && !track.is_favorite) ? 
+            <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.ADD_TO_FAVORITES, track)}}>
+                <span>Add to favorites</span> <IconHeart/>
+            </div> : null
+        }
                     
     </div>)
 }

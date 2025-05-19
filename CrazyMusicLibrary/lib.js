@@ -60,3 +60,7 @@ export const HSLToHex = (h,s,l) => {
   
     return "#" + r + g + b;
   }
+
+export const lerp  = (a,b,x) => {
+  return a + (b-a)*x
+} 

@@ -92,7 +92,12 @@
 }
 
 .action-bar{
-  width: 45%;
+  width:85%;
+}
+@media screen and (min-width: 714px) {
+  .action-bar{
+    width: 45%;
+  }
 }
 
 .action-bar[is-playlist-add="true"]{

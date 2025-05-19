@@ -22,7 +22,7 @@ const AlbumView = ({isPlaylist = false}) => {
     const [artists, setArtists] = useState([]);
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
-    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, linkNewContainer } = useAudioPlayer();
+    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, linkNewContainer, getNextSongsFromAlbum } = useAudioPlayer();
     const wrapperRef = useRef(null) ;
     const navigate = useNavigate();
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
@@ -190,6 +190,10 @@ const AlbumView = ({isPlaylist = false}) => {
         searchInputRef.current.value = ""
         setProposedEntryToAdd([]);
     }
+
+    const trackCliced = (id) => {
+        getNextSongsFromAlbum(id, showOnlyFavs);
+    }
     return (
         <div className="album-view">
             <button className="roundButton" onClick={() => window.history.back()}>
@@ -273,7 +277,7 @@ const AlbumView = ({isPlaylist = false}) => {
                                 </div>}
 
                             {tracks.map((track, index) => (
-                                <TrackView key={track.id} index={index} track={track}  playIconId={currentPlayIcon} />))}
+                                <TrackView key={track.id} index={index} track={track} onClick={trackCliced} playIconId={currentPlayIcon} />))}
                         </div>
                     </div>
                 </div>

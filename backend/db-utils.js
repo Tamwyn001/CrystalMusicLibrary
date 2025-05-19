@@ -220,7 +220,6 @@ const getGenreAlbums = (id) => {
         FROM tracks_to_playlists t2p
         WHERE t2p.playlist_id = ?  ORDER BY t2p.track_no ASC`; //AND track_number > (SELECT track_number from tracks WHERE id = ?)
     const params = onlyFavs ? [playlistId,email] : playlistId;
-    console.log(interpolateQuery(query, params));
 
     return db.prepare(query).all(params);
 }
@@ -601,10 +600,11 @@ const updateTrackTags = (trackId, deleted, current, email) =>{
         `;
         db.prepare(deleteQuery).run([trackId, ...deleted]);
     }
-    console.log(current);
     if( current.filter(tag => tag.isNew).length > 0){
+        const {ownerId, username} = db.prepare("SELECT id, username FROM users WHERE email = ?").get(email);
+        console.log("New tags", current.filter(tag => tag.isNew).map(tag => tag.name) ,"by \x1b[36m", username, "\x1b[0m.");
         batchInsert("tags", "id, name, color", current.filter(tag => tag.isNew).map(tag => [tag.id, tag.name, tag.color]), true);
-        const ownerId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
+        
         batchInsert("tags_to_users", "tag_id, owner_id",current.filter(tag => tag.isNew).map(tag => [tag.id, ownerId]),true )
     }
     batchInsert("tracks_to_tags", "tag_id, track_id",current.map(tag => [tag.id, trackId]),true )
@@ -627,7 +627,25 @@ const getSaladTracks = (tagsId) => {
         FROM tracks_to_tags JOIN tracks t ON t.id = track_id WHERE tag_id IN (${placeholders});`
     return db.prepare(query).all([...tagsId]);
 }
+
+const getUserMostUsedTags = (email) => {
+    const userId = db.prepare("SELECT id from users WHERE email = ?").get(email).id;
+
+    const query = `
+    SELECT COUNT(t2t.tag_id) as total, t2t.tag_id as id, t.name as name, t.color as color
+    FROM tracks_to_tags t2t
+    JOIN tags t ON t.id = t2t.tag_id
+    WHERE id IN (SELECT id FROM tags_to_users WHERE owner_id = ?)
+    GROUP BY t2t.tag_id
+    ORDER BY total DESC
+    LIMIT 5;
+    `;
+    const res = db.prepare(query).all([userId]);
+    return(res)
+
+}
 module.exports = {
+    getUserMostUsedTags,
     getSaladTracks,
     getTrackTags,
     updateTrackTags,

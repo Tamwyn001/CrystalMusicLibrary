@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import apiBase from "../APIbase";
-import { parseAudioDuration } from "../lib.js";
-import { AudioContext } from "standardized-audio-context";
+import { lerp, parseAudioDuration } from "../lib.js";
 import _, { includes, method } from "lodash";
 import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
 import CreatePlaylist from "./components/CreatePlaylist.jsx";
@@ -17,6 +16,8 @@ const trackActionTypes = {
     TAGS : "tags",
     GOTO_ALBUM :  "goto_album",
     REMOVE_FROM_PLAYLIST : "remove_from_playlist",
+    ADD_TO_FAVORITES : "add_to_favs",
+    REMOVE_FROM_FAVORITES : "remove_from_favs",
     NONE : "none"
 }
 
@@ -29,16 +30,12 @@ export const AudioPlayerProvider = ({ children }) => {
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrackData, setCurrentTrackData] = useState({}); // Store track data here
     const [currentTime, setCurrentTime] = useState(0); // Store current time here
-    const audioCtxRef = useRef(null);
     const globalAudioRef = useRef(null); //audioRef that links either to A or B.
     const audioRefA = useRef(null); //
-    const gainNodeRefA = useRef(null);
     const audioRefB = useRef(null); //
-    const gainNodeRefB = useRef(null);
-    const masterGainNodeRef = useRef(null);
     const [playQueue, setPlayQueue] = useState([]); // Store play queue here
     const [trackCoverUrl, setTrackCoverUrl] = useState('null'); // Store track cover URL here
-    const resolveTrackURL = (name) => `${apiBase}/read-write/music/${name}`; // Adjust the path as needed
+    const resolveTrackURL = (name) => `${name}` != 'null' ? `${apiBase}/read-write/music/${name}` : null; // Adjust the path as needed
     const [queuePointer, setQueuePointer] = useState(-1); // Pointer to the current track in the queue
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
@@ -58,38 +55,33 @@ export const AudioPlayerProvider = ({ children }) => {
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
-        return isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));
+        return  isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));;
       });
     const [creatingNewPlaylist, setCreatingNewPlaylist] = useState(false)
     const playlistAddedCallback = useRef(null);
-
+    const toggleTrackFavoriteWithActionBar = useRef(null);
+    //=======
+    const trackBlendIntervalRef = useRef(null); 
+    const volumeTransitionInterval = useRef(null);
+    const volumeRef = useRef(0);
     //call inside a mount
     const setupAudioGraph = () => {
-
-        //MASTER VOLUME 
-        const masterGain = audioCtxRef.current.createGain();
-        masterGainNodeRef.current = masterGain;
-        masterGain.connect(audioCtxRef.current.destination);
 
         // NODE A
         audioRefA.current = new Audio();
         audioRefA.current.setAttribute("source", "A")
-        const sourceA = audioCtxRef.current.createMediaElementSource(audioRefA.current);
-        const gainNodeA = audioCtxRef.current.createGain();
-        sourceA.connect(gainNodeA);
-        gainNodeA.connect(masterGain);
-        gainNodeRefA.current = gainNodeA;
-        audioRefA.current.crossOrigin = "anonymous";
+
+
         // NODE B
         audioRefB.current = new Audio();
         audioRefB.current.setAttribute("source", "B")
 
-        const sourceB = audioCtxRef.current.createMediaElementSource(audioRefB.current);
-        const gainNodeB = audioCtxRef.current.createGain();
-        sourceB.connect(gainNodeB);
-        gainNodeB.connect(masterGain);
-        gainNodeRefB.current = gainNodeB;
-        audioRefB.current.crossOrigin = "anonymous";
+        for (const audioRef of [audioRefA, audioRefB]){
+            audioRef.current.crossOrigin = "anonymous";
+            audioRef.current.playsInline = true;
+            audioRef.current.setAttribute('webkit-playsinline', ''); // For iOS Safari compatibility
+            audioRef.current.volume = parseFloat(localStorage.getItem('volume')) * 0.75 || 0.5;
+        }
         resetAudioNodes();
         console.log("Audio graph setted up")
     };
@@ -100,14 +92,10 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefA.current?.pause();
         audioRefA.current = null;
         audioRefA.current?.disconnect();
-        gainNodeRefA.current?.disconnect();
 
         audioRefB.current?.pause();
         audioRefB.current = null;
         audioRefB.current?.disconnect();
-        gainNodeRefB.current?.disconnect();
-
-        masterGainNodeRef.current?.disconnect();
 
         audioRefA.current?.removeEventListener("timeupdate", updateTime);
         audioRefA.current?.removeEventListener("ended", playNextTrackOnEnd);
@@ -119,11 +107,9 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefA.current?.pause();
         audioRefA.current.src = null;
         audioRefA.current.currentTime = 0;
-        gainNodeRefA.current.gain.value = 0;
         audioRefB.current?.pause();
         audioRefB.current.src = null;
         audioRefB.current.currentTime = 0;
-        gainNodeRefB.current.gain.value = 0;
         globalAudioRef.current = null;
         targetAudioHelperRef.current = "A";
 
@@ -140,10 +126,10 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const rescheduleAudioTransition = () => {
         const shouldStopMusic = playQueue.length <= queuePointer + 1; 
-        clearTimeout(trackBlendTimeoutRef.current);
+        if(trackBlendTimeoutRef.current) clearTimeout(trackBlendTimeoutRef.current);
         if(shouldStopMusic || !globalAudioRef.current){return};
         
-        console.log("Transition rescheduled, timesout in ", currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime);
+        console.log("Transition rescheduled, timesout in ", currentTrackData.rawDuration , globalAudioRef.current.currentTime , trackBlendTime, currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime);
         trackBlendTimeoutRef.current = setTimeout(() => {
             targetAudioHelperRef.current = targetAudioHelperRef.current === "A" ? "B": "A";
             playbackWithTransition(queuePointer + 1)
@@ -155,9 +141,6 @@ export const AudioPlayerProvider = ({ children }) => {
     //this is only called if a track will follow
     const playbackWithTransition = async (newQueuePointer) => {
         const shouldStopMusic = playQueue.length <= newQueuePointer; 
-        if (audioCtxRef.current.state === "suspended") {
-            audioCtxRef.current.resume();
-          }
 
         //if another track, we switch audios
         setQueuePointer(newQueuePointer);
@@ -183,44 +166,79 @@ export const AudioPlayerProvider = ({ children }) => {
             return;
         }
         globalAudioRef.current.play();
+        clearTimeout(trackBlendIntervalRef.current);
         setPlayingTrack(trackName);
         setIsPlaying(true);
         
         fetchTrackCover(trackName);
             
         console.log("Fading in", globalAudioRef.current)
-        const now = audioCtxRef.current.currentTime;
- 
+
         if(targetAudioHelperRef.current === "A"){  
             if(!shouldStopMusic){
-                gainNodeRefA.current.gain.setValueAtTime(0, now);// now
-                gainNodeRefA.current.gain.linearRampToValueAtTime(1, now + 4);// now+ blendTime
+                startNewTrackBlend(audioRefB, audioRefA);
                 audioRefA.current.addEventListener("timeupdate", updateTime);
                 audioRefA.current.addEventListener("ended", playNextTrackOnEnd);
+            }else{
+                startNewTrackBlend(audioRefB, null);
             }
-            //and reverse the ramp for the other audio
-            gainNodeRefB.current.gain.linearRampToValueAtTime(1, now);// now
-            gainNodeRefB.current.gain.linearRampToValueAtTime(0, now + trackBlendTime);// now+ blendTime
-
-
 
             audioRefB.current.removeEventListener("timeupdate", updateTime);
             audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
 
         }else if(targetAudioHelperRef.current === "B"){
             if(!shouldStopMusic){
-                gainNodeRefB.current.gain.setValueAtTime(0, now);// now
-                gainNodeRefB.current.gain.linearRampToValueAtTime(1, now + trackBlendTime);// now+ blendTime
+                startNewTrackBlend(audioRefA, audioRefB);
                 audioRefB.current.addEventListener("timeupdate", updateTime);
                 audioRefB.current.addEventListener("ended", playNextTrackOnEnd);
+            }else{
+                startNewTrackBlend(audioRefA, null);
             }
-            gainNodeRefA.current.gain.linearRampToValueAtTime(1, now);// now
-            gainNodeRefA.current.gain.linearRampToValueAtTime(0, now + trackBlendTime);// now+ blendTime
-
 
             audioRefA.current.removeEventListener("timeupdate", updateTime);
             audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
         }
+
+    }
+    const resetTransition = () =>{
+        if(transitionTimoutRef.current) clearTimeout(transitionTimoutRef.current);
+        if(trackBlendIntervalRef.current) clearInterval(trackBlendIntervalRef.current);
+        //retarget all to node A
+    }
+
+    useEffect(() => {
+        console.log('Changed inteval ref:', trackBlendIntervalRef.current);
+    }, [trackBlendIntervalRef.current]);
+
+    const startNewTrackBlend = ( fadingOutAudioRef, fadingInAudioRef ) => { //startIn in s
+        if(trackBlendIntervalRef.current) clearInterval(trackBlendIntervalRef.current);
+    
+        const interval = 150; //ms
+        let iter = 0;
+        
+        console.log('Init fadeout for:', fadingInAudioRef.current);
+        trackBlendIntervalRef.current = setInterval( () => {
+            const fadingInVolume = Math.min(1, Math.max(0, (iter * interval) / (trackBlendTime * 1000)));
+            //we need a volume ref otherwise it will take the volume value at the first call and stick
+            //with it.
+            fadingInAudioRef.current.volume = fadingInVolume * volumeRef.current; 
+            // addNotification(`Fade ref: ${fadingInAudioRef.current.volume}`, notifTypes.INFO);
+            //we dont espacialy want to fadin a new track
+            if(fadingOutAudioRef.current){
+                fadingOutAudioRef.current.volume = (1 - fadingInVolume) * volumeRef.current;
+            }
+            if(fadingInVolume >= 1 ){
+                clearInterval(trackBlendIntervalRef.current);
+                trackBlendIntervalRef.current = null;
+                if(fadingInAudioRef.current){
+                    //only call this stop method if there is another track coming
+                    //Otherwise the OnEndReached callback fires and stop the music. (queue end)
+                    fadingOutAudioRef.current.pause();
+                    fadingOutAudioRef.current.src = null;
+                }
+            }
+            iter ++;
+        }, interval);
 
     }
 
@@ -258,6 +276,7 @@ export const AudioPlayerProvider = ({ children }) => {
             globalAudioRef.current.pause();
             setIsPlaying(false);
             clearTimeout(trackBlendTimeoutRef.current);
+            clearInterval(trackBlendIntervalRef.current);
 
         } else {
             setIsPlaying(true);
@@ -270,34 +289,23 @@ export const AudioPlayerProvider = ({ children }) => {
         }
     }
 
-    const setupAudio = () => {
-        if (!audioCtxRef.current) {
-            audioCtxRef.current = new AudioContext();
-            setupAudioGraph(); // your function to connect audio nodes
-        }
-    
-        if (audioCtxRef.current.state === "suspended") {
-            audioCtxRef.current.resume();
-        }
-    };
 
-    const getNextSongsFromAlbum = (index) => {
-        setupAudio();
-
-        fetch(`${apiBase}/read-write/nextSongs/${container.type}/${container.id}`, {
+    const getNextSongsFromAlbum = (trackId, onlyFavs = false) => {
+        fetch(`${apiBase}/read-write/nextSongs/${container.type}/${container.id}/${onlyFavs}`, {
             method: 'GET',
             credentials : "include"
         }).then(res => res.json())
         .then(data => {
             setPlayQueue(data);
-            setQueuePointer(index);
+            console.log(data);
+            setQueuePointer(data.findIndex(id => id === trackId));
             setShouldInitPlay(true);
         });
     }
 
     const playTrackNoQueue = (trackPath) => {
         setPlayQueue([trackPath]);
-        setupAudio();
+
         setQueuePointer(0);
         setShouldInitPlay(true);
     };
@@ -305,7 +313,6 @@ export const AudioPlayerProvider = ({ children }) => {
 
 
     const playPreviousSong = () => {
-        setupAudio();
         if (globalAudioRef.current.currentTime > 5 || queuePointer === 0) { // Check if the current time is greater than 3 seconds or if it's the first song
             globalAudioRef.current.currentTime = 0; // Reset the current time to 0
             rescheduleAudioTransition();
@@ -329,7 +336,6 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const playContainerSuffle = (containerId, containerType, onlyFavs = false) => {
         console.log(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`);
-        setupAudio();
         fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, { 
             method: 'GET',
             credentials : "include"
@@ -363,6 +369,8 @@ export const AudioPlayerProvider = ({ children }) => {
         setPlayQueue([]);
         setPlayingTrack('');
         console.log('No more songs in the queue');
+        clearInterval(trackBlendIntervalRef.current);
+        clearTimeout(trackBlendTimeoutRef.current);
         return;
     }
 
@@ -406,7 +414,7 @@ export const AudioPlayerProvider = ({ children }) => {
     }
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
-
+        setupAudioGraph();
         return () => {
             destructAudioGraph();
         }
@@ -425,7 +433,6 @@ export const AudioPlayerProvider = ({ children }) => {
         setPlayQueue((prevQueue) => [...prevQueue, ...tracks]);
     }
     const shuffleArtistToQueue = async (artistID) => {
-        setupAudio();
         const res = await fetch(`${apiBase}/read-write/artist-all-tracks/${artistID}`, {
             method: 'GET',
             credentials: 'include'
@@ -441,7 +448,6 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const playLibraryShuffle = async () => {
-        setupAudio();
         fetch(`${apiBase}/read-write/all-songs`, { method: 'GET' })
         .then(response => response.json())
         .then(data => {
@@ -493,10 +499,35 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         // Avoid setting state here again! Just apply it.
         const clamped = Math.min(1, Math.max(0, volume));
-        masterGainNodeRef.current?.gain.linearRampToValueAtTime((clamped).toFixed(4) * 0.75, audioCtxRef.current.currentTime + 0.2);
+        if(!trackBlendIntervalRef.current){
+            //only smooth audio outside of the transitions
+            newVolumeTransition((clamped).toFixed(4) * 0.75);
+        }
+        volumeRef.current = clamped.toFixed(4) * 0.75;
         localStorage.setItem('volume', clamped);
     }, [volume]);
 
+    const newVolumeTransition = (targetVolume) => {
+        if(volumeTransitionInterval.current)clearInterval(volumeTransitionInterval.current);
+        let iter = 0;
+        const interval = 16; //60fps
+        const startVolume = audioRefA.current.volume;
+
+        volumeTransitionInterval.current = setInterval(() => {  
+            // console.log(startVolume, targetVolume, iter * interval / 300);
+            const currentVolume = lerp(startVolume, targetVolume, iter * interval / 300);
+
+            audioRefA.current.volume = currentVolume;
+            audioRefB.current.volume = currentVolume;
+            if(targetVolume - startVolume > 0 ?
+                currentVolume >= targetVolume : currentVolume <= targetVolume  ){
+                clearInterval(volumeTransitionInterval.current);
+                volumeTransitionInterval.current = null;
+            }
+            iter ++;
+        }, interval);
+        
+    }
     const applyContainerChanges = (containerClass, file = null) => {
         if(!containerClass) { //no changes made
             console.log('No changes made');
@@ -546,11 +577,12 @@ export const AudioPlayerProvider = ({ children }) => {
         setCreatingNewPlaylist(false);
     }
 
-    const openTrackActions = (position, track, looseFocusCallback) => {
-        console.log(track, "at", position);
+    const openTrackActions = (position, track, looseFocusCallback, toggleFavoriteCallback) => {
+        // console.log(track, "at", position);
         setTrackActionContext({track, position});
         if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
         trackActionLoosesFocusRef.current = looseFocusCallback;
+        toggleTrackFavoriteWithActionBar.current = toggleFavoriteCallback;
     }
 
     const closeTrackActions = () =>{
@@ -558,11 +590,11 @@ export const AudioPlayerProvider = ({ children }) => {
         if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
     }
 
-    const onClicTrackActionEntry = (type, track) =>{
+    const onClicTrackActionEntry = (type, track, callback = null) =>{
         closeTrackActions();
-        console.log(track);
-        console.log(type, track.id);
         switch(type){
+            case trackActionTypes.NONE:
+                return;
             case trackActionTypes.TOP_QUEUE:
                 playTrackNext(track);
                 break;
@@ -578,7 +610,28 @@ export const AudioPlayerProvider = ({ children }) => {
             case trackActionTypes.TAGS:
                 setEdtitingTrackTags(track);
                 addNotification(`Avaliable soon :)`, notifTypes.INFO);
-                break
+                break;
+            case trackActionTypes.ADD_TO_FAVORITES:
+                fetch(`${apiBase}/read-write/toggleFavorite/${track.id}/${true}`,{
+                    method : 'GET',
+                    credentials: "include"
+                  })
+                  .then(res => res.json())
+                  .then((data) =>{
+                    toggleTrackFavoriteWithActionBar.current(data);
+                  });
+              
+                break;
+            case trackActionTypes.REMOVE_FROM_FAVORITES:
+                fetch(`${apiBase}/read-write/toggleFavorite/${track.id}/${false}`,{
+                    method : 'GET',
+                    credentials: "include"
+                  })
+                  .then(res => res.json())
+                  .then((data) => {
+                    toggleTrackFavoriteWithActionBar.current(data);
+                  });
+                break;
         }
     }
     const gotoTrackAlbum = (track) => {
@@ -587,7 +640,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 .then(id => {navigate(`albums/${id}`)});
     }
     const playTrackNext = (track) =>{
-        const array = playQueue
+        const array = playQueue;
         array.splice(queuePointer + 1, 0, track.id);
         setPlayQueue(array);
         addNotification(`${track.title} playing next.`, notifTypes.SUCCESS);
@@ -631,9 +684,8 @@ export const AudioPlayerProvider = ({ children }) => {
         if(salad.length === 0) { return}
         setPlayQueue(salad);
         setQueuePointer(index || 0);
-        if(!index){
+        setShouldInitPlay(true);
 
-        }
     }
 
 

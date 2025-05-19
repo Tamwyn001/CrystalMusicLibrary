@@ -2,16 +2,13 @@ import AlbumAdd from "./AlbumAdd";
 import AlbumCard from "./AlbumCard";
 
 const AlbumsOverview = ({albums, addNewMusic, deleteAlbum, editAlbum, publish}) =>{
-    let cards = [];
-    let counter = 0;
-    for(const album of albums){
-        cards.push(<AlbumCard album={album} key={counter} deleteAlbum={deleteAlbum} editAlbum={editAlbum}/>);
-        counter++;
-    }
-    cards.push(<AlbumAdd key={counter} addNewMusic={addNewMusic}/>);
+
+    const cards = albums.map((album, index) => <AlbumCard album={album} key={index} deleteAlbum={deleteAlbum} editAlbum={editAlbum}/>)
+    console.log("rerun");
+    cards.push(<AlbumAdd key={-1} addNewMusic={addNewMusic}/>);
     return(
         <div className="albums-overview">
-            <div className="album-overview-container">{cards}</div>
+            <div className="album-overview-container">{cards.reverse()}</div>
             {/* <button className="roundButton" onClick={addNewMusic}>Add new music</button> */}
             <button className="roundButton" onClick={publish}>Publish to library</button>
 

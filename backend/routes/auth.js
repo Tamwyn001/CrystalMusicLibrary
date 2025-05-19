@@ -86,7 +86,12 @@ router.post("/verifyToken", (req, res) => {
         return res.status(401).json({ error: "Access denied. No token provided." });}
     try {
         const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+        if(!decoded.email){throw new Error("user not valid, redirect to login");
+        }
+        
         res.json({success : true, message: "Token verified", user : decoded});
+        // console.log("Auto logged in \x1b[36m", decoded.username, "\x1b[0m")
+
     }catch (err) {
         console.error("Error verifying token:", err);
         res.status(401).json({ error: "Invalid token." });

@@ -74,9 +74,9 @@ const Register = () => {
         <p>We were not able to connect you, please login.</p>
         <form onSubmit={handleLogin}>
             <label htmlFor="email">Email</label>
-            <input type="text" name="email" placeholder="Username" />
+            <input type="text" name="email" placeholder="Username" autocomplete="email"/>
             <label htmlFor="password">Password</label>
-            <input type="password" placeholder="Password" name="password"/>
+            <input type="password" placeholder="Password" name="password" autocomplete="password"/>
             <button type="submit">Login </button>
         </form>
         <RequestStatus/>

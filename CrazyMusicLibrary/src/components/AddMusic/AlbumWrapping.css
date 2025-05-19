@@ -17,22 +17,36 @@
 }
 .albumWrapping-library{
     display: flex;
-    flex-direction: row;
-    justify-content: left;
-    gap: 10px;
-    height: 100%;
-    overflow: hidden;
+    flex-direction: column;
     position: relative;
+    overflow-y: auto;
     padding: 20px 30px;
     background-color: aliceblue;
     margin: auto;
-    top: calc(50% - 300px);
-    height: fit-content;
-    width: 800px;
+    top: 50px;
+    height: calc(100% - 120px);
+    width: calc(100% - 90px);
     border-radius: 20px;
 }
 
-
+@media screen and (min-width: 714px) {
+    .albumWrapping-library{
+        display: flex;
+        flex-direction: row;
+        justify-content: left;
+        gap: 10px;
+        height: 100%;
+        overflow: hidden;
+        position: relative;
+        padding: 20px 30px;
+        background-color: aliceblue;
+        margin: auto;
+        top: calc(50% - 300px);
+        height: fit-content;
+        width: 800px;
+        border-radius: 20px;
+    }
+}
 
 .albumCover{
     display: flex;
@@ -55,17 +69,37 @@
     flex-direction: column;
     align-items: left;
     justify-content: left;
+    overflow: none;
+    padding: 0px 20px;
+}
+
+@media screen and (min-width: 714px) {
+    .albumDetails{
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    justify-content: left;
     overflow: auto;
     overflow-x: hidden;
     width: 80%;
     padding: 0px 20px;
 }
+}
+
 
 .albumType{
-    display: grid;
-    grid-template-areas: "myArea myArea";
+    display: flex;
+    flex-direction: column;
     column-gap: 10px;
     row-gap: 0px;
+}
+@media screen and (min-width: 714px) {
+    .albumType{
+        display: grid;
+        grid-template-areas: "myArea myArea";
+        column-gap: 10px;
+        row-gap: 0px;
+    }
 }
 .albumTypeOption{
     display: flex;

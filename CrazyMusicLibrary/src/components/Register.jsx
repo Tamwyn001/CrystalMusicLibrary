@@ -54,13 +54,13 @@ const Register = () => {
         {(!welcomeMessage) && <DisplayGotoLogin/>}
         <form onSubmit={handleRegister}>
             <label htmlFor="email">Email</label>
-            <input type="text" name="email" placeholder="Username" />
+            <input type="text" name="email" placeholder="Username" autocomplete="email"/>
             <label htmlFor="password">Password</label>
-            <input type="password" placeholder="Password" name="password"/>
+            <input type="password" placeholder="Password" name="password" autocomplete="new-password"/>
             <label htmlFor="repeat_password">Confirm Password</label>
-            <input type="password" placeholder="Confirm Password" name="repeat_password"/>
+            <input type="password" placeholder="Confirm Password" name="repeat_password" autocomplete="password"/>
             <label htmlFor="name">Name</label>
-            <input type="text" name="name" placeholder="Name" />
+            <input type="text" name="name" placeholder="Name" autocomplete="name"/>
             <button type="submit">Register</button>
         </form>
         </div>

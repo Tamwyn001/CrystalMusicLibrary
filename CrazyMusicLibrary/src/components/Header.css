@@ -82,8 +82,28 @@
 .audio-controls[context="desktop"]{
     display: none;
 }
-@media screen and (min-width: 450px) {
-    .mobile-gost{display: flex; width: 140px; gap: 10px}
+
+.serach-button-div:hover{
+    background-color: rgb(212, 219, 253);
+}
+
+.serach-button-div{
+    display: flex;
+    align-content: center;
+    gap: 2px;
+    cursor: pointer;
+    background-color: rgba(255, 255, 255, 0.771);
+    border-radius: 20px;
+    padding: 5px;
+
+}
+
+
+.serach-button-div .keyboard-key, .serach-button-div span{
+    display: none;
+}
+@media screen and (min-width: 714px) {
+    
     .trackinfo-desktop{
     width: 100%;
     display: flex;
@@ -107,6 +127,27 @@
     }
     .audio-controls[context="mobile"]{
         display: none;
+    }
+
+}
+
+@media screen and (min-width: 1100px) {
+    
+    .serach-button-div{
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 2px;
+        width: 200px;
+        cursor: pointer;
+        background-color: rgba(255, 255, 255, 0.771);
+        border-radius: 20px;
+        padding: 3px 10px 3px 17px;
+    }
+    .mobile-gost{display: flex; width: 140px; gap: 10px}
+    
+    .serach-button-div .keyboard-key, .serach-button-div span{
+        display: inline-block;
     }
 }
 .playPauseContainer{
@@ -149,21 +190,6 @@
     transition: filter 0.1s;    
 }
 
-.serach-button-div{
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-    gap: 2px;
-    width: 200px;
-    cursor: pointer;
-    background-color: rgba(255, 255, 255, 0.771);
-    border-radius: 20px;
-    padding: 3px 10px 3px 17px;
-}
-
-.serach-button-div:hover{
-    background-color: rgb(212, 219, 253);
-}
 
 .volume-bar{
     position: absolute;

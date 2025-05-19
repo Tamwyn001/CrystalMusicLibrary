@@ -4,6 +4,7 @@ const bodyParser = require("body-parser");
 const dotenv = require("dotenv");
 const path = require("path");
 const isPkg = typeof process.pkg !== "undefined";
+const readline = require("readline")
 const { existsSync, mkdirSync } = require("fs");
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
@@ -25,11 +26,28 @@ const resolvedDataPath = path.isAbsolute(rawPathData)
       : path.resolve(__dirname, rawPathData));
 
 console.log("Data path: ", resolvedDataPath);
+try{
 for(const uploadDir of ["music", "covers"]){
     if (!existsSync(path.join(resolvedDataPath, uploadDir))){
         console.log(`Creating directory ${path.join(resolvedDataPath, uploadDir)}`);
         mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
     }
+}
+}
+catch (err) {
+    console.log("\x1b[1;31mCan't create or find directory DATA\x1b[0m, is the disc mounted?");
+
+    const rl = readline.createInterface({
+      input: process.stdin,
+      output: process.stdout
+    });
+
+    rl.question('Press any key to exit... ', () => {
+      rl.close();
+      process.exit(1);
+    });
+
+    return;
 }
 process.env.CML_DATA_PATH_RESOLVED = resolvedDataPath;
 
@@ -42,11 +60,27 @@ const resolvedDatabasePath =path.isAbsolute(rawPathDatabase)
     : path.resolve(__dirname, rawPathDatabase));
 
   console.log("Database path: ", resolvedDatabasePath);
-if (!existsSync(resolvedDatabasePath)){
-  console.log(`Creating directory ${resolvedDatabasePath}`);
-  mkdirSync(resolvedDatabasePath, { recursive: true });
+try{
+  if (!existsSync(resolvedDatabasePath)){
+    console.log(`Creating directory ${resolvedDatabasePath}`);
+    mkdirSync(resolvedDatabasePath, { recursive: true });
+  }
 }
+catch (err) {
+  console.log("\x1b[1;31mCan't create or find directory DB (DATABASE)\x1b[0m, is the disc mounted?");
 
+  const rl = readline.createInterface({
+    input: process.stdin,
+    output: process.stdout
+  });
+
+  rl.question('Press any key to exit... ', () => {
+    rl.close();
+    process.exit(1);
+  });
+
+  return;
+}
 // Initialize DB once
 const { setupDatabase } = require('./db.js');
 setupDatabase(resolvedDatabasePath, basePath);
@@ -108,7 +142,9 @@ const allowedDomains = [
   'http://10.24.134.178:4173',
   'http://169.254.160.204:4173',
   "http://192.168.10.134:4173",
-  "http://192.168.10.134:5173"
+  "http://192.168.10.134:5173",
+  "http://192.168.10.134:4173",
+  "http://192.168.10.140:4173/"
 ];
 console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
@@ -121,8 +157,14 @@ app.use('/covers', express.static(coversPath));
 
 app.use(cors({
   origin: function (origin, callback) {
-    if (!origin) return callback(null, true);
+    if (!origin) 
+       {
+        return callback(null, true);
+       }
+   
+
     if (allowedDomains.includes(origin)) return callback(null, true);
+    console.log(" User from \x1b[1;31m",`${origin}`,"\x1b[0m is not trusted.");
     return callback(new Error(`Cette origine (${origin}) n'est pas autorisée.`), false);
   },
   credentials: true,

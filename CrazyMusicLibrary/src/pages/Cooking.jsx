@@ -10,7 +10,7 @@ import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useNotifications } from "../GlobalNotificationsProvider";
 import TrackView from "../components/TrackView";
-import _ from 'lodash';
+import _, { includes } from 'lodash';
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -18,7 +18,7 @@ const Cooking = () => {
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
     const { playAudioSalad, setSaladContext, saladContext } = useAudioPlayer();
     const [ currentCookingContent, setCurrentCookingContent ] = useState([]);
-
+    const [ mostUsedTags, setMostUsedTags ] = useState([]);
     const {addNotification, notifTypes } = useNotifications();
     const [ tracks, setTracks ] = useState([]);
     useEffect(() => {
@@ -30,6 +30,19 @@ const Cooking = () => {
         if(currentCookingContent.length === 0 ){
             setCurrentCookingContent(saladContext || [])
         }
+        fetch(`${apiBase}/read-write/mostUsedTags`, {
+            method : "GET",
+            credentials : "include"
+        })
+        .then(res => res.json())
+        .then(data => {
+
+            const proposed = data.map(tag => {
+                return {...tag, type : tag.total, icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
+            })
+            setMostUsedTags(proposed);
+            setProposedEntryToAdd(proposed)
+        });
 
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
@@ -43,7 +56,7 @@ const Cooking = () => {
     const fetchSearchResults = (e) => {
         const input = e.target.value;
 
-        if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([]);return;} //return if empty or only white spaces
+        if (input === "" || input.trim().length === 0) {setProposedEntryToAdd(mostUsedTags);return;} //return if empty or only white spaces
         fetch(`${apiBase}/read-write/search/${input}/tags`, {
             method: "GET"})
         .then((res) => {
@@ -57,7 +70,6 @@ const Cooking = () => {
             const proposed = data.tags?.map(tag => {
                 return {...tag, icon : () => <IconLabel color={tag.color}/>}
             })
-            console.log(proposed);
             setProposedEntryToAdd(proposed);})
 
     }
@@ -101,7 +113,15 @@ const Cooking = () => {
     }
 
     const clickedTrack = (id) => {
+ 
         playAudioSalad(tracks.map(track => track.id), id);
+        
+    }
+
+    const onSearchbarFocused = () =>{
+        setSearchbarFocused(true); 
+        if (searchInputRef.current.value !== '')return
+  
         
     }
     return(
@@ -117,7 +137,7 @@ const Cooking = () => {
                         onChange={fetchSearchResults}
                         placeholder="Search some tags.."
                         ref={searchInputRef}
-                        onFocus={() => { setSearchbarFocused(true); }}/>
+                        onFocus={onSearchbarFocused}/>
                     <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
                         <List
                             height={300}
@@ -151,7 +171,7 @@ const Cooking = () => {
                 </div>
                 <div className="track-list">
                     {tracks.map((track, index) => (
-                                <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} />))}
+                        <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} />))}
                 </div>
             </div>
         </div>

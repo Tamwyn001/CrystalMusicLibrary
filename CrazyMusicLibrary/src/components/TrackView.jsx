@@ -5,15 +5,21 @@ import SvgHoverToggle from "./SvgHoverToggle";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 
-const TrackView = ({ index, track, playIconId, isSalad = null }) => {
+const TrackView = ({ index, track, playIconId, isSalad = null, onClick }) => {
   const { title, track_number, rawDuration } = track;
-  const { getNextSongsFromAlbum, playingTrack, openTrackActions, jumpToQueueTrack} = useAudioPlayer();
+  const { playingTrack, openTrackActions} = useAudioPlayer();
   const trackName = track.id;
   const [trackFavorite, setTrackFavorite] = useState(false);
   const [ actionsOpened, setActionsOpened] = useState(false);
   const handleClick = () => { 
-    if(isSalad){isSalad(index); return}
-    getNextSongsFromAlbum(index); 
+    if(isSalad){
+      isSalad(index); 
+      return
+    }
+
+    //this only happends into album/playlist view
+    //we need to see if sorted after likes
+    onClick(track.id);
   };
   const GetRandomPlayIcon = () => {
     switch (playIconId) {
@@ -54,8 +60,12 @@ const TrackView = ({ index, track, playIconId, isSalad = null }) => {
   const clickDots = (event) =>{
     event.stopPropagation();
     setActionsOpened(true);
-    openTrackActions({x:event.clientX, y: event.clientY}, track, looseFocusFromActionBar)
+    openTrackActions({x:event.clientX, y: event.clientY}, track, looseFocusFromActionBar, toggleFavoriteCallback)
 
+  }
+  //when favorite set with actionbar, no direct connection, so we pass a callback
+  const toggleFavoriteCallback = (newFavorite) => {
+    setTrackFavorite(newFavorite);
   }
 
   return (
