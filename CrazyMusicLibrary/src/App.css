@@ -94,6 +94,10 @@
 .action-bar{
   width:85%;
 }
+.cooking-header{
+  position: relative;
+
+}
 @media screen and (min-width: 714px) {
   .action-bar{
     width: 45%;
@@ -257,4 +261,10 @@
 .track-action-entry:hover{
   background-color: #c9f0ff;
 
+}
+
+.tag-color{
+  width: 10px;
+  height: 10px;
+  border-radius: 5px;
 }

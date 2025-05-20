@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -329,6 +329,31 @@ router.get("/mostUsedTags", (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
     res.json(getUserMostUsedTags(decoded.email));
-})
+});
 
+router.get("/getAllUserTags", (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    res.json(getUserTags(decoded.email));
+});
+
+router.post(`/applyTagModifications`, upload.none(), (req,res) => {
+    // const token =req.cookies.token;
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    applyTagEdits(JSON.parse(req.body.tag));
+    res.json({messsage : "Succesfully updated."})
+});
+
+router.delete("/delete/:type/:id", (req,res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    switch (req.params.type) {
+        case "tag":
+            deleteTag(req.params.id, decoded.email);
+            break;
+        case "salad":
+            break;
+    };
+    res.json({message: "Deletion successfull!"})
+})
 module.exports = {router, runServerStats};

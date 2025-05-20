@@ -28,6 +28,11 @@
     position: relative;
     flex-wrap: wrap;
 }
+.open-tags-edit{
+    position: absolute;
+    top: 0;
+    right: 120px;
+}
 
 .cooking-actions{
     display: flex;

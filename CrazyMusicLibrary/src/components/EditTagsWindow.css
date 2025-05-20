@@ -1,0 +1,17 @@
+.tag-edtior-container{
+    width: 500px;
+    height: 500px;
+    background-color: aliceblue;
+    margin: auto;
+    top: calc(50% - 300px);
+    position: relative;
+    border-radius: 20px;
+    padding: 10px 5px;
+}
+
+.edit-tags-content{
+    background-color: white;
+    position: relative;
+    z-index: 1;
+    padding: 10px 0px 10px 20px;
+}

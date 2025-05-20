@@ -635,16 +635,46 @@ const getUserMostUsedTags = (email) => {
     SELECT COUNT(t2t.tag_id) as total, t2t.tag_id as id, t.name as name, t.color as color
     FROM tracks_to_tags t2t
     JOIN tags t ON t.id = t2t.tag_id
-    WHERE id IN (SELECT id FROM tags_to_users WHERE owner_id = ?)
+    WHERE id IN (SELECT tag_id FROM tags_to_users WHERE owner_id = ?)
     GROUP BY t2t.tag_id
     ORDER BY total DESC
     LIMIT 5;
     `;
     const res = db.prepare(query).all([userId]);
     return(res)
+}
+
+const getUserTags = (email) => {
+    const userId = db.prepare("SELECT id from users WHERE email = ?").get(email).id;
+    const query = `
+    SELECT * FROM tags t
+    WHERE id IN (SELECT tag_id FROM tags_to_users WHERE owner_id = ?)
+    ORDER BY name ASC
+    `;
+    const res = db.prepare(query).all([userId]);
+    return(res)
 
 }
+
+const applyTagEdits = (tagEdits) => {
+    const query = ` 
+    UPDATE tags SET name = ?, color = ? WHERE id = ?;
+    `
+    db.prepare(query).run([tagEdits.name, tagEdits.color, tagEdits.id]);
+};
+
+const deleteTag = (id, email) => {
+    const username = db.prepare("SELECT username FROM users WHERE email = ?").get(email).username;
+    const name = db.prepare("SELECT name FROM tags WHERE id = ?").get(id).name;
+    db.prepare("DELETE FROM tags WHERE id = ?").run(id);
+    console.log("Tag", name,"deleted by \x1b[36m", username, "\x1b[0m.");
+
+}
+
 module.exports = {
+    deleteTag,
+    applyTagEdits,
+    getUserTags,
     getUserMostUsedTags,
     getSaladTracks,
     getTrackTags,

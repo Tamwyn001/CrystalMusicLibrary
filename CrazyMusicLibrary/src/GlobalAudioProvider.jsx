@@ -8,8 +8,9 @@ import TrackActions from "./components/TrackActions.jsx";
 import { useNotifications } from "./GlobalNotificationsProvider.jsx";
 import { useNavigate } from "react-router-dom";
 import TagEditor from "./components/TagEditor.jsx";
+import EditTagsWindow from "./components/EditTagsWindow.jsx";
 
-const AudioPlayerContext = createContext();
+const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
     TOP_QUEUE : "top_queue",
     END_QUEUE : 'end_queue',
@@ -58,6 +59,7 @@ export const AudioPlayerProvider = ({ children }) => {
         return  isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));;
       });
     const [creatingNewPlaylist, setCreatingNewPlaylist] = useState(false)
+    const [ tagWindowOpen, setTagWindowOpen ] = useState(false);
     const playlistAddedCallback = useRef(null);
     const toggleTrackFavoriteWithActionBar = useRef(null);
     //=======
@@ -658,12 +660,12 @@ export const AudioPlayerProvider = ({ children }) => {
             .then(data => {
                albumAskRefreshRef.current();
                addNotification(`${track.title} removed.`, notifTypes.SUCCESS);})
-    }
+    };
 
     const linkNewContainer = (container, refreshCallback) => {
         albumAskRefreshRef.current = refreshCallback;
         setContainer(container);
-    }
+    };
 
     const applyTrackEditTags = (tags, track) =>{
         setEdtitingTrackTags(null);
@@ -678,7 +680,7 @@ export const AudioPlayerProvider = ({ children }) => {
             credentials:"include",
             body: data})
         .then(res => res.json()).then(data => {addNotification("Tags upated!", notifTypes.SUCCESS)})
-    }
+    };
 
     const playAudioSalad = async (salad = [], index) => {
         if(salad.length === 0) { return}
@@ -686,12 +688,20 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(index || 0);
         setShouldInitPlay(true);
 
-    }
+    };
 
+    const openTagWindow = () => {
+        setTagWindowOpen(true);
+    };
+    const closeTagWindow = () => {
+        setTagWindowOpen(false);
+    }
 
     return (
         <AudioPlayerContext.Provider 
-        value={{/* all function logic */  
+        value={{
+            closeTagWindow,
+            openTagWindow, 
             saladContext,
             setSaladContext,  
             playAudioSalad,
@@ -739,9 +749,16 @@ export const AudioPlayerProvider = ({ children }) => {
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
             {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
             {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}
+            {(tagWindowOpen) && <EditTagsWindow/>}
         </AudioPlayerContext.Provider>
     );
 }
 
 //this is to import for the child components to call audio control functions
-export const useAudioPlayer = () => useContext(AudioPlayerContext);
+export const useAudioPlayer = () => {
+    const context = useContext(AudioPlayerContext);
+    if (context === undefined) {
+      throw new Error("useAudioPlayer must be used within an AudioPlayerProvider");
+    }
+    return context;
+  };

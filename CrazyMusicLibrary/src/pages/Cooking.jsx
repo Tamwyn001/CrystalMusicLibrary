@@ -1,4 +1,4 @@
-import { IconLabel, IconMusicCode, IconSearch, IconTagStarred, IconX } from "@tabler/icons-react";
+import { IconLabel, IconMusicCode, IconSearch, IconTags, IconTagStarred, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 import ActionBarEntry from "../components/ActionBarEntry";
@@ -16,7 +16,7 @@ const Cooking = () => {
     const searchInputRef = useRef(null);
     const [searchbarFocused, setSearchbarFocused ] = useState(false);
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
-    const { playAudioSalad, setSaladContext, saladContext } = useAudioPlayer();
+    const { playAudioSalad, setSaladContext, saladContext, openTagWindow } = useAudioPlayer();
     const [ currentCookingContent, setCurrentCookingContent ] = useState([]);
     const [ mostUsedTags, setMostUsedTags ] = useState([]);
     const {addNotification, notifTypes } = useNotifications();
@@ -92,7 +92,7 @@ const Cooking = () => {
 
     useEffect(() => {
         setSaladContext(currentCookingContent);
-        if(currentCookingContent.length === 0 ){return}
+        if(currentCookingContent.length === 0 ){setTracks([]); return}
         const data = new FormData();
         data.append("tags", JSON.stringify(currentCookingContent.map(tag => tag.id)));
         fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
@@ -127,6 +127,7 @@ const Cooking = () => {
     return(
         <div className="cooking-div">
             <h2>Here select some tags and play the music!</h2>
+            <div className="cooking-header">
             <div className="action-bar" style={{margin : "auto"}} ref={wrapperRef}>
                 <div className="action-bar-research" id="playlist-researchbar" style={{zIndex : "2"}} >
                     <div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>
@@ -155,8 +156,12 @@ const Cooking = () => {
 
                         </List>
                     </div>
-                </div>
-                
+                 </div>
+
+            </div>
+            <button className="open-tags-edit" onClick={openTagWindow}>
+                    <IconTags/>
+                </button>
             </div>
             <div className="cooking-selection">
                 <div className="cooking-actions">
