@@ -6,7 +6,7 @@ const Database = require("better-sqlite3");
 const path = require("path");
 
 let dbInstance = null
-const LATEST_DATABASE_VERSION = 2;
+const LATEST_DATABASE_VERSION = 3;
 
 
 // Higher order function - returns a function that always runs in a transaction
@@ -206,7 +206,7 @@ const upgradeDbVersion = () => {
           name VARCHAR(255),
           color CHAR(7)
       );`,
-      `CREATE TABLE IF NOT EXISTS  tags_to_users(
+      `CREATE TABLE IF NOT EXISTS tags_to_users(
           tag_id VARCHAR(36) NOT NULL,
           owner_id INT NOT NULL,
           PRIMARY KEY (tag_id, owner_id),
@@ -229,10 +229,35 @@ const upgradeDbVersion = () => {
       console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v2.\x1b[0m Added tag support and date album was added to library.");
   }
 
-  if (currentVersion < 3){
-    // later added modifications
-    // console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v3.\x1b[0m Added tag support and date album was added to library.");
-
+  if(currentVersion < 3){
+    const instructionsToV3 = 
+      [ "UPDATE schema_version SET version = 3;",
+       ` CREATE TABLE IF NOT EXISTS salads(
+          id VARCHAR(36) PRIMARY KEY,
+          name VARCHAR(255),
+          color CHAR(7)
+      );`,
+      `CREATE TABLE IF NOT EXISTS salads_to_users(
+          salad_id VARCHAR(36) NOT NULL,
+          owner_id INT NOT NULL,
+          PRIMARY KEY (salad_id, owner_id),
+          FOREIGN KEY (owner_id) REFERENCES users(id),
+          CONSTRAINT fk_salad_id FOREIGN KEY (salad_id) REFERENCES salads(id) ON DELETE CASCADE
+      );`,
+       //Each salad is unique to a user, so the mapped tags are proper to the users as well.
+      `CREATE TABLE IF NOT EXISTS  tags_to_salads( 
+          tag_id VARCHAR(36) NOT NULL,
+          salad_id VARCHAR(36) NOT NULL,
+          PRIMARY KEY (tag_id, salad_id),
+          FOREIGN KEY (tag_id) REFERENCES tags(id),
+          CONSTRAINT fk_salad_id FOREIGN KEY (salad_id) REFERENCES salads(id) ON DELETE CASCADE
+      );`
+      ]; 
+      const upgradeV3 = asTransaction(() => {
+        instructionsToV3.forEach(action => {dbInstance.prepare(action).run();})
+      })
+      upgradeV3();
+      console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v3.\x1b[0m Added salad support.");
   }
 
 

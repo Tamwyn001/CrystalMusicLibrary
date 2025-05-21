@@ -1,4 +1,4 @@
-import { IconLabel, IconMusicCode, IconSearch, IconTags, IconTagStarred, IconX } from "@tabler/icons-react";
+import { IconCheck, IconLabel, IconMusicCode, IconSalad, IconSaladFilled, IconSearch, IconTags, IconTagStarred, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
 import ActionBarEntry from "../components/ActionBarEntry";
@@ -6,11 +6,12 @@ import apiBase from "../../APIbase";
 import CookingTagEntry from "../components/CookingTagEntry";
 import '../components/TagEditor.css';
 import './Cooking.css';
+import _ from 'lodash'
 import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useNotifications } from "../GlobalNotificationsProvider";
 import TrackView from "../components/TrackView";
-import _, { includes } from 'lodash';
+import { HexColorPicker } from "react-colorful";
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -21,6 +22,12 @@ const Cooking = () => {
     const [ mostUsedTags, setMostUsedTags ] = useState([]);
     const {addNotification, notifTypes } = useNotifications();
     const [ tracks, setTracks ] = useState([]);
+    const [ savingNewSalad, setSavingNewSalad ] = useState(false);
+    const [ displayPicker, setDisplayPicker] = useState(false);
+    const colorPickerRef = useRef(null);
+    const saladNameInputRef = useRef(null);
+    const [ color, setColor ] = useState('#aabbcc');
+    const [ allowsSave, setAllowSave ] = useState(true);
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -38,7 +45,7 @@ const Cooking = () => {
         .then(data => {
 
             const proposed = data.map(tag => {
-                return {...tag, type : tag.total, icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
+                return {...tag, type : tag.total, typeElem: "tag", icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
             })
             setMostUsedTags(proposed);
             setProposedEntryToAdd(proposed)
@@ -55,9 +62,8 @@ const Cooking = () => {
     
     const fetchSearchResults = (e) => {
         const input = e.target.value;
-
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd(mostUsedTags);return;} //return if empty or only white spaces
-        fetch(`${apiBase}/read-write/search/${input}/tags`, {
+        fetch(`${apiBase}/read-write/search/${input}/tags,salads`, {
             method: "GET"})
         .then((res) => {
             if (res.ok) {
@@ -66,13 +72,15 @@ const Cooking = () => {
             throw new Error("Error fetching search results");
         })
         .then((data) => {
-            
-            const proposed = data.tags?.map(tag => {
-                return {...tag, icon : () => <IconLabel color={tag.color}/>}
-            })
-            setProposedEntryToAdd(proposed);})
-
-    }
+            const proposed = [ 
+                ...data.tags?.map(tag => {
+                    return {...tag, typeElem : "tag", icon : () => <IconLabel color={tag.color}/>}}),
+                ...data.salads?.map(salad => {
+                    return {...salad, typeElem : "salad", icon : () => <IconSalad color={salad.color}/>}})];  
+            console.log(proposed);
+            setProposedEntryToAdd(proposed);
+        });
+    };
     const closeSearchBar = () => {
         setSearchbarFocused(false);
     }
@@ -80,10 +88,11 @@ const Cooking = () => {
         setCurrentCookingContent(prev => prev.filter(tag => tag.id !== id));
     }
 
-    const handleActionBarEntryClick = (id) => {
+    const handleActionBarEntryClick = (entry) => {
         closeSearchBar();
-        if(currentCookingContent.find(tag => tag.id === id.id)){return}
-        setCurrentCookingContent(prev => [...prev, id]);
+        console.log(entry);
+        if(currentCookingContent.find(tag => tag.id === entry.id)){return}
+        setCurrentCookingContent(prev => [...prev, entry]);
     }
     const playSalad = async () => {
         playAudioSalad(tracks.map(track => track.id))
@@ -92,15 +101,25 @@ const Cooking = () => {
 
     useEffect(() => {
         setSaladContext(currentCookingContent);
-        if(currentCookingContent.length === 0 ){setTracks([]); return}
+        //avoid refetching when we just created a
+        // if(currentCookingContent.find(data => data.type ==="just_wrapped_salad")) {
+        //     return
+        // }
+        
+        if(currentCookingContent.length === 0 ){setTracks([]); setAllowSave(true); return}
+        setAllowSave(currentCookingContent.findIndex(tag => tag.typeElem==="salad") === -1);
+
         const data = new FormData();
-        data.append("tags", JSON.stringify(currentCookingContent.map(tag => tag.id)));
+        data.append("tags", JSON.stringify(
+            currentCookingContent.filter(elem => elem.typeElem === "tag").map(tag => tag.id)));
+        data.append("salads", JSON.stringify(
+            currentCookingContent.filter(elem => elem.typeElem === "salad").map(salad => salad.id)));
+
         fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
         .then(res => res.json())
         .then(data => {
             setTracks(_.shuffle(JSON.parse(data)));
             if(tracks.length > 0){
-                
                 addNotification("Salad received! Enjoy..", notifTypes.SALAD);
             } else {
                 addNotification("This salad is empty.. No tracks found.", notifTypes.SALAD);
@@ -109,7 +128,29 @@ const Cooking = () => {
     },[currentCookingContent])
 
     const saveSalad = async () =>{
-        addNotification("Avaliale soon :)", notifTypes.SALAD);
+        setSavingNewSalad(true);
+    }
+
+    const sendNewSalad = () => {
+        setSavingNewSalad(false);
+        if(currentCookingContent.find(tag => tag.typeElem === "salad")){return;}
+        const data = new FormData();
+        data.append("salad", JSON.stringify({
+            name : saladNameInputRef.current.value,
+            color : color,
+            tags : currentCookingContent.map(tag => tag.id)
+        }));
+
+        fetch(`${apiBase}/read-write/newSalad`, {
+            method: "POST",
+            credentials: 'include',
+            body : data
+        } )
+        .then(res => res.json())
+        .then(data => {
+            addNotification("Salad saved!", notifTypes.SUCCESS);
+            setCurrentCookingContent([data])
+        })
     }
 
     const clickedTrack = (id) => {
@@ -125,7 +166,7 @@ const Cooking = () => {
         
     }
     return(
-        <div className="cooking-div">
+        <div className="cooking-div" >
             <h2>Here select some tags and play the music!</h2>
             <div className="cooking-header">
             <div className="action-bar" style={{margin : "auto"}} ref={wrapperRef}>
@@ -166,12 +207,16 @@ const Cooking = () => {
             <div className="cooking-selection">
                 <div className="cooking-actions">
                 <ButtonWithCallback text={'Play the salad'} icon={<IconMusicCode/>} onClick={playSalad}/>
-                <ButtonWithCallback text={'Save this salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
+                { allowsSave &&
+                    <ButtonWithCallback text={'Save this salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
+                }
                 </div>
                 <div className="cooking-tags" style={{marginBottom : "30px"}}>
                     {currentCookingContent.map(tag =>                     
-                        <div key={tag.id} className="small-tag" style={{backgroundColor : tag.color}}>
-                            <span>{tag.name}</span> <IconX onClick={() => {removeTagFromTrack(tag.id)}}/>
+                        <div key={tag.id} className="small-tag" data-prefix="true" style={{backgroundColor : tag.color}}>
+                            {tag.typeElem === "salad" && <IconSalad data-prefix='true'/>}
+                            <span>{tag.name}</span> 
+                            <IconX onClick={() => {removeTagFromTrack(tag.id)}}/>
                         </div>)}
                 </div>
                 <div className="track-list">
@@ -179,6 +224,17 @@ const Cooking = () => {
                         <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} />))}
                 </div>
             </div>
+            {savingNewSalad ?
+            <div className="edit-tag" style={{left: '-20px', margin : 'auto'}}>
+                <IconX style={{cursor: "pointer"}} onClick={() => {setSavingNewSalad(false)}}/>
+                <input type="text" placeholder="Name your new salad." ref={saladNameInputRef}/>
+                <IconSaladFilled style={{cursor: "pointer"}} id="color-button" color={color} onClick={() => {setDisplayPicker(!displayPicker); }}/>
+                { displayPicker && 
+                    <div ref={colorPickerRef} className="edit-tag-picker" > {/*Need a div to support the ref*/}
+                        <HexColorPicker  color={color} onChange={setColor} />
+                    </div>}
+                <IconCheck onClick={sendNewSalad} style={{cursor: "pointer"}}/>
+            </div> : null}
         </div>
     )
 }

@@ -4,7 +4,6 @@ import './EditTagsWindow.css'
 import ButtonWithCallback from './ButtonWithCallback';
 import { useEffect, useRef, useState } from 'react';
 import apiBase from '../../APIbase';
-import { method } from 'lodash';
 import { FixedSizeList as List} from 'react-window';
 import { HexColorPicker } from 'react-colorful';
 import { useNotifications } from '../GlobalNotificationsProvider';
@@ -115,16 +114,16 @@ const EditTagsWindow = () => {
                     </List>
                 }
                 {editingTag ?
-                    <div className="edit-tag">
+                    <div className="edit-tag" style={{left: '-20px', margin : 'auto'}}>
                         <IconX style={{cursor: "pointer"}} onClick={() => {setEditingTag(null)}}/>
                         <input type="text" placeholder="Name your new tag." ref={renameTagInputRef} defaultValue={editingTag.name}/>
-                        <IconTagFilled id="color-button" color={color} onClick={() => {setDisplayPicker(!displayPicker); }}/>
+                        <IconTagFilled style={{cursor: "pointer"}} id="color-button" color={color} onClick={() => {setDisplayPicker(!displayPicker); }}/>
                         { displayPicker && 
                             <div ref={colorPickerRef} className="edit-tag-picker" > {/*Need a div to supprot the ref*/}
                                 <HexColorPicker  color={color} onChange={setColor} />
                             </div>}
                         <IconCheck onClick={handleModifyTag} style={{cursor: "pointer"}}/>
-                        <IconTrash onClick={() => {setToDeleteElement({type : "tag",  ...editingTag})}}/>
+                        <IconTrash style={{cursor: "pointer"}} onClick={() => {setToDeleteElement({type : "tag",  ...editingTag})}}/>
                     </div> : null}
                 { toDeleteElement ? 
                 <div className='deletion-confirmation'>

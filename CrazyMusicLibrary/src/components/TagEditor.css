@@ -12,8 +12,8 @@
     position: absolute;
     top : 100px;
     z-index: 11;
-    left: 250px
-
+    left: 250px;
+    border: 2px solid lightblue;
 }
 
 .edit-tag-picker{
@@ -34,6 +34,9 @@
     position: relative;
     text-wrap: nowrap;
 }
+.small-tag[data-prefix="true"]{
+    padding-left: 40px;
+}
 .small-tag svg {
     position: absolute;
     right: 10px;
@@ -41,6 +44,12 @@
 }
 .small-tag:hover svg{
     opacity: 0.8;
+}
+.small-tag svg[data-prefix='true']{
+    left: 10px;
+    opacity: 0.5;
+} 
+.small-tag:hover svg[data-prefix='true']{
 }
 
 .track-tags-div{

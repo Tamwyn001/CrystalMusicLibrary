@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -322,7 +322,8 @@ router.get("/trackTags/:trackId", (req, res) => {
 
 router.post("/getSalad",upload.none() , (req,res) => {
     const tags = JSON.parse(req.body.tags);
-    res.json(JSON.stringify(getSaladTracks(tags)));
+    const salads = JSON.parse(req.body.salads)
+    res.json(JSON.stringify(getSaladTracks(tags, salads)));
 });
 
 router.get("/mostUsedTags", (req, res) => {
@@ -355,5 +356,12 @@ router.delete("/delete/:type/:id", (req,res) => {
             break;
     };
     res.json({message: "Deletion successfull!"})
+})
+
+router.post("/newSalad", upload.none(), (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    
+    res.json(registerNewSaladForUser(JSON.parse(req.body.salad), decoded.email))
 })
 module.exports = {router, runServerStats};

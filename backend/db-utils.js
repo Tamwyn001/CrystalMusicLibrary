@@ -347,7 +347,8 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
 const findAudioEntity = (id, restriction = []) => {
     if (restriction.includes("tags")){
         const queryTags = "SELECT * FROM tags WHERE name LIKE ?";
-        return {tags : db.prepare(queryTags).all(`%${id}%`)}
+        const salad = (restriction.includes("salads")) ? db.prepare("SELECT * from salads WHERE name LIKE ?").all(`%${id}%`) : null;
+        return {tags : db.prepare(queryTags).all(`%${id}%`), salads : salad}
     }
     const queryTracks = `
         SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
@@ -601,11 +602,11 @@ const updateTrackTags = (trackId, deleted, current, email) =>{
         db.prepare(deleteQuery).run([trackId, ...deleted]);
     }
     if( current.filter(tag => tag.isNew).length > 0){
-        const {ownerId, username} = db.prepare("SELECT id, username FROM users WHERE email = ?").get(email);
+        const {id : ownerId, username} = db.prepare("SELECT id, username FROM users WHERE email = ?").get(email);
         console.log("New tags", current.filter(tag => tag.isNew).map(tag => tag.name) ,"by \x1b[36m", username, "\x1b[0m.");
         batchInsert("tags", "id, name, color", current.filter(tag => tag.isNew).map(tag => [tag.id, tag.name, tag.color]), true);
         
-        batchInsert("tags_to_users", "tag_id, owner_id",current.filter(tag => tag.isNew).map(tag => [tag.id, ownerId]),true )
+        batchInsert("tags_to_users", "tag_id, owner_id",current.filter(tag => tag.isNew).map(tag => [tag.id, ownerId]),false )
     }
     batchInsert("tracks_to_tags", "tag_id, track_id",current.map(tag => [tag.id, trackId]),true )
 
@@ -620,12 +621,23 @@ const getTrackTags = (trackId) =>{
     return db.prepare(query).all(trackId);
 }
 
-const getSaladTracks = (tagsId) => {
+const getSaladTracks = (tagsId, saladsId) => {
     const placeholders = tagsId.map(() => '?').join(', ');
     const query = `
         SELECT DISTINCT t.id as id, t.title as title, t.duration as rawDuration, t.track_number as track_number
-        FROM tracks_to_tags JOIN tracks t ON t.id = track_id WHERE tag_id IN (${placeholders});`
-    return db.prepare(query).all([...tagsId]);
+        FROM tracks_to_tags JOIN tracks t ON t.id = track_id WHERE tag_id IN (${placeholders});`;
+    console.log(interpolateQuery(query, [...tagsId]));
+    const placeholdersSalad = saladsId.map(() => '?').join(', ');
+    const querySalad = `
+        SELECT DISTINCT t.id as id, t.title as title, t.duration as rawDuration, t.track_number as track_number
+        FROM tags_to_salads t2s
+        JOIN tracks_to_tags t2t
+        JOIN tracks t ON t.id = track_id
+        WHERE t2s.salad_id IN (${placeholdersSalad})
+        AND t2s.tag_id NOT IN (${placeholders});` //used to avoid having the tags already fetched wich results in multiple lines.
+
+    
+    return [...db.prepare(query).all([...tagsId]), ...db.prepare(querySalad).all([...saladsId, ...tagsId])];
 }
 
 const getUserMostUsedTags = (email) => {
@@ -669,9 +681,26 @@ const deleteTag = (id, email) => {
     db.prepare("DELETE FROM tags WHERE id = ?").run(id);
     console.log("Tag", name,"deleted by \x1b[36m", username, "\x1b[0m.");
 
-}
+};
+
+const registerNewSaladForUser = (salad, email) => {
+    if(salad.tags.length === 0) {return null}
+    const userId = db.prepare("SELECT id from users WHERE email = ?").get(email).id;
+    //salad : {name, color, [tags]}
+    
+    const newUuid = uuidv4();
+    const newSaladQuery = `
+    INSERT INTO salads (id, name, color) VALUES (?,?,?);`
+    db.prepare(newSaladQuery).run([newUuid, salad.name, salad.color]);
+    const linkSaladUserQuery = `
+    INSERT INTO salads_to_users (salad_id, owner_id) VALUES (?,?);`
+    db.prepare(linkSaladUserQuery).run([newUuid, userId]);
+    batchInsert("tags_to_salads", "tag_id, salad_id", salad.tags.map(tag => [tag, newUuid]), false);
+    return {id : newUuid, name : salad.name, color : salad.color, type : "salad"}
+};
 
 module.exports = {
+    registerNewSaladForUser,
     deleteTag,
     applyTagEdits,
     getUserTags,
