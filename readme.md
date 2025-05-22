@@ -13,7 +13,7 @@
 </p>
 
 ## Setup
-Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
+Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/latest).
 
 | Windows | Linux | Mac-Os |
 |---------|-------|--------|
