@@ -3,6 +3,7 @@
 # Define paths
 $root = "C:\Users\Tamwyn\Documents\Projets Perso\CrasyMusicLibrary"
 $pkg_root = Join-Path $root "pkg-dist"
+$rootWSL = "/mnt/c/Users/Tamwyn/Documents/Projets Perso/CrasyMusicLibrary"
 $appVersion = "2.0.0"
 
 
