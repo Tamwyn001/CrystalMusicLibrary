@@ -8,7 +8,6 @@ pnpm-debug.log*
 lerna-debug.log*
 
 node_modules
-dist
 dist-ssr
 *.local
 
@@ -22,7 +21,6 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
-backend/.env
 docker.cmd
 /backend/data
 
@@ -35,3 +33,4 @@ GitBanner.png
 HowTo.pdn
 CrazyMusicLibrary/CrazyMusicLibrary.rar
 !backend/.env
+!./backend/dist
