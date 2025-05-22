@@ -268,3 +268,13 @@
   height: 10px;
   border-radius: 5px;
 }
+
+.track-mini-thumbnail{
+  width: 40px;
+  height: auto;
+  padding: 0px;
+  left : 5px;
+  border-radius: 5px;
+  position: absolute;
+  z-index: 0;
+}

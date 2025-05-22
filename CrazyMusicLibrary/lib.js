@@ -14,9 +14,9 @@ export const parseDataSize = (rawSize) => {
     const gb = Math.floor(mb / 1024);
     const tb = Math.floor(gb / 1024);
     const readable = (tb > 0) ?
-        `${tb}TB` : (gb > 0) ?
-            `${gb}GB` : (mb > 0) ?
-                `${mb}MB` : `${kb}KB`;
+        `${Number(rawSize/1024/1024/1024/1024).toFixed(2)}TB` : (gb > 0) ?
+            `${Number(rawSize/1024/1024/1024).toFixed(2)}GB` : (mb > 0) ?
+                `${Number(rawSize/1024/1024).toFixed(2)}MB` : `${Number(rawSize/1024).toFixed(2)}KB`;
     return { kb, mb, gb, tb, readable };
 }
 

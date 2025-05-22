@@ -5,10 +5,11 @@ import SvgHoverToggle from "./SvgHoverToggle";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 
-const TrackView = ({ index, track, playIconId, isSalad = null, onClick }) => {
+const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCover = false }) => {
   const { title, track_number, rawDuration } = track;
   const { playingTrack, openTrackActions} = useAudioPlayer();
   const trackName = track.id;
+  const [ trackCoverURL, setTrackCoverUrl ] = useState('null');
   const [trackFavorite, setTrackFavorite] = useState(false);
   const [ actionsOpened, setActionsOpened] = useState(false);
   const handleClick = () => { 
@@ -24,17 +25,24 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick }) => {
   const GetRandomPlayIcon = () => {
     switch (playIconId) {
       case 0:
-        return <IconPiano className="track-number" playing="piano"/>;
+        return <IconPiano className="track-number" playing="piano" data-showCover={showCover}/>;
       case 1:
-        return <IconVinyl className="track-number" playing="vinyl"/>;
+        return <IconVinyl className="track-number" playing="vinyl" data-showCover={showCover}/>;
       case 2:
-        return <IconRadio className="track-number" playing="piano"/>;
+        return <IconRadio className="track-number" playing="piano" data-showCover={showCover}/>;
       case 'salad':
-        return <IconSalad className="track-number" playing="piano"/>
+        return <IconSalad className="track-number" playing="piano" data-showCover={showCover}/>
     }
   };
   useEffect(() =>{
     setTrackFavorite(track.is_favorite === 1);
+    if(showCover){
+        fetch(`${apiBase}/read-write/trackCover/${track.id}`, {
+          method: 'GET'
+      })
+      .then(response => response.json())
+      .then(data => {setTrackCoverUrl(`${apiBase}/covers/${data}`);})
+    }
   },[])
 
   const toggleFavorite = (e) => {
@@ -76,8 +84,10 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick }) => {
         iconDefault={(!trackFavorite) ? IconHeart :  IconHeartBroken } 
         onClick={toggleFavorite}
      />
-      {(playingTrack === trackName) ? GetRandomPlayIcon() : <p className="track-number">{track_number}</p>}
-      <p style={{flexGrow : '1'}}>{title}</p>
+      {showCover ?  ((trackCoverURL.split('/').pop() === 'null') ? null :
+        <img src={trackCoverURL} className="track-mini-thumbnail" />) : null}
+      {(playingTrack === trackName) ? GetRandomPlayIcon() : showCover ? null : <p className="track-number">{track_number}</p> }
+      <p style={{flexGrow : '1', marginLeft : showCover ? "45px" : "35px" }}>{title}</p>
       <IconDots className={"track-actions-dots" } onClick={clickDots}/>
       <p style={{paddingRight:'10px'}}>{parseAudioDuration(rawDuration).readable}</p>
     </div>

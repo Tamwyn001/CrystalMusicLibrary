@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -205,13 +205,11 @@ router.get("/serverStats", async (req, res) => {
         await promiseServerStats; //this is to a promise when the server stats are already running
     }
     const {date, tracks_byte_usage : tracksByteUsage, covers_byte_usage : coversByteUsage} = latestServerStats();
-    const {free, size} = await checkDiskSpace(process.cwd());
-    res.json({date, tracksByteUsage, coversByteUsage, free, size});
+    res.json({date, tracksByteUsage, coversByteUsage, free : process.env.CML_FREE_STORAGE, size : process.env.CML_TOTAL_STORAGE});
 });
 
 router.get("/diskSpace", async (req, res) => {
-    const {free, size} = await checkDiskSpace(process.cwd());
-    res.json({free, size});
+    res.json({free : process.env.CML_FREE_STORAGE, size : process.env.CML_TOTAL_STORAGE});
 });
 
 router.get("/user-data-usage/:id", async (req, res) => {
@@ -338,10 +336,23 @@ router.get("/getAllUserTags", (req, res) => {
     res.json(getUserTags(decoded.email));
 });
 
+router.get("/getAllUserSalads", (req, res) => {
+    const token =req.cookies.token;
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    res.json(getUserSalads(decoded.email));
+});
+
 router.post(`/applyTagModifications`, upload.none(), (req,res) => {
     // const token =req.cookies.token;
     // const decoded = jwt.verify(token, process.env.JWT_SECRET);
     applyTagEdits(JSON.parse(req.body.tag));
+    res.json({messsage : "Succesfully updated."})
+});
+
+router.post(`/applySaladModifications`, upload.none(), (req,res) => {
+    // const token =req.cookies.token;
+    // const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    applySaladEdits(JSON.parse(req.body.salad));
     res.json({messsage : "Succesfully updated."})
 });
 
@@ -353,6 +364,7 @@ router.delete("/delete/:type/:id", (req,res) => {
             deleteTag(req.params.id, decoded.email);
             break;
         case "salad":
+            deleteSalad(req.params.id, decoded.email);
             break;
     };
     res.json({message: "Deletion successfull!"})

@@ -345,7 +345,7 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(data => {
             setPlayQueue(_.shuffle(data));
             setShouldInitPlay(true);
-
+            setQueuePointer(0);
         });
     };
 
@@ -403,7 +403,7 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(index);
     }
     const fetchTrackCover = (trackName) =>{
-        fetch(`${apiBase}/read-write/trackCover/${trackName.split('.')[0]}`, {
+        fetch(`${apiBase}/read-write/trackCover/${trackName}`, {
             method: 'GET'
         })
         .then(response => response.json())
@@ -446,7 +446,7 @@ export const AudioPlayerProvider = ({ children }) => {
         const tracks = data.map((track) => track.id); // Extract the track name from the response
         setPlayQueue(_.shuffle(tracks));
         setShouldInitPlay(true);
-
+        setQueuePointer(0);
     }
 
     const playLibraryShuffle = async () => {
@@ -455,7 +455,7 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(data => {
             setPlayQueue(_.shuffle(data));
             setShouldInitPlay(true);
-
+            setQueuePointer(0);
         });
     }
 

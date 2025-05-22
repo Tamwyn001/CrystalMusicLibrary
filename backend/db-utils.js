@@ -626,18 +626,21 @@ const getSaladTracks = (tagsId, saladsId) => {
     const query = `
         SELECT DISTINCT t.id as id, t.title as title, t.duration as rawDuration, t.track_number as track_number
         FROM tracks_to_tags JOIN tracks t ON t.id = track_id WHERE tag_id IN (${placeholders});`;
-    console.log(interpolateQuery(query, [...tagsId]));
+
+    const tagTracks = db.prepare(query).all([...tagsId]);
+
     const placeholdersSalad = saladsId.map(() => '?').join(', ');
+    const placehodlersTracksFound = tagTracks.map(() => '?').join(', ');
+
     const querySalad = `
         SELECT DISTINCT t.id as id, t.title as title, t.duration as rawDuration, t.track_number as track_number
         FROM tags_to_salads t2s
-        JOIN tracks_to_tags t2t
-        JOIN tracks t ON t.id = track_id
+        JOIN tracks_to_tags t2t on t2t.tag_id = t2s.tag_id
+        JOIN tracks t ON t.id = t2t.track_id
         WHERE t2s.salad_id IN (${placeholdersSalad})
-        AND t2s.tag_id NOT IN (${placeholders});` //used to avoid having the tags already fetched wich results in multiple lines.
+        AND t.id NOT IN (${placehodlersTracksFound});` //used to avoid having the tags already fetched wich results in multiple lines.
 
-    
-    return [...db.prepare(query).all([...tagsId]), ...db.prepare(querySalad).all([...saladsId, ...tagsId])];
+    return [...tagTracks, ...db.prepare(querySalad).all([...saladsId, ...tagTracks.map(track => track.id)])];
 }
 
 const getUserMostUsedTags = (email) => {
@@ -663,9 +666,17 @@ const getUserTags = (email) => {
     WHERE id IN (SELECT tag_id FROM tags_to_users WHERE owner_id = ?)
     ORDER BY name ASC
     `;
-    const res = db.prepare(query).all([userId]);
-    return(res)
+    return db.prepare(query).all([userId])
+}
 
+const getUserSalads = (email) => {
+    const userId = db.prepare("SELECT id from users WHERE email = ?").get(email).id;
+    const query = `
+    SELECT * FROM salads s
+    WHERE id IN (SELECT salad_id FROM salads_to_users WHERE owner_id = ?)
+    ORDER BY name ASC
+    `;
+    return db.prepare(query).all([userId])
 }
 
 const applyTagEdits = (tagEdits) => {
@@ -675,11 +686,26 @@ const applyTagEdits = (tagEdits) => {
     db.prepare(query).run([tagEdits.name, tagEdits.color, tagEdits.id]);
 };
 
+const applySaladEdits = (saladEdits) => {
+    const query = ` 
+    UPDATE salads SET name = ?, color = ? WHERE id = ?;
+    `;
+    db.prepare(query).run([saladEdits.name, saladEdits.color, saladEdits.id]);
+};
+
 const deleteTag = (id, email) => {
     const username = db.prepare("SELECT username FROM users WHERE email = ?").get(email).username;
     const name = db.prepare("SELECT name FROM tags WHERE id = ?").get(id).name;
     db.prepare("DELETE FROM tags WHERE id = ?").run(id);
     console.log("Tag", name,"deleted by \x1b[36m", username, "\x1b[0m.");
+
+};
+
+const deleteSalad = (id, email) => {
+    const username = db.prepare("SELECT username FROM users WHERE email = ?").get(email).username;
+    const name = db.prepare("SELECT name FROM salads WHERE id = ?").get(id).name;
+    db.prepare("DELETE FROM salads WHERE id = ?").run(id);
+    console.log("Salad", name,"deleted by \x1b[36m", username, "\x1b[0m.");
 
 };
 
@@ -696,10 +722,13 @@ const registerNewSaladForUser = (salad, email) => {
     INSERT INTO salads_to_users (salad_id, owner_id) VALUES (?,?);`
     db.prepare(linkSaladUserQuery).run([newUuid, userId]);
     batchInsert("tags_to_salads", "tag_id, salad_id", salad.tags.map(tag => [tag, newUuid]), false);
-    return {id : newUuid, name : salad.name, color : salad.color, type : "salad"}
+    return {id : newUuid, name : salad.name, color : salad.color, typeElem : "salad"}
 };
 
 module.exports = {
+    applySaladEdits,
+    deleteSalad,
+    getUserSalads,
     registerNewSaladForUser,
     deleteTag,
     applyTagEdits,

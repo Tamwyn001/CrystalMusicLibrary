@@ -18,11 +18,7 @@
   "name": "crystal-music-library",
   "pkg": {
     "assets": [
-      "dist/**/*",
-      "data/covers/**/*",
-      "db/CML_setup.sql",
-      "node_modules/better-sqlite3/build/Release/better_sqlite3.node",
-      ".env"
+      "node_modules/better-sqlite3/build/Release/better_sqlite3.node"
     ],
     "scripts": [
       "server.js",

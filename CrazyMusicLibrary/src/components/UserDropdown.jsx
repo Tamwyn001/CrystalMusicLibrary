@@ -41,6 +41,18 @@ const userDropdown = () =>{
             credentials: 'include'
         })
         .then(res => res.json())
+        .then(res =>{
+            // %{
+            //     fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
+            //     .then((response) => {
+            //         if (response.ok) {
+            //             window.location.href = '/';
+            //         } else {
+            //             console.error('Logout failed');
+            //         }
+            //     })
+            // }
+        })
         .then(data => {setIsAdmin(data);})
     },[])
     return (

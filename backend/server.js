@@ -6,6 +6,8 @@ const path = require("path");
 const isPkg = typeof process.pkg !== "undefined";
 const readline = require("readline")
 const { existsSync, mkdirSync } = require("fs");
+const APP_VERSION = "2.0.0";
+
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
   ? path.join(path.dirname(process.execPath), 'dist')
@@ -165,7 +167,7 @@ app.use(cors({
 
     if (allowedDomains.includes(origin)) return callback(null, true);
     console.log(" User from \x1b[1;31m",`${origin}`,"\x1b[0m is not trusted.");
-    return callback(new Error(`Cette origine (${origin}) n'est pas autorisée.`), false);
+    return callback(new Error(`This (${origin}) is not allowed, try to enter the ip printed when the library got ready.`), false);
   },
   credentials: true,
   exposedHeaders: ["Content-Disposition"]
@@ -216,7 +218,7 @@ try {
 runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n
-\x1b[92m. 🚀     Crystal Music Library Server online\x1b[0m\n
+\x1b[92m. 🚀     Crystal Music Library Server online\x1b[0m v${APP_VERSION}\n
 ✅ The library can be accesed at \x1b[96m http://${localIP}:${PORT}\x1b[0m\n
 ==========================================`);
 });

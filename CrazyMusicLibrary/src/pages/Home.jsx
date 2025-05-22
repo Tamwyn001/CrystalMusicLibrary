@@ -2,6 +2,7 @@ import ProgressBar from "../components/ProgressBar";
 import LibAlbumCard from "../components/LibAlbumCard";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
+import { IconSquarePlus } from "@tabler/icons-react";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
     const fetchAlbums = () => {

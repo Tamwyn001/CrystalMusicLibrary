@@ -12,6 +12,7 @@ import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useNotifications } from "../GlobalNotificationsProvider";
 import TrackView from "../components/TrackView";
 import { HexColorPicker } from "react-colorful";
+import { HSLToHex } from "../../lib";
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -117,9 +118,11 @@ const Cooking = () => {
 
         fetch(`${apiBase}/read-write/getSalad`, {method : "POST", body : data})
         .then(res => res.json())
+        .then(data => JSON.parse(data))
         .then(data => {
-            setTracks(_.shuffle(JSON.parse(data)));
-            if(tracks.length > 0){
+            setTracks(_.shuffle(data));
+            console.log("New tracks received", data);
+            if(data.length > 0){
                 addNotification("Salad received! Enjoy..", notifTypes.SALAD);
             } else {
                 addNotification("This salad is empty.. No tracks found.", notifTypes.SALAD);
@@ -128,10 +131,13 @@ const Cooking = () => {
     },[currentCookingContent])
 
     const saveSalad = async () =>{
+        if( currentCookingContent.length === 0){return}
         setSavingNewSalad(true);
+        setColor(`${HSLToHex(Math.random().toFixed(4)*360, 100.00, 70.80)}`)
     }
 
     const sendNewSalad = () => {
+        if(!saladNameInputRef.current.value){return}
         setSavingNewSalad(false);
         if(currentCookingContent.find(tag => tag.typeElem === "salad")){return;}
         const data = new FormData();
@@ -177,7 +183,7 @@ const Cooking = () => {
                         type="text"
                         id="playlist-searchbar"
                         onChange={fetchSearchResults}
-                        placeholder="Search some tags.."
+                        placeholder="Search some tags or salads.."
                         ref={searchInputRef}
                         onFocus={onSearchbarFocused}/>
                     <div className="action-bar-results" style={{display : `${(searchbarFocused) ?  "block": "none"}`}} >
@@ -213,7 +219,7 @@ const Cooking = () => {
                 </div>
                 <div className="cooking-tags" style={{marginBottom : "30px"}}>
                     {currentCookingContent.map(tag =>                     
-                        <div key={tag.id} className="small-tag" data-prefix="true" style={{backgroundColor : tag.color}}>
+                        <div key={tag.id} className="small-tag" data-prefix={tag.typeElem === "salad"} style={{backgroundColor : tag.color}}>
                             {tag.typeElem === "salad" && <IconSalad data-prefix='true'/>}
                             <span>{tag.name}</span> 
                             <IconX onClick={() => {removeTagFromTrack(tag.id)}}/>
@@ -221,11 +227,11 @@ const Cooking = () => {
                 </div>
                 <div className="track-list">
                     {tracks.map((track, index) => (
-                        <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} />))}
+                        <TrackView key={track.id} index={index} isSalad={clickedTrack} track={track} playIconId={"salad"} showCover={true}/>))}
                 </div>
             </div>
             {savingNewSalad ?
-            <div className="edit-tag" style={{left: '-20px', margin : 'auto'}}>
+            <div className="edit-tag" style={{left: 'calc(50% - 170px)', margin : 'auto'}}>
                 <IconX style={{cursor: "pointer"}} onClick={() => {setSavingNewSalad(false)}}/>
                 <input type="text" placeholder="Name your new salad." ref={saladNameInputRef}/>
                 <IconSaladFilled style={{cursor: "pointer"}} id="color-button" color={color} onClick={() => {setDisplayPicker(!displayPicker); }}/>

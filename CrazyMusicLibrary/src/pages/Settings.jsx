@@ -13,7 +13,19 @@ const Settings = () => {
             method: 'POST',
             credentials: 'include'
         })
-        .then(res => res.json())
+        .then(res => {
+            if(!res.ok)
+            {
+                fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
+                .then((response) => {
+                    if (response.ok) {
+                        window.location.href = '/';
+                    } else {
+                        console.error('Logout failed');
+                    }
+                })
+            return res.json()}
+        })
         .then(data => {setIsAdmin(data);})
     },[])
     const navigate = useNavigate();

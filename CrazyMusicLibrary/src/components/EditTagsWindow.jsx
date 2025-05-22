@@ -14,13 +14,14 @@ const EditTagsWindow = () => {
     const [ userSalads, setUserSalads ] = useState([]);
     const [ displayPicker, setDisplayPicker ] = useState(false);
     const [color, setColor] = useState("#aabbcc");
-    const [ editingTag, setEditingTag ] = useState(null);
+    const [ editingElem, setEditingElem ] = useState(null);
     const renameTagInputRef = useRef(null);
     const colorPickerRef = useRef(null);
     const { addNotification, notifTypes } = useNotifications();
     const [ toDeleteElement, setToDeleteElement ] = useState(null);
     useEffect(() => {
         refetchTags();
+        refreshSalads();
     },[])
 
     const refetchTags = () => {
@@ -31,28 +32,42 @@ const EditTagsWindow = () => {
         .then(res => res.json())
         .then(data => {
             setUserTags(data);
-            console.log(data);
         })
     }
 
-    const openTagEdit = (tag) =>{
-        setEditingTag({type : "tag", ...tag})
-        setColor(tag.color);
+    const refreshSalads = () => {
+        fetch(`${apiBase}/read-write/getAllUserSalads`, {
+            method : "GET",
+            credentials: "include"
+        })
+        .then(res => res.json())
+        .then(data => {
+            setUserSalads(data);
+        })
     }
-    const handleModifyTag = () =>{
-        const tagInfo = {id: editingTag.id, name : renameTagInputRef.current.value, color: color};
+
+    const openElemEdit = (elem) =>{
+        setEditingElem(elem)
+        setColor(elem.color);
+    }
+    const handleModifyElem = () =>{
+        const elemInfo = {id: editingElem.id, name : renameTagInputRef.current.value, color: color};
         const data = new FormData();
-        data.append("tag", JSON.stringify(tagInfo));
-        fetch(`${apiBase}/read-write/applyTagModifications`, {
+        data.append(focusedWindow === 0 ? "tag": "salad", JSON.stringify(elemInfo));
+        fetch(`${apiBase}/read-write/${focusedWindow === 0 ? "applyTagModifications" : "applySaladModifications"}`, {
             method : "POST",
             credentials : "include",
             body : data
         }).then(res => res.json())
         .then(data => {
-            refetchTags();
+            if(focusedWindow === 0 ){
+                refetchTags();
+            }else{
+                refreshSalads();
+            }
             addNotification("Tag updated.", notifTypes.SUCCESS);
         })
-        setEditingTag(null);
+        setEditingElem(null);
     }
 
 
@@ -63,8 +78,12 @@ const EditTagsWindow = () => {
             credentials : "include"
         }).then(res => res.json())
         .then(data => {
-            refetchTags();
-            setEditingTag(null);
+            if(focusedWindow === 0 ){
+                refetchTags();
+            }else{
+                refreshSalads();
+            }
+            setEditingElem(null);
             setToDeleteElement(null);
             addNotification("Tag deleted.", notifTypes.SUCCESS);
         })
@@ -81,49 +100,37 @@ const EditTagsWindow = () => {
                 </div>
                 <div className='edit-tags-content'>
                 {
-                    focusedWindow === 0 ? 
+                    
                     <List
                     className="albumTrackList"
                     height={250}
-                    itemCount={userTags.length}
+                    itemCount={focusedWindow === 0 ? userTags.length : userSalads.length}
                     itemSize={35}
                     width={"100%"}
                     >
-                        {({ index, style }) => (
-                            <div key={index} style={style} className="album-wrapping-track">
-                                <div className='tag-color' style ={{backgroundColor : userTags[index].color}}/>
-                            <span>{userTags[index].name}</span>
-                            <IconPencil className="trackIcon" onClick={() => {openTagEdit(userTags[index])}}/>
-                        </div>)}
+                    {({ index, style }) => (
+                        <div key={index} style={style} className="album-wrapping-track">
+                            <div className='tag-color' style ={{
+                                backgroundColor : focusedWindow === 0 ? userTags[index].color : userSalads[index].color}}/>
+                        <span>{focusedWindow === 0 ? userTags[index].name : userSalads[index].name}</span>
+                        <IconPencil className="trackIcon" onClick={() => {openElemEdit(
+                             focusedWindow === 0 ? {...userTags[index], type : "tag"} : {...userSalads[index] , type : "salad"})}}/>
+                    </div>)}
                     </List>
                     
-                    :
-                    <List
-                    className="albumTrackList"
-                    height={250}
-                    itemCount={userSalads.length}
-                    itemSize={35}
-                    width={"100%"}
-                    >
-                        {({ index, style }) => (
-                            <div key={index} style={style} className="album-wrapping-track">
-                            <div className='tag-color' style ={{backgroundColor : userSalads[index].color}}/>
-                            <span>{userSalads[index].title}</span>
-                            <IconPencil className="trackIcon" onClick={() => {openTrackRemap(userSalads[index])}}/>
-                        </div>)}
-                    </List>
+        
                 }
-                {editingTag ?
+                {editingElem ?
                     <div className="edit-tag" style={{left: '-20px', margin : 'auto'}}>
-                        <IconX style={{cursor: "pointer"}} onClick={() => {setEditingTag(null)}}/>
-                        <input type="text" placeholder="Name your new tag." ref={renameTagInputRef} defaultValue={editingTag.name}/>
+                        <IconX style={{cursor: "pointer"}} onClick={() => {setEditingElem(null)}}/>
+                        <input type="text" placeholder="Name your new tag." ref={renameTagInputRef} defaultValue={editingElem.name}/>
                         <IconTagFilled style={{cursor: "pointer"}} id="color-button" color={color} onClick={() => {setDisplayPicker(!displayPicker); }}/>
                         { displayPicker && 
                             <div ref={colorPickerRef} className="edit-tag-picker" > {/*Need a div to supprot the ref*/}
                                 <HexColorPicker  color={color} onChange={setColor} />
                             </div>}
-                        <IconCheck onClick={handleModifyTag} style={{cursor: "pointer"}}/>
-                        <IconTrash style={{cursor: "pointer"}} onClick={() => {setToDeleteElement({type : "tag",  ...editingTag})}}/>
+                        <IconCheck onClick={handleModifyElem} style={{cursor: "pointer"}}/>
+                        <IconTrash style={{cursor: "pointer"}} onClick={() => {setToDeleteElement(editingElem)}}/>
                     </div> : null}
                 { toDeleteElement ? 
                 <div className='deletion-confirmation'>

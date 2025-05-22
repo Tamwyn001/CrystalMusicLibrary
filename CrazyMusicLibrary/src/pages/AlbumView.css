@@ -116,6 +116,7 @@
     position: absolute;
     cursor: pointer;
     height: 24px;
+    z-index: 2;
 }
 
 .track-actions-dots{
@@ -131,9 +132,13 @@
   
 .track-number{
     margin-left: 10px;
+    position: absolute;
 }
 :root{
     --dashArray: 60;
+}
+.track-number[data-showCover="true"]{
+    color: rgb(255, 255, 255);
 }
 .track-number[playing="piano"], .track-number[playing="vinyl"]{
     margin-left: 4px;

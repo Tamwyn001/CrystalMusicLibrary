@@ -277,7 +277,7 @@ const AlbumView = ({isPlaylist = false}) => {
                                 </div>}
 
                             {tracks.map((track, index) => (
-                                <TrackView key={track.id} index={index} track={track} onClick={trackCliced} playIconId={currentPlayIcon} />))}
+                                <TrackView key={track.id} index={index} track={track} onClick={trackCliced} playIconId={currentPlayIcon} showCover={isPlaylist}/>))}
                         </div>
                     </div>
                 </div>

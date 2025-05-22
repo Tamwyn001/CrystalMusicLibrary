@@ -245,11 +245,11 @@ const upgradeDbVersion = () => {
           CONSTRAINT fk_salad_id FOREIGN KEY (salad_id) REFERENCES salads(id) ON DELETE CASCADE
       );`,
        //Each salad is unique to a user, so the mapped tags are proper to the users as well.
-      `CREATE TABLE IF NOT EXISTS  tags_to_salads( 
+      `CREATE TABLE IF NOT EXISTS tags_to_salads( 
           tag_id VARCHAR(36) NOT NULL,
           salad_id VARCHAR(36) NOT NULL,
           PRIMARY KEY (tag_id, salad_id),
-          FOREIGN KEY (tag_id) REFERENCES tags(id),
+          CONSTRAINT fk_salad_tag FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE,
           CONSTRAINT fk_salad_id FOREIGN KEY (salad_id) REFERENCES salads(id) ON DELETE CASCADE
       );`
       ]; 

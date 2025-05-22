@@ -13,9 +13,14 @@
 </p>
 
 ## Setup
-1. Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
-2. Unzip the files to a folder.
-3. Open the ```.env``` file and set the variables:
+Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/tag/v1.0.0).
+
+| Windows | Linux | Mac-Os |
+|---------|-------|--------|
+| x64     | x64   | see [Host with NodeJs](/doc/buildFromSource.md)    |
+
+1. Unzip the files to a folder.
+2. Open the ```.env``` file and set the variables:
    
    It may be not visible at first. In Windows go under display > show hidden files.
    
@@ -38,8 +43,9 @@
     # The port where the server will be hosted. Default is 4590. 
     ```
 
-5. Run the ```crystal-music.library.exe``` file on Windows or similar for other OS.
-6. Once the server is running, an IP will be printed, open it in the browser, or on your mobile phone.
+3. Run the ```crystal-music.library.exe``` file on Windows or similar for other OS.
+4. **If this step fails:** see 
+5. Once the server is running, an IP will be printed, open it in the browser, or on your mobile phone.
 
 
 ## Use
