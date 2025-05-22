@@ -59,6 +59,7 @@ Download the executables from the latest release [here](https://github.com/Tamwy
 If you want to share this with your local network, just register new users, when these open the link.
 
 ## Roadmap
-- **v2.0.0**: 💿 Playlists (tagging), genres, edit albums, search-bar
-- **v3.0.0**: 🛠️ Relocate songs, cross-fading, internet radio
+- ✔️**v1.0.0**: 🎺 Minimal proof of concept : play songs and add music.
+- ✔️**v2.0.0**: 💿 Playlists (tagging), genres, edit albums, search-bar, relocate songs, cross-fading
+- **v3.0.0**: 🛠️ Internet radio, tutorial, spectrogram add linking external filebase
 - **v4.0.0**: 📈 Library graph, complex song use analysis
