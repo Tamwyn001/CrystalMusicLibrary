@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import LibArtistsCard from "../components/LibArtistsCard";
 import apiBase from "../../APIbase";
+import { AddMusicShortcut } from "../components/AddMusicShortcut";
 
 const ArtistsView = () => {
     const [artists, setArtists] = useState([]);
@@ -30,9 +31,10 @@ const ArtistsView = () => {
 
     return(
         <div className="home album-displayer">
-           {artists?.map((artist) => (
+           {artists?.length !== 0 ? artists.map((artist) => (
             <LibArtistsCard key={artist.id} artist={artist}/>
-        ))}
+        )) 
+        : <AddMusicShortcut/> }
         </div>
     )
 }

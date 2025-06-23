@@ -6,7 +6,7 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
         setMusicDetected(true)
         if (e.target.files) {
             console.log('New tracks')
-            tracksSelected(e.target.files);
+            tracksSelected(Array.from(e.target.files));
             e.target.files = null; // Reset the input value
         }
     };

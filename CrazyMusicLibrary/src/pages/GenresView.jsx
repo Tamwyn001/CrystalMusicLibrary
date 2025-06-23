@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 
 import GenreCard from "../components/GenreCard";
+import { AddMusicShortcut } from "../components/AddMusicShortcut";
 
 const GenresView = ({}) => {
     const [genres, setGenres] = useState([]);
@@ -31,9 +32,10 @@ const GenresView = ({}) => {
 
     return( 
         <div className="home genre-displayer">
-            {genres.map((genre) => (
+            {genres?.length !== 0 ? genres.map((genre) => (
             <GenreCard key={genre.id} genre={genre}/>
-        ))}
+        ))
+        : <AddMusicShortcut/>}
         </div>
     )
 }

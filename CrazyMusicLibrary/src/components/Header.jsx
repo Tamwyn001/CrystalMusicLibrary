@@ -12,6 +12,7 @@ import { useNavigate } from 'react-router-dom'
 import { useGlobalActionBar } from '../GlobalActionBar.jsx'
 import VolumeBar from './VolumeBar.jsx'
 import RadialProgressBar from './RadialProgressBar.jsx'
+import {useEventContext} from '../GlobalEventProvider.jsx'
 
 
 
@@ -28,6 +29,7 @@ const Header = () => {
     const [uploadProgress, setUploadProgress] = useState(null) //{done : Numver, total: Number}
     const [uploadPercent, setUploadPercent] = useState(null) // Number
     const navigate = useNavigate();
+    const { subscribe } = useEventContext();
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
         if(visible){
@@ -37,9 +39,14 @@ const Header = () => {
         }
     }
 
-    function openNewMusic (){
+    const openNewMusic = () => {
         setNewMusicActive(true);
     }
+
+    useEffect(() => {
+        const unsubscribeAddMusic = subscribe('openAddMusic', openNewMusic);
+        return () => {unsubscribeAddMusic();}
+    },[])
 
     const closeNewMusic = () => {
         setNewMusicActive(false);

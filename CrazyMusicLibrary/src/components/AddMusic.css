@@ -35,3 +35,10 @@
     flex-direction: column;
     height: calc(100% - 200px);
 }
+.add-music-shortcut{
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    gap: 20px;
+    margin : auto;
+}

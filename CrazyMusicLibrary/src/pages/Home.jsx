@@ -3,6 +3,7 @@ import LibAlbumCard from "../components/LibAlbumCard";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 import { IconSquarePlus } from "@tabler/icons-react";
+import { AddMusicShortcut } from "../components/AddMusicShortcut";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
     const fetchAlbums = () => {
@@ -31,9 +32,9 @@ const Home = ({}) => {
 
     return(
         <div className="home album-displayer">
-           {albums.map((album) => (
+           {albums?.length !== 0 ? albums.map((album) => (
             <LibAlbumCard key={album.id} album={album}/>
-        ))}
+        )) : <AddMusicShortcut/>}
         </div>
     )
 }

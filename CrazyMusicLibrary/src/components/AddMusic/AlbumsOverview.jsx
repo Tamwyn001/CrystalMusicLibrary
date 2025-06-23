@@ -10,7 +10,7 @@ const AlbumsOverview = ({albums, addNewMusic, deleteAlbum, editAlbum, publish}) 
         <div className="albums-overview">
             <div className="album-overview-container">{cards.reverse()}</div>
             {/* <button className="roundButton" onClick={addNewMusic}>Add new music</button> */}
-            <button className="roundButton" onClick={publish}>Publish to library</button>
+            {albums.length > 0 && <button className="roundButton" onClick={publish}>Publish to library</button>}
 
         </div>
     )

@@ -70,8 +70,8 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
 
 
 
-    let awaitForTrackOverwite = useRef(false); //used to avoid setting the state when the user deletes the album
-    let pendingTracksForMetaFetch = useRef(null);
+    const awaitForTrackOverwite = useRef(false); //used to avoid setting the state when the user deletes the album
+    const pendingTracksForMetaFetch = useRef(null);
 
     const handleTracksSelected = async (tracks) => {
         console.log("Tracks selected: ", tracks);
@@ -80,7 +80,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         setTotalMeta(tracks.length);
         setToAddTracks((prev) => [...prev, ...tracks]); // Add the new metadatas to the list of tracks
         pendingTracksForMetaFetch.current = tracks;
-        let idMapping = [];
+        const idMapping = [];
         for (let i = 0; i < tracks.length; i++) {
             idMapping.push({id: uuidv4()});
         }
@@ -89,16 +89,31 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         
     }
     useEffect(() => {
-        console.log("Track meta overwrite changed: ", trackMetaOverwrite);
         if(awaitForTrackOverwite.current){
             awaitForTrackOverwite.current = false;
             beginFetchMeta();
         }
     },[trackMetaOverwrite]);
 
+    useEffect(() => {
+        console.log("To add tracks", toAddTracks)
+    },[toAddTracks]);
+
     const beginFetchMeta = async () => {
         const localMetadatas = await fetchMetadata();
-        handleReconstruct(localMetadatas);
+        if(!localMetadatas){
+            const numToremove = pendingTracksForMetaFetch.current.length;
+            console.log(toAddTracks.length , numToremove);
+
+            setTrackMetaOverwrite(trackMetaOverwrite.filter((elem, index) => index < (trackMetaOverwrite.length - numToremove) ));
+            setToAddTracks(toAddTracks.filter((elem, index) => index < (toAddTracks.length - numToremove) ));
+            setFinishedMeta(0); 
+            setActiveIndex(2);
+        }else{
+            handleReconstruct(localMetadatas);
+        }
+        pendingTracksForMetaFetch.current = null;
+       
     }
 
     const updateAlbums = (newAlbum) => {
@@ -158,16 +173,19 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
     };
 
     const fetchMetadata = async () => {
-        const rawTracks = pendingTracksForMetaFetch.current;
-        const tracks = Array.from(rawTracks)
+        const tracks = pendingTracksForMetaFetch.current;
+        // const tracks = rawTracks
         setActiveIndex(1);
-        let localMetadatas = [];
-        let modifiedMetas = trackMetaOverwrite;
+        const localMetadatas = [];
+        const modifiedMetas = trackMetaOverwrite;
         const relativeShift =  trackMetaOverwrite.length - tracks.length; //get the index just before the new tracks
+        let errorInAdd = false;
         //fetch the filenames from the files and parse them
         await Promise.all(
             tracks.map(async (track, index) => {
-            let meta = await parseBlob(track);
+            const meta = await parseBlob(track).catch((err) => 
+                {console.log("error at", track, err); addNotification(`Track ${track.name} seems corrupted, retry without it.`, notifTypes.ERROR)});
+            if(!meta){errorInAdd = true; return;}
             let modifiedMeta = modifiedMetas[index + relativeShift]; //get the modified metadata from the list
             if(!meta.common.title){
                 meta.common.title = track.name;
@@ -186,6 +204,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
             localMetadatas.splice(index, 0, meta); //insert the metadata at the index of the track
             setFinishedMeta(localMetadatas.length);
         }));       
+        if(errorInAdd){return null}
         setTrackMetaOverwrite(modifiedMetas); //add the modified metadata to the list
         return localMetadatas; //this is to rebuild the albums
     }
@@ -272,7 +291,6 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         setActiveIndex(4);
 
         const covers =  albums.map((album) => {
-            console.log("Album: " , album);
             if(!album.sourceIsBinary){
                 if(!album.coverFile){return null;} //skip if no cover file
                 console.log("Using file reference for cover: " + album.coverFile);
