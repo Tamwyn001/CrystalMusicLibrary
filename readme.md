@@ -62,4 +62,5 @@ If you want to share this with your local network, just register new users, when
 - ✔️**v1.0.0**: 🎺 Minimal proof of concept : play songs and add music.
 - ✔️**v2.0.0**: 💿 Playlists (tagging), genres, edit albums, search-bar, relocate songs, cross-fading
 - **v3.0.0**: 🛠️ Internet radio, tutorial, spectrogram add linking external filebase
-- **v4.0.0**: 📈 Library graph, complex song use analysis
+- **v4.0.0**: 🎤 Speech recognition model based lyrics generation 
+- **v5.0.0**: 📈 Library graph, complex song use analysis
