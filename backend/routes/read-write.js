@@ -1,6 +1,6 @@
 const express = require( "express");
 const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 const checkDiskSpace = require('check-disk-space').default
@@ -81,6 +81,9 @@ router.get("/genre/:id",  (req, res) => {
     res.json(genre);
 });
 
+router.get("/genre/:id/getGenreTracks" , (req,res) => {
+    res.json(getGenreTracks(req.params.id).map(obj => obj.id));
+});
 
 router.get("/artists",  (req, res) => {
     const artists = getArtists();
@@ -149,6 +152,7 @@ router.get("/nextSongs/:containerType/:containerId{/:onlyFavs}",
     const nextSongs = 
         (containerType === "playlist") ? getNextSongsFromPlayist(containerId,onlyFavs, decoded.email ) 
         : (containerType === "album") ? getNextSongsFromAlbum(containerId,onlyFavs, decoded.email) 
+        : (containerType === "genre") ? getGenreTracks(containerId, decoded.email)
         : [];
     res.json(nextSongs.map(song => song.id));
     return;
@@ -161,6 +165,10 @@ router.delete("/deleteTrackFromPlaylist/:playlistId/:trackId", (req, res) => {
 
 router.get("/trackCover/:id", (req, res) => {
     res.json(getTrackCoverPath(req.params.id));
+});
+
+router.get("/trackCoversGenre/:genreId", (req, res) => {
+    res.json(getThreeAlbumCoverForGenre(req.params.genreId));
 });
 
 

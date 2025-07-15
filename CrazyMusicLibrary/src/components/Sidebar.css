@@ -2,11 +2,12 @@
     display: flex;
     flex-direction: column;
     justify-content: space-between;
-    background-color: rgb(237, 255, 247);
+    background: linear-gradient(90deg, rgb(208, 255, 235) -20px, rgb(208, 240, 246) 100%);
     width: calc(100% - 20px);
     margin-top: 10px;
     margin-left: 10px;
     border-radius: 20px;
+    border: solid white 3px;
 }
 .sidebar p{
    padding: 0px;
@@ -20,7 +21,7 @@
 }
 @media screen and (min-width: 714px) {
     .sidebar{
-        width: 350px;
+        width: 334px;
     }
     .stat-short{
         display: block;
@@ -39,22 +40,37 @@
 .sidebar > nav{
     display: flex;
     flex-direction: column;
-    padding: 20px 5px;
+    padding: 15px 10px 10px 10px;
     flex-grow: 1;
+    gap: 10px;
 }
+
 a{
     text-decoration: none;
-    color: #2d4961;
-    font-size: 20px;
+    color: var(--font-color);
     margin: 0px;
     background-color: rgb(228, 255, 250);
-    border-radius: 20px;
-    padding: 7px 20px;
+    border-radius: 10px;
+    padding: 7px 20px 7px 10px;
     display: flex;
     flex-direction: row;
     justify-content: left;
     align-items: center;
+    border: solid rgba(255, 255, 255, 0.358) 3px;
+    font-size: 18px;
+    transition: all 0.2s;
+    position: relative;
 }
 a > svg{
     margin-right: 10px;
+}
+
+a:hover{
+    background-color: rgb(210, 246, 255);
+    border: solid rgba(255, 255, 255, 0.416) 3px;
+    color: rgb(67, 117, 209);
+
+}
+a:hover  svg{
+    color: rgb(36, 89, 188);
 }

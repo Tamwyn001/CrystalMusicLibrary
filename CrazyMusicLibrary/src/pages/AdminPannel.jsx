@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 import Header from "../components/Header";
-import { IconArrowBackUp } from "@tabler/icons-react";
+import { IconArrowBackUp ,IconDatabaseHeart,IconMacro } from "@tabler/icons-react";
 import UserAccountInfosEntry from "../components/UserAccountInfosEntry";
 import { useNavigate } from "react-router-dom";
 import './AdminPannel.css';
+import BackendJob from "../components/BackendJob";
 
 const AdminPannel = () => {
     const [isAdmin, setIsAdmin] = useState(false);
@@ -45,8 +46,24 @@ const AdminPannel = () => {
             <div>
                 <h1>Admin pannel</h1>
                 <p>Only for the true admins.</p>
+                <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline"}}>
+                    <IconDatabaseHeart/>
+                    <h2 style={{margin: "0"}}>Users' storage usage</h2>    
+                </div>
                 <div className="all-users-list">
                     {allUsers.map((user) => (<UserAccountInfosEntry key={user.id} user={user} totalStorage={totalStorage}/>))}
+                </div>
+                <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline"}}>
+                    <IconMacro/>
+                    <h2 style={{marginTop: "0"}}>Backend processes</h2>    
+                </div>
+                <div style={{display : "grid", gridTemplateColumns: "repeat(auto-fill, 500px)", gap:"10px", justifyContent: "center"}}>
+                    <BackendJob jobKey={"JOB_CD"} jobName={"Recompute tracks number and CDs"}
+                        description={"Reextract the metadatas of the songs to remap them to the correct CD or track number."}/>
+                    {/* <BackendJob jobKey={"JOB_LOSSLES"} jobName={"Analyse Lossless"}
+                        description={"Reextract the metadatas of the songs to check for lossy or not songs."}/>
+                    <BackendJob jobKey={"JOB_LYRICS"} jobName={"Analyse Lyrics"}
+                        description={"Runs a voice recognition model to extract dynamic lyrics from the songs."}/> */}
                 </div>
             </div>
         );

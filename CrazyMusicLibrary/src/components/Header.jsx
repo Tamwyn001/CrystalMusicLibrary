@@ -8,7 +8,7 @@ import { useAudioPlayer } from '../GlobalAudioProvider'
 import AudioControls from './AudioControls'
 import CML_logo from './CML_logo.jsx'
 import MusicQueue from './MusicQueue.jsx'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { useGlobalActionBar } from '../GlobalActionBar.jsx'
 import VolumeBar from './VolumeBar.jsx'
 import RadialProgressBar from './RadialProgressBar.jsx'
@@ -30,6 +30,9 @@ const Header = () => {
     const [uploadPercent, setUploadPercent] = useState(null) // Number
     const navigate = useNavigate();
     const { subscribe } = useEventContext();
+
+    const [location, setLocation] = useState(useLocation().pathname === "/admin-pannel" );
+
     function playPauseVisibility(visible){
         setPausePlayVisible(visible);
         if(visible){
@@ -44,6 +47,7 @@ const Header = () => {
     }
 
     useEffect(() => {
+        
         const unsubscribeAddMusic = subscribe('openAddMusic', openNewMusic);
         return () => {unsubscribeAddMusic();}
     },[])
@@ -145,7 +149,8 @@ const Header = () => {
             { volumeShown && <VolumeBar hideComponent={() => setVolumeShown(false)}/>} 
         </div>
         <div className="headerRight">
-            <div className="serach-button-div" onClick={openSearchBar}>
+            {! location && (
+                <div className="serach-button-div" onClick={openSearchBar}>
                 <div className='keyboard-key'>
                     <span>CTRL</span>
                 </div>
@@ -155,6 +160,7 @@ const Header = () => {
                 </div>
                 <IconSearch/>
             </div>
+            )}
             <div style={{position : "relative" , padding : "5px", display: "flex", justifyContent: "center"}} className='upload-music-header'>
             {(uploadPercent) &&
                 <RadialProgressBar percent={uploadPercent} size={44} useText={false} style={{position: "absolute", transform:"translate(-1px, -5.5px)"}}/>}

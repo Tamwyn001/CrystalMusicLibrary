@@ -344,7 +344,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
             bodyFormData.append("trackMeta", JSON.stringify(trackMetaOverwrite[i])); // Append the metadata, BEFORE the track, otherwise might not be populated yet
             bodyFormData.append("music", track); // Append each file individually
             setSendingFile(track.name);
-            
+            uploadProgress({done : i, total: toAddTracks.length });
             await axios({
                 method: "POST",
                 data: bodyFormData,
@@ -363,7 +363,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
                 },
               })
               .then(() => {
-                    uploadProgress({done : i, total: toAddTracks.length });
+                   
                 })
               .catch((error) => {
                 console.error("Error uploading track:", error);});

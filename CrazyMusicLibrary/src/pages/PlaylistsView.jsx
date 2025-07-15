@@ -25,7 +25,7 @@ const PlaylistsView = () => {
     
     return(
         <div>
-            <ButtonWithCallback className="buttonRound" onClick={createNewPlaylist} style={{marginBottom : "40px"}} icon={<IconCategoryPlus/>} text={"Create a new playlsit"}/>
+            <ButtonWithCallback className="buttonRound" onClick={createNewPlaylist} style={{marginBottom : "40px"}} icon={<IconCategoryPlus/>} text={"Create a new playlist"}/>
             <div className="album-displayer">
                 {playlists.map((playlist) => <PlaylistCard key={playlist.id} playlist={playlist}/>)}
             </div>

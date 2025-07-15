@@ -93,6 +93,7 @@ setupDatabase(resolvedDatabasePath, basePath);
 const { networkInterfaces } = require("os");
 
 const authRouter = require("./routes/auth.js");
+
 console.log(`✅ Auth routes initialized`);
 const { router : readWriteRouter, runServerStats } = require("./routes/read-write.js");
 const cookieParser = require("cookie-parser");
@@ -188,6 +189,9 @@ app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
+const jobRouter = require("./routes/jobs.js");
+app.use("/jobs", jobRouter);
+console.log(`  .      Backend jobs`);
 console.log(`✅ Routes initialized`);
 app.get("/isResponding", (req, res) => {
   res.json({ message: "Server is responding" });

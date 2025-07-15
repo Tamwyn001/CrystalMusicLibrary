@@ -64,3 +64,10 @@ export const HSLToHex = (h,s,l) => {
 export const lerp  = (a,b,x) => {
   return a + (b-a)*x
 } 
+
+export const trimString = (string, max ) => {
+  if (string.length > max){
+    return string.substring(0,max-2) + "..";
+  }
+  return string;
+}

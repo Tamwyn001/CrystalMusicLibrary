@@ -1,9 +1,9 @@
 # 2025 Arto Steffan - Crystal Music Librarry Compilation script
 
 # Define paths
-$root = "C:\Users\Tamwyn\Documents\Projets Perso\CrasyMusicLibrary"
+$root = "C:\Users\Tamwyn\Documents\Projets Perso\CrystalMusicLibrary"
 $pkg_root = Join-Path $root "pkg-dist"
-$rootWSL = "/mnt/c/Users/Tamwyn/Documents/Projets Perso/CrasyMusicLibrary"
+$rootWSL = "/mnt/c/Users/Tamwyn/Documents/Projets Perso/CrystalMusicLibrary"
 $appVersion = "2.0.0"
 
 

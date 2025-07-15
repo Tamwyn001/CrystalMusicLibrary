@@ -1,0 +1,79 @@
+
+
+.genre-card{
+    height: 200px;
+    width: 350px;
+    background-color: aliceblue;
+    border-radius: 20px;
+    text-align: center;
+    cursor: pointer;
+    overflow: hidden;
+    position: relative;
+    background-color: #ffffff53;
+}
+
+.genre-card:hover .genre-name p{
+    width: 90%;
+    
+}
+.genre-name p{
+    color: white;
+    text-align: center ;
+    justify-self: center;
+    position: relative;
+    width: 50%;
+    margin: auto;
+    border-radius: 10px 10px 0px 0px;
+    background-color: #64646492;
+    transition: all 0.2s;
+}
+.genre-name{
+    position: absolute;
+    bottom: -4px;
+    right: 0;
+    width: 330px;
+    padding: 4px 10px;
+}
+
+.genre-img-cover{
+    object-fit: cover;
+    translate: 0px -500px;
+    border-radius: 15px;
+    scale: var(--scale);
+    filter: blur(0px) opacity(1) brightness(1);
+    transition: transform 0.5s;
+    transition: filter 0.5s;
+
+
+}
+.genre-img-cover:hover{
+    scale: calc(var(--scale) + 0.02);
+
+}
+
+/*   */
+.img-pivot{
+    rotate: calc(-38deg + 20deg + 10deg * var(--start-angle));
+    transition: all 0.2s;
+    position: absolute;
+    bottom: -500px;
+    right: 100px;
+    opacity: 0;
+
+}
+
+.genre-card:hover{
+    background-color: #ffffff8b;
+
+}
+.genre-card:hover .img-pivot{
+    rotate: calc(-38deg + 25deg + 15deg * var(--start-angle));
+    opacity: 1;
+
+    /* animation: translation calc(var(--speed) * 20s) infinite linear var(--start-delay);  */
+}
+.genre-img-cover[data-hidden="true"]{
+    filter: blur(3px) opacity(0.4) brightness(0.3);
+}
+
+

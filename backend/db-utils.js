@@ -3,6 +3,7 @@ const { currentDate, interpolateQuery } = require("./lib.js");
 const path = require("path")
 const { unlinkSync } = require("fs");
 const { v4 : uuidv4} = require("uuid");
+// const {_} = require("lodash");
 const db = getDatabase();
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
@@ -117,7 +118,9 @@ const getPlaylist = (id, usermail, shortInfos) => {
 
  const getAlbum = (id, usermail) => {
     const queryAlbumInfos = `
-        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover, a.description AS description, a.release_date AS release_date
+        SELECT a.id AS id, a.title AS title, ad.name AS artist, a.cover AS cover,
+            a.description AS description, a.release_date AS release_date,
+            a.lossless as lossless
         FROM albums AS a 
         LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
         LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
@@ -133,7 +136,7 @@ const getPlaylist = (id, usermail, shortInfos) => {
     const tracksInfos = `
         SELECT t.id AS id, t.title AS title, t.track_number AS track_number, t.duration AS rawDuration, EXISTS (
             SELECT entry_id FROM favorites WHERE entry_id = t.id AND (user_id IN (SELECT id FROM users WHERE email = ?))
-        ) as is_favorite
+        ) as is_favorite, t.disc as disc
         FROM tracks AS t 
         WHERE t.album = ?
         ORDER BY track_number ASC
@@ -170,6 +173,30 @@ const getGenreAlbums = (id) => {
     const queryInfos = `SELECT name FROM genres WHERE id = ?`;
     return {albums : db.prepare(queryAlbums).all(id), 
             name : db.prepare(queryInfos).get(id).name};
+}
+
+const getGenreTracks = (genreId, user) => {
+    // Todo: to user support
+    const genreTracks = `
+        SELECT t.id as id FROM tracks t
+        JOIN albums_to_genres a2g ON t.album = a2g.album
+        WHERE a2g.genre = ?
+        ORDER BY a2g.album, t.id ASC;
+    `;
+    const result =_.shuffle(db.prepare(genreTracks).all(genreId));
+        switch(result.length){
+            case 0:
+                break;
+            case 1:
+                result = [result[0], result[0], result[0]];
+                break;
+            case 2:
+                result = [result[0], result[1], result[1]];
+                break;
+            default:
+                result = [result[0], result[1], result[2]];
+        }
+    return ;
 }
 
  const getTrackNameCover = (id) => {
@@ -236,6 +263,20 @@ const getGenreAlbums = (id) => {
     } else {
         return null; // or a default cover path
     }
+}
+
+const getThreeAlbumCoverForGenre = (genreId) => {
+    const query = `
+        SELECT a.cover AS cover
+        FROM albums_to_genres a2g
+        JOIN albums a on a2g.album = a.id
+        WHERE a2g.genre = ?;
+    `;
+    // Todo: install Lodash and suffle the result
+    //  var result = _.shuffle(db.prepare(query).all(genreId));
+    var result = db.prepare(query).all(genreId);
+
+    return result.map(res => res.cover);
 }
 
  const getTrackIndex = (trackId) => {
@@ -726,6 +767,8 @@ const registerNewSaladForUser = (salad, email) => {
 };
 
 module.exports = {
+    getThreeAlbumCoverForGenre,
+    getGenreTracks,
     applySaladEdits,
     deleteSalad,
     getUserSalads,

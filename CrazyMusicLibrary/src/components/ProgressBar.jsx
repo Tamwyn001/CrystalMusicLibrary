@@ -1,5 +1,5 @@
 import './ProgressBar.css';
-const ProgressBar = ({percent, showPercent=false, isMarquee = false, fillColor = "#fffdff", style={}, initialising = false, onClickPercentage = null}) => {
+const ProgressBar = ({percent, text=null, showPercent=false, isMarquee = false, fillColor = "#fffdff", style={}, initialising = false, initialisingColor="white", onClickPercentage = null, filter=""}) => {
     const calcClickedPrecent = (e) => { 
         if (initialising || (!onClickPercentage))  return;
         const progressBar = e.currentTarget;
@@ -9,11 +9,12 @@ const ProgressBar = ({percent, showPercent=false, isMarquee = false, fillColor =
     }
     return(
         <div className="progressBar" style={style} onClick={calcClickedPrecent}>
-            <div className="progressFill" style={{width : `${percent}%`, backgroundColor : `${fillColor}`, ...style}}/>
+            <div className="progressFill" style={{width : `${percent}%`, background : `${fillColor}`, ...style}}/>
         {(initialising)?
-            <div className="progressFill" init="init" style={{ backgroundColor : 'white', opacity : '0.5', ...style}}/>
+            <div className="progressFill" init="init" style={{ backgroundColor : initialisingColor, opacity : '0.5', ...style}}/>
         :null}
            {showPercent && (<span className="progressPercent" style={{color : `black`}}>{percent + "%"}</span>)}
+           {text && (<span className="progressPercent" style={{color : `black`, margin:"auto"}}>{text}</span>)}
         </div>
     )
 }

@@ -148,8 +148,9 @@ export const AudioPlayerProvider = ({ children }) => {
         setQueuePointer(newQueuePointer);
         
         globalAudioRef.current = targetAudioHelperRef.current === "A" ? audioRefA.current : audioRefB.current; 
-
-        await fetch(`${apiBase}/read-write/trackInfos/${playQueue[newQueuePointer].split('.')[0]}`, {
+        const splittedTrackName = playQueue[newQueuePointer].split('.');
+        const trackId = splittedTrackName.length != 0? splittedTrackName[0] : playQueue[newQueuePointer];
+        await fetch(`${apiBase}/read-write/trackInfos/${trackId}`, {
             method: 'GET'
         })
         .then(response => response.json())
@@ -324,6 +325,19 @@ export const AudioPlayerProvider = ({ children }) => {
         setShouldInitPlay(true);
     };
 
+    const playContainer = (containerId, containerType, onlyFavs = false) => {
+        setShouldInitPlay(false);
+        fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, {
+            method: 'GET',
+            credentials: 'include'
+        })
+        .then(res => res.json())
+        .then(data => {
+            setPlayQueue(data);
+            setQueuePointer(0);
+            setShouldInitPlay(true);        
+        });
+    };
     const addContainerToQueue = (containerId, containerType, onlyFavs = false) => {
         setShouldInitPlay(false);
         fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, {
@@ -670,7 +684,6 @@ export const AudioPlayerProvider = ({ children }) => {
     const applyTrackEditTags = (tags, track) =>{
         setEdtitingTrackTags(null);
         if(!tags){return}
-        console.log("parsed tags:", tags);
         const data = new FormData();
         data.append("current", JSON.stringify(tags.current));
         data.append("deleted", JSON.stringify(tags.deleted));
@@ -700,6 +713,7 @@ export const AudioPlayerProvider = ({ children }) => {
     return (
         <AudioPlayerContext.Provider 
         value={{
+            playContainer,
             closeTagWindow,
             openTagWindow, 
             saladContext,

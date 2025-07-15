@@ -57,9 +57,9 @@ const StatShort = () => {
 
     return(
         <div className="stat-short">
-            <h4>Statistics</h4>
+            {/* <h4>Statistics</h4>
             <p>Total Songs: {stats?.totalTracks}</p>
-            <p>Music duration {parseAudioDuration(stats?.totalDuration).readable}</p>
+            <p>Music duration {parseAudioDuration(stats?.totalDuration).readable}</p> */}
             <div className="stat-short-category">
                 <p>Library size: {serverStats}</p>
                 <p>Free {serverUsage?.free} of {serverUsage?.total}</p>

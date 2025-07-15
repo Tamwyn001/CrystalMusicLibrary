@@ -15,13 +15,14 @@ const UserAccountInfosEntry = ({user, totalStorage}) => {
         }).catch(err => {
             console.error("Error fetching user storage data: ", err);
         });
+        
     }, []);
     return(
         <div className="user-account-infos-entry">
             <p>{user.username}</p>
             <p>{user.email}</p>
             <p>{user.role}</p>
-            <ProgressBar percent={userStorage/totalStorage*100} fillColor='var(--cool-green)' showPercent={true} style={{maxWidth : '200px'}}/>
+            <ProgressBar percent={Number(userStorage/totalStorage*100).toFixed(2)} fillColor='var(--cool-green)' showPercent={true} style={{maxWidth : '200px'}}/>
         </div>
         
     )

@@ -1,10 +1,11 @@
 :root {
   font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  /* font-family: 'Figtree'; */
   line-height: 1.5;
   font-weight: 400;
 
   color-scheme: light dark;
-  color: #2d4961;;
+  color: var(--font-color);;
   background-color: #242424;
 
   font-synthesis: none;
@@ -37,10 +38,11 @@ h1 {
   cursor: pointer;
   transition: border-color 0.25s;
   border: none;
-  color: #2d4961;            /* ensure text is visible */
+  color: var(--font-color);            /* ensure text is visible */
+  transition: all 0.2s;
 } 
 button:hover {
-  background-color: #f9e0fa;
+  background-color: var(--button-hover);
 }
 button:focus,
 button:focus-visible {

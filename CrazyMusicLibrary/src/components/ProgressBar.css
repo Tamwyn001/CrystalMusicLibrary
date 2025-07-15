@@ -17,7 +17,7 @@
     position: absolute;
     top: 0;
     left: 0;
-    color: #2d4961;
+    color: var(--font-color);
     padding: 0px 15px;
 }
 

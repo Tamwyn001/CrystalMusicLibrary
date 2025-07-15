@@ -7,7 +7,7 @@
     flex-direction: column;
     width: 100%;
     height: fit-content;
-    background-color: var(--cool-green);
+    background-color: rgba(224, 248, 254, 0.638);
     border-radius: var( --card-border-radius);
     position: relative;
 }
@@ -16,11 +16,55 @@
     width: 150px;
 }
 .album-card:hover{
-    background-color: var(--chill-purple);
+    background-color: rgba(233, 250, 254, 0.715);
     scale: 1.01;
     transition: 0.1s;
 }
+.album-card-loader{
 
+    border-radius: 20px;
+    animation: pulse 1s infinite ;
+}
+.loader-div{
+    background-color: rgba(255, 255, 255, 0.364);
+    display: flex;
+    flex-direction: column;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1.6;
+    padding-bottom: 5px;
+}
+.loader-img{
+    --opacity : 0.5;
+    width: 100%;
+    height: auto;
+    aspect-ratio: 1;
+    background-color: rgb(226, 226, 226);
+    margin-bottom: 2px;
+}
+.loader-text{
+    --opacity : 0.9;
+    background-color: rgb(255, 255, 255);
+    width: auto;
+    height: 16px;
+    margin: 10px;
+    border-radius: 10px;
+}
+.loader-text.title{
+    height: 25px;
+}
+
+@keyframes pulse {
+    0%{
+        opacity: calc(var(--opacity));
+    }
+    50%{
+        opacity: calc(var(--opacity) -0.3);
+    }
+    100%{
+        opacity: calc(var(--opacity));
+    }
+}
 .song-count-icon{
     width: 30px;
     height: auto;
@@ -60,4 +104,7 @@
 .album-card-overview-button[use="edit"]{
     top: 0px;
     right: 0px;
+}
+.album-artist, .album-name{
+    margin: 0px 5px;
 }

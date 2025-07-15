@@ -7,11 +7,13 @@
 .content-container{
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 85px);
+    height: calc(100vh - 90px);
     gap: 5px;
     overflow: hidden;
 }
-
+.home.album-displayer[data-no-tracks="true"] {
+    display: block !important;
+  }
 @media screen and (min-width: 714px) {
     .content-container{
         flex-direction: row;
@@ -29,7 +31,8 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, calc(50% - 10px));
     column-gap: 20px;
-    row-gap: 20px;
+    row-gap: auto;
+    justify-content: center;
 
 }
 .genre-displayer{
@@ -38,16 +41,10 @@
     row-gap: 20px;
     grid-template-columns: repeat(auto-fill, 350px);
 }
-.genre-card{
-    height: 150px;
-    width: 350px;
-    background-color: aliceblue;
-    border-radius: 20px;
-    text-align: center;
-    cursor: pointer;
-}
+
 .content{
-    background-color: rgb(236, 210, 239);
+    border: solid rgba(255, 255, 255, 0.836) 3px;
+    background: linear-gradient(90deg, rgb(204, 251, 230) -50%, rgb(198, 203, 253) 50%, rgb(248, 221, 255) 100%); 
     margin: 10px 10px 0px 10px;
     border-radius: 20px;
     padding: 20px 20px 20px 20px;

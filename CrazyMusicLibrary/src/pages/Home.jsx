@@ -6,6 +6,7 @@ import { IconSquarePlus } from "@tabler/icons-react";
 import { AddMusicShortcut } from "../components/AddMusicShortcut";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
+    const [albumFetched, setAlbumFetched] = useState(false);
     const fetchAlbums = () => {
         fetch(`${apiBase}/read-write/albums`, {method: "GET", credentials: "include"})
         .then((response) => {
@@ -14,7 +15,9 @@ const Home = ({}) => {
                 return;
             }
             return response.json();
-        }).then((data) => {setAlbums(data)});
+        }).then((data) => {
+            setAlbums(data);
+            setAlbumFetched(true)});
     }
     useEffect(() => {
         fetchAlbums(); // Trigger when Home is mounted
@@ -29,12 +32,22 @@ const Home = ({}) => {
           };
     }, []); // Empty dependency array = only on mount
 
+    const SkeletonLoader = () => {
+        return (
+        <div className="album-card-loader loader-div">
+            <div className="album-card-loader loader-img"></div>
+            <div className="album-card-loader loader-text title"></div>
+            <div className="album-card-loader loader-text "></div>
+        </div>)
+    } 
 
     return(
-        <div className="home album-displayer">
-           {albums?.length !== 0 ? albums.map((album) => (
+        <div className="home album-displayer" data-no-tracks={(albums?.length == 0 && albumFetched) ? "true" : "false"}>
+           {!albumFetched?  
+           <SkeletonLoader/>
+           : (albums?.length !== 0 ? albums.map((album) => (
             <LibAlbumCard key={album.id} album={album}/>
-        )) : <AddMusicShortcut/>}
+        )) : <AddMusicShortcut/>)}
         </div>
     )
 }

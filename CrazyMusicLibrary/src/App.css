@@ -12,6 +12,8 @@
   --violet-web-color: #E78FF0ff;
   --heliotrope: #C86AF9ff;
   --cool-green: #bfeae9;
+  --font-color: #293a6d;
+  --button-hover : rgb(226, 245, 255);
 }
 
 .buttonRound{
@@ -32,13 +34,6 @@
 
 }
 
-
-.album-name{
-  margin: 0px;
-}
-.album-artist{
-  margin: 0px;
-}
 
 
 .button-with-callback{

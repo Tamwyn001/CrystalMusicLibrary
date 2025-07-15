@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import Loading from "../components/Loading";
 import TrackView from "../components/TrackView";
 import { useNavigate, useParams } from "react-router-dom";
-import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChevronRight, IconCodePlus, IconEdit, IconFilterStar, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
+import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChartScatter3d, IconChevronRight, IconCodePlus, IconEdit, IconFilterStar, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
 import "./AlbumView.css";
 
 import apiBase from "../../APIbase";
@@ -32,7 +32,7 @@ const AlbumView = ({isPlaylist = false}) => {
     const { notifTypes, addNotification} = useNotifications();
     const [isFavPlaylist, setIsFavPlaylist] = useState(false);
     const [ showOnlyFavs, setShowOnlyFavs ] = useState(false);
-    const [ favFilterAvaliable, setFavFilterAvaliable ] = useState(false)
+    const [ favFilterAvaliable, setFavFilterAvaliable ] = useState(false);
     useEffect(() => {
             refetchAlbum();   
             
@@ -63,6 +63,7 @@ const AlbumView = ({isPlaylist = false}) => {
                 return;
             }
             setAlbum(data.albumInfos);
+
             setTracks(tracks);
             setGenres(data.genres);
             setArtists(data.artists);
@@ -240,6 +241,7 @@ const AlbumView = ({isPlaylist = false}) => {
                                         <IconFilterStar/>
                                     </button>
                                 }
+                                {album.lossless === 1 && <div className="lossless"><span>Lossless</span> <IconChartScatter3d/></div>}
                             </div>
                             {(isPlaylist) &&         
                                 <div className="action-bar" is-playlist-add={"true"} ref={wrapperRef}>
