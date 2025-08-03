@@ -8,9 +8,9 @@ export const AddMusicShortcut = () => {
 
     return (
         <div className="add-music-shortcut">
-            Welcome to the Crystal Music Library!
+            <h2>Welcome to the Crystal Music Library! </h2>
             <button onClick={emitAddMusic} 
-            style={{display : 'flex', flexDirection: 'row', alignItems: 'center', gap : '15px'}}>
+            style={{display : 'flex', flexDirection: 'row', alignItems: 'center', gap : '15px', margin: "auto"}}>
                 <IconMusicPlus/>
                 <h3 style={{margin : '2px'}}>Add music</h3>
             </button>

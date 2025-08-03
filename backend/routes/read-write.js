@@ -1,15 +1,20 @@
 const express = require( "express");
-const {existsSync, mkdirSync, statSync, createReadStream} = require( "fs");
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre } = require( "../db-utils.js");
+// @ts-ignore
+const {existsSync, mkdirSync, statSync, createReadStream, unlink} = require( "fs");
+// @ts-ignore
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
+// @ts-ignore
 const checkDiskSpace = require('check-disk-space').default
 const { getMulterInstance } = require('../multerConfig.js');
-const { stat } = require("fs/promises");
+const { stat, unlink : unlinkPromise } = require("fs/promises");
 const jwt = require("jsonwebtoken");
 const path = require("path")
+const icy = require("icy");
 
 const router = express.Router();
+// @ts-ignore
 const isPkg = typeof process.pkg !== 'undefined';
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
@@ -27,6 +32,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     //link tracks to albumUuid
     const musicFileProcess = new Promise(async (resolve, reject) => {
         const meta = JSON.parse(req.body.trackMeta);
+        // @ts-ignore
         let file = req.files.music[0];
         file.uuid = meta.id;
         file.albumId = meta.albumUuid;
@@ -39,6 +45,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
             const token = req.cookies.token;
             if (token) {
                     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+                    // @ts-ignore
                     addedBy = decoded.email;
                     addTracks([file], addedBy);
                     resolve(file.title);
@@ -55,6 +62,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     }
 );
 
+// @ts-ignore
 router.get("/albums",  (req, res) => {
     const albums = getAlbums();
     res.json(albums);
@@ -63,6 +71,7 @@ router.get("/albums",  (req, res) => {
 router.get("/album/:id",  (req, res) => {
     const token = req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     const album = getAlbum(req.params.id, decoded.email);
     res.json(album);
 });
@@ -71,6 +80,7 @@ router.get("/playlist/:id{/:shortInfos}",  (req, res) => {
     const token = req.cookies.token;
     const shortInfos = req.params.shortInfos || false;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     const playlist = getPlaylist(req.params.id, decoded.email, shortInfos);
     res.json(playlist);
 });
@@ -82,15 +92,18 @@ router.get("/genre/:id",  (req, res) => {
 });
 
 router.get("/genre/:id/getGenreTracks" , (req,res) => {
+    // @ts-ignore
     res.json(getGenreTracks(req.params.id).map(obj => obj.id));
 });
 
+// @ts-ignore
 router.get("/artists",  (req, res) => {
     const artists = getArtists();
     res.json(artists);
 });
-router.get("/artist/:id",  (req, res) => {
-    const artist = getArtist(req.params.id);
+router.get("/artist/:id{/:forEdit}",  (req, res) => {
+    const forEdit = req.params?.forEdit != null;
+    const artist = getArtist(req.params.id, forEdit);
     res.json(artist);
 });
 router.get("/artist-all-tracks/:id",  (req, res) => {
@@ -150,8 +163,11 @@ router.get("/nextSongs/:containerType/:containerId{/:onlyFavs}",
     const token = req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token  
     const nextSongs = 
+        // @ts-ignore
         (containerType === "playlist") ? getNextSongsFromPlayist(containerId,onlyFavs, decoded.email ) 
+        // @ts-ignore
         : (containerType === "album") ? getNextSongsFromAlbum(containerId,onlyFavs, decoded.email) 
+        // @ts-ignore
         : (containerType === "genre") ? getGenreTracks(containerId, decoded.email)
         : [];
     res.json(nextSongs.map(song => song.id));
@@ -172,6 +188,7 @@ router.get("/trackCoversGenre/:genreId", (req, res) => {
 });
 
 
+// @ts-ignore
 router.get("/stats", (req, res) => {
     const musicDir = path.join(uploadPath, 'music');
     const coversDir = path.join(uploadPath, 'covers');
@@ -208,6 +225,7 @@ const runServerStats = () => {
   } );
 }
 
+// @ts-ignore
 router.get("/serverStats", async (req, res) => {
     if(runningServerStats){
         await promiseServerStats; //this is to a promise when the server stats are already running
@@ -216,6 +234,7 @@ router.get("/serverStats", async (req, res) => {
     res.json({date, tracksByteUsage, coversByteUsage, free : process.env.CML_FREE_STORAGE, size : process.env.CML_TOTAL_STORAGE});
 });
 
+// @ts-ignore
 router.get("/diskSpace", async (req, res) => {
     res.json({free : process.env.CML_FREE_STORAGE, size : process.env.CML_TOTAL_STORAGE});
 });
@@ -223,8 +242,18 @@ router.get("/diskSpace", async (req, res) => {
 router.get("/user-data-usage/:id", async (req, res) => {
     const userId = req.params.id;
     const paths = getTracksAddedByUsers(userId);
-    res.json((await Promise.all(paths.map(async ({path}) =>  stat(path))))
-    .reduce((accumulator, { size } ) => accumulator + size, 0));
+    const totalSize = await Promise.all(paths.map(async ({path}) => 
+        {
+            try{
+                stat(path)
+            }
+            catch(err){
+                console.log("User data storage error: ", err);
+            }
+            finally{}
+        }));
+    res.json(totalSize.reduce(
+        (accumulator, { size } ) => accumulator + size, 0));
 });
 
 router.get("/search/:query{/:restrictionType}", async (req, res) => {
@@ -232,20 +261,37 @@ router.get("/search/:query{/:restrictionType}", async (req, res) => {
 });
 
 
+// @ts-ignore
 router.get("/all-songs", async (req, res) => {
     res.json(getAllTracks());
 });
 
-router.post("/editContainer/:type", upload.single("cover"), (req, res) => {
-    switch(req.params.type){
-        case "album" :
-            applyAlbumsEdit(JSON.parse(req.body.album), req.file?.filename);
-            break;
-        case "playlist" :
-            applyPlaylistEdit(JSON.parse(req.body.playlist), req.file?.filename);
-            break
-    }
-    res.json({ message: "Album edited successfully" });
+router.post("/editContainer/:type",  upload.fields([
+    { name: "cover", maxCount: 1 },
+    { name: "coverArtist", maxCount: 1 }]),
+    (req, res) => {
+        // Because of upload.FIELDS we treat the fiels as array.
+        switch (req.params.type) {
+            case "album":
+                applyAlbumsEdit(
+                    JSON.parse(req.body.album),
+                    req.files["cover"]?.[0]?.filename
+                );
+                break;
+            case "playlist":
+                applyPlaylistEdit(
+                    JSON.parse(req.body.playlist),
+                    req.files["cover"]?.[0]?.filename
+                );
+                break;
+            case "artist":
+                applyArtistEdit(
+                    JSON.parse(req.body.artist),
+                    req.files["coverArtist"]?.[0]?.filename
+                );
+                break;
+        }
+        res.json({ message: `${req.params.type} edited successfully` });
 });
 
 //because we use uuid for tracks, playlists and albums, we can just use one unique parameter for all of them
@@ -253,14 +299,17 @@ router.get("/toggleFavorite/:id/:favorite", (req,res) =>{
     const token = req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token    
     const toFav = req.params.favorite === "true"
+    // @ts-ignore
     setFavorite(req.params.id, decoded.email, toFav);
     res.json(toFav);
 });
 
+// @ts-ignore
 router.get("/genres", (req,res) =>{
     res.json(getGenres());
 });
 
+// @ts-ignore
 router.get("/playlists", (req, res) =>{
     res.json(getPlaylists())
 });
@@ -268,6 +317,7 @@ router.get("/playlists", (req, res) =>{
 router.post("/newPlaylist", upload.single("cover"), (req, res) =>{
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     createPlaylist(JSON.parse(req.body.playlist), decoded.email, req.file?.filename);
     res.json();
 });
@@ -276,6 +326,7 @@ router.post("/addToPlaylist", upload.none(), (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
     const {playlistId, endpoint , entryId , addAllToFavorite} = JSON.parse(req.body.addRequest);
+    // @ts-ignore
     const addAllToFavoriteObj = { should : addAllToFavorite, email : decoded.email};
     switch(endpoint){
         case "track":
@@ -318,6 +369,7 @@ router.post("/changeTrackTags/:id", upload.none(), (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
 
+    // @ts-ignore
     updateTrackTags(trackId, deleted, current, decoded.email);
     res.json({message : "Tags updated."})
 });
@@ -335,18 +387,21 @@ router.post("/getSalad",upload.none() , (req,res) => {
 router.get("/mostUsedTags", (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     res.json(getUserMostUsedTags(decoded.email));
 });
 
 router.get("/getAllUserTags", (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     res.json(getUserTags(decoded.email));
 });
 
 router.get("/getAllUserSalads", (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
+    // @ts-ignore
     res.json(getUserSalads(decoded.email));
 });
 
@@ -364,24 +419,71 @@ router.post(`/applySaladModifications`, upload.none(), (req,res) => {
     res.json({messsage : "Succesfully updated."})
 });
 
-router.delete("/delete/:type/:id", (req,res) => {
+router.delete("/delete/:type/:id{/:forUser}", async (req,res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     switch (req.params.type) {
         case "tag":
+            // @ts-ignore
             deleteTag(req.params.id, decoded.email);
             break;
         case "salad":
+            // @ts-ignore
             deleteSalad(req.params.id, decoded.email);
             break;
+        case "album":
+            const forUser = req.params.forUser != null;
+            if(!forUser){
+                // Unlink all the audio files and the cover
+                //**
+                // Todo: for external libraries, we just delete the database entry.
+                //*  No need to delete the files as they may be part of another system.
+                const albumsTracks = getAlbumTracksPath(req.params.id);
+                
+                const deleteAlbumCover = async () => {
+                    const coverName = getAlbumCoverPath(req.params.id);
+                    if (!coverName) return;
+                    try {
+                        await unlinkPromise(path.join(process.env.CML_DATA_PATH_RESOLVED,
+                            "covers", coverName));
+                    } catch (err) {
+                        console.error("Error deleting album cover:", err);
+                    }
+                };
+
+                const deletionPromises = [
+                    ...albumsTracks.map(async (trackPath) => {
+                        try {
+                            await unlinkPromise(trackPath);
+                        } catch (err) {
+                            console.error("Error deleting track:", err);
+                        }
+                    }),
+                    deleteAlbumCover()
+                ];
+
+                await Promise.all(deletionPromises);
+            }
+            // @ts-ignore
+            const deletionParams = {forAll : !forUser, userEmail : forUser ? decoded.email : null};
+            const artistInfos = deleteAlbum(req.params.id, deletionParams);
+            // Remove cover file if no albums left.
+            console.log(artistInfos);
+            if(artistInfos.leftAlbums == 0 &&  artistInfos.pictureName){
+                const artistsCover = path.join(process.env.CML_DATA_PATH_RESOLVED,
+                    "covers", "artists", artistInfos.pictureName);
+                if(existsSync(artistsCover)){ await unlinkPromise(artistsCover); }
+            }
     };
-    res.json({message: "Deletion successfull!"})
+    res.json({message: "Deletion successfull!", success : true})
 })
 
 router.post("/newSalad", upload.none(), (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
+    // @ts-ignore
     res.json(registerNewSaladForUser(JSON.parse(req.body.salad), decoded.email))
-})
+});
+
 module.exports = {router, runServerStats};

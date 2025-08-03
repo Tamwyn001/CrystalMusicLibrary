@@ -1,0 +1,65 @@
+import { IconArrowsShuffle, IconDatabaseSearch, IconHeartSearch } from "@tabler/icons-react";
+import { useEffect, useState } from "react"
+import ButtonWithCallback from "../components/ButtonWithCallback";
+import apiBase from "../../APIbase";
+import LibRadioCard from "../components/LibRadioCard";
+
+const Radio = () => {
+    const [ radioFetched, setRadioFetched ] = useState(false);
+    const [radios, setRadios] = useState([]);
+    const SkeletonLoader = () => {
+        return (
+        <div className="album-card-loader loader-div">
+            <div className="album-card-loader loader-img"></div>
+            <div className="album-card-loader loader-text title"></div>
+            <div className="album-card-loader loader-text "></div>
+        </div>)
+    } 
+    useEffect(() => {
+        refetchRadios();
+    }, [])
+
+    const refetchRadios = async () => {
+        const res = await fetch(`${apiBase}/radio/radios`, {
+                method : "GET",
+                credentials : "include"})
+            .then(res => res.json());
+        setRadioFetched(true);
+        setRadios(res);
+        console.log("radios:", res);
+    }
+
+    const changeSearchQuery = () => {
+
+    }
+
+    const playRandomRadio = () => {
+
+    }
+
+    const externalSearch = async () =>{
+        window.open("https://www.radio-browser.info/tags", '_blank').focus();
+    }
+    return(
+        <div className="home">
+            <h3>Recently heard</h3>
+            <div className="album-displayer" data-no-tracks={(radios?.length == 0 && radioFetched) ? "true" : "false"}>
+            {!radioFetched?  
+            <SkeletonLoader/>
+            : radios?.length !== 0 ? radios.map((radio) => (
+                <LibRadioCard key={radio.id} radio={radio}/>
+            )) : null}
+
+            </div>
+            <div style={{display : "flex", flexDirection : "row", alignItems : "center", gap: "10px"}}>
+                <h3 style={{marginRight : "20px"}}>Discover</h3>
+                <ButtonWithCallback text={'Filters'} icon={<IconHeartSearch/>} onClick={changeSearchQuery}/>
+                <ButtonWithCallback text={'Random'} icon={<IconArrowsShuffle />} onClick={playRandomRadio}/>
+                <ButtonWithCallback text={'External search'} icon={<IconDatabaseSearch />} onClick={externalSearch}/>
+
+
+            </div>
+        </div>
+    )
+}
+export default Radio;

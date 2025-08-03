@@ -6,7 +6,7 @@
   const path = require("path");
 
   let dbInstance = null
-  const LATEST_DATABASE_VERSION = 4;
+  const LATEST_DATABASE_VERSION = 6;
 
 
   // Higher order function - returns a function that always runs in a transaction
@@ -116,7 +116,7 @@
           FOREIGN KEY (artist) REFERENCES artists_descs(id),
           FOREIGN KEY (taking_part) REFERENCES albums(id)
       );`,    
-      `CREATE TABLE  IF NOT EXISTS genres(
+      `CREATE TABLE IF NOT EXISTS genres(
           id INTEGER PRIMARY KEY,
           name VARCHAR(255) NOT NULL,
           description TEXT,
@@ -161,7 +161,7 @@
         --  FOREIGN KEY (entry_id) REFERENCES tracks(id), we omit this key, bc can be track, album or playslit
           FOREIGN KEY (user_id) REFERENCES users(id)
       );`,    
-      `CREATE TABLE  IF NOT EXISTS playlists_descs(
+      `CREATE TABLE IF NOT EXISTS playlists_descs(
           id VARCHAR(36) PRIMARY KEY,
           name TEXT,
           cover TEXT,
@@ -172,7 +172,7 @@
           FOREIGN KEY (created_by) REFERENCES users(id)
       
       );`,
-      `CREATE TABLE  IF NOT EXISTS tracks_to_playlists(
+      `CREATE TABLE IF NOT EXISTS tracks_to_playlists(
           playlist_id VARCHAR(36),
           track_id VARCHAR(36),
           track_no INT,
@@ -180,7 +180,7 @@
           FOREIGN KEY (playlist_id) REFERENCES playlists_descs(id),
           FOREIGN KEY (track_id) REFERENCES tracks(id)
       );`,
-      `CREATE TABLE  IF NOT EXISTS playlists_to_owners(
+      `CREATE TABLE IF NOT EXISTS playlists_to_owners(
           playlist_id VARCHAR(36) NOT NULL,
           owner_id INT NOT NULL,
           PRIMARY KEY (playlist_id, owner_id),
@@ -259,20 +259,183 @@
         upgradeV3();
         console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v3.\x1b[0m Added salad support.");
     }
-
     
     if(currentVersion < 4){
-      const instructionsToV3 = 
+      const instructionsToV4 = 
         [ "UPDATE schema_version SET version = 4;",
         "ALTER TABLE tracks ADD disc int DEFAULT 0;",
         "ALTER TABLE albums ADD lossless int DEFAULT 0;",
         ]; 
-        const upgradeV3 = asTransaction(() => {
-          instructionsToV3.forEach(action => {dbInstance.prepare(action).run();})
+        const upgradeV4 = asTransaction(() => {
+          instructionsToV4.forEach(action => {dbInstance.prepare(action).run();})
         })
-        upgradeV3();
+        upgradeV4();
         console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v4.\x1b[0m Added disc support.");
     }
+    if(currentVersion < 5){
+      const instructionsToV5 = 
+        [ "UPDATE schema_version SET version = 5;",
+        `CREATE TABLE IF NOT EXISTS radios(
+            id VARCHAR(36) PRIMARY KEY,
+            name TEXT,
+            url TEXT,
+            coverUrl TEXT
+        );`,
+        `CREATE TABLE IF NOT EXISTS radios_to_users(
+            id INT PRIMARY KEY,
+            user INT,
+            radio VARCHAR(36),
+            FOREIGN KEY (user) REFERENCES users(id),
+            FOREIGN KEY (radio) REFERENCES radios(id)
+        );`]; 
+        const upgradeV5 = asTransaction(() => {
+          instructionsToV5.forEach(action => {dbInstance.prepare(action).run();})
+        })
+        upgradeV5();
+        console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v5.\x1b[0m Added radio support.");
+    }
+    if(currentVersion < 6){
+      // We need to add foreign key delete cascade constrain,
+      // To do so, we create a new table suiting our needs and copy the old
+      // one into the new one.
+
+      // https://www.sqlite.org/lang_altertable.html#otheralter
+      //
+      // 1.Create new table
+      // 2.Copy data
+      // 3.Drop old table
+      // 4.Rename new into old 
+      const changeTracks = 
+        [ 
+
+          `CREATE TABLE IF NOT EXISTS tracks_new(
+            id VARCHAR(36) NOT NULL,
+            title VARCHAR(255) NOT NULL,
+            album VARCHAR(36) NOT NULL,
+            genre int,
+            duration INT,
+            release_date DATE,
+            path TEXT NOT NULL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            track_number INT,
+            uploaded_by INT,
+            disc int DEFAULT 0,
+            PRIMARY KEY (id),
+            FOREIGN KEY (album) REFERENCES albums(id) ON DELETE CASCADE,
+            FOREIGN KEY (uploaded_by) REFERENCES users(id) ON DELETE SET NULL
+          );`,
+
+          "INSERT INTO tracks_new SELECT * FROM tracks;",
+          "DROP TABLE tracks;",
+          "ALTER TABLE tracks_new RENAME TO tracks;",
+          ]; 
+
+        const changeAlbumsToGenre = [
+
+          `CREATE TABLE IF NOT EXISTS albums_to_genres_new(
+            id INTEGER PRIMARY KEY,
+            album VARCHAR(36) NOT NULL,
+            genre int,
+            FOREIGN KEY (album) REFERENCES albums(id) ON DELETE cascade,
+            FOREIGN KEY (genre) REFERENCES genres(id) ON DELETE cascade
+          );`,
+          `INSERT INTO albums_to_genres_new SELECT * FROM albums_to_genres;`,
+          "DROP TABLE albums_to_genres;",
+          "ALTER TABLE albums_to_genres_new RENAME TO albums_to_genres;",
+
+        ];
+
+        const changeTrackToPlaylist = [
+          `CREATE TABLE  IF NOT EXISTS tracks_to_playlists_new(
+              playlist_id VARCHAR(36),
+              track_id VARCHAR(36),
+              track_no INT,
+              PRIMARY KEY (playlist_id, track_id),
+              FOREIGN KEY (playlist_id) REFERENCES playlists_descs(id)  ON DELETE cascade,
+              FOREIGN KEY (track_id) REFERENCES tracks(id)  ON DELETE cascade
+          );`,
+          `INSERT INTO tracks_to_playlists_new SELECT * FROM tracks_to_playlists;`,
+           "DROP TABLE tracks_to_playlists;",
+           "ALTER TABLE tracks_to_playlists_new RENAME TO tracks_to_playlists;"
+        ];
+
+        const changePlaylistToOwners = [
+          `CREATE TABLE IF NOT EXISTS playlists_to_owners_new(
+            playlist_id VARCHAR(36) NOT NULL,
+            owner_id INT NOT NULL,
+            PRIMARY KEY (playlist_id, owner_id),
+            FOREIGN KEY (owner_id) REFERENCES users(id) ON DELETE cascade
+            FOREIGN KEY (playlist_id) REFERENCES playlists_descs(id) ON DELETE cascade
+        );`,
+        `INSERT INTO playlists_to_owners_new SELECT * FROM playlists_to_owners;`,
+        `DROP TABLE playlists_to_owners;`,
+        "ALTER TABLE playlists_to_owners_new RENAME TO playlists_to_owners;"
+        ];
+
+        const changeTracksToTags = [
+          `CREATE TABLE IF NOT EXISTS tracks_to_tags_new( 
+            track_id VARCHAR(36) NOT NULL,
+            tag_id VARCHAR(36) NOT NULL,
+            PRIMARY KEY (track_id, tag_id),
+            FOREIGN KEY (track_id) REFERENCES tracks(id) ON DELETE CASCADE,
+            CONSTRAINT fk_tag_id FOREIGN KEY (tag_id) REFERENCES tags(id) ON DELETE CASCADE
+          );`,
+          `INSERT INTO tracks_to_tags_new SELECT * FROM tracks_to_tags;`,
+          `DROP TABLE tracks_to_tags;`,
+          "ALTER TABLE tracks_to_tags_new RENAME TO tracks_to_tags;",
+
+        ];
+        const changeRadioToUsers = [ 
+
+          `CREATE TABLE IF NOT EXISTS radios_to_users_new(
+            id INT PRIMARY KEY,
+            user INT,
+            radio VARCHAR(36),
+            FOREIGN KEY (user) REFERENCES users(id) ON DELETE CASCADE,
+            FOREIGN KEY (radio) REFERENCES radios(id) ON DELETE CASCADE
+          );`,
+          `INSERT INTO radios_to_users_new SELECT * FROM radios_to_users;`,
+          `DROP TABLE radios_to_users;`,
+          "ALTER TABLE radios_to_users_new RENAME TO radios_to_users;",
+
+        ];
+        const changeArtistToAlbum = [
+          `CREATE TABLE  IF NOT EXISTS artists_to_albums_new(
+          id INTEGER PRIMARY KEY,
+          artist int NOT NULL,
+          taking_part VARCHAR(36),
+          FOREIGN KEY (artist) REFERENCES artists_descs(id) ON DELETE CASCADE,
+          FOREIGN KEY (taking_part) REFERENCES albums(id) ON DELETE CASCADE
+        );`,
+        `INSERT INTO artists_to_albums_new SELECT * FROM artists_to_albums;`,
+        `DROP TABLE artists_to_albums;`,
+        "ALTER TABLE artists_to_albums_new RENAME TO artists_to_albums;",
+
+        ];
+        const instructionsToV6 = [
+          "UPDATE schema_version SET version = 6;",
+          ...changeTracks,
+          ...changeAlbumsToGenre,
+          ...changeTrackToPlaylist,
+          ...changePlaylistToOwners,
+          ...changeTracksToTags,
+          ...changeRadioToUsers,
+          ...changeArtistToAlbum,
+        "ALTER TABLE artists_descs ADD active_since DATE;"
+      ];
+
+        const upgradeV6 = asTransaction(() => {
+          instructionsToV6.forEach(action => {dbInstance.prepare(action).run();})
+        })
+        //DANGER ZONE temporary deactivation ..
+        // Must be outside of the transaction
+        dbInstance.prepare("PRAGMA foreign_keys = OFF;").run();
+        upgradeV6();
+        dbInstance.prepare("PRAGMA foreign_key_check;").run();
+        dbInstance.prepare("PRAGMA foreign_keys = ON;").run();
+        console.log(`   \x1b[1m\x1b[38;5;222mUpgraded database to v6.\x1b[0m Added music deletion: Extanded Foreign keys contraints.`);
+    }
+  
 
 
   }

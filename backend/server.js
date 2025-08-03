@@ -48,7 +48,7 @@ catch (err) {
       rl.close();
       process.exit(1);
     });
-
+    //@ts-ignore
     return;
 }
 process.env.CML_DATA_PATH_RESOLVED = resolvedDataPath;
@@ -80,7 +80,7 @@ catch (err) {
     rl.close();
     process.exit(1);
   });
-
+//@ts-ignore
   return;
 }
 // Initialize DB once
@@ -125,7 +125,7 @@ function getLocalIP() {
       }
     }
   }
-  return '127.0.0.1';
+  return 'localhost';
 }
 
 const localIP = getLocalIP();
@@ -136,18 +136,13 @@ const localIP = getLocalIP();
 
 const app = express();
 const PORT = process.env.PORT || 4590;
+console.log(localIP);
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
-  `http://${localIP}:4173`,
   `http://${localIP}:4590`,
   `http://${localIP}:${PORT}`,
-  'http://10.24.134.178:4173',
-  'http://169.254.160.204:4173',
-  "http://192.168.10.134:4173",
-  "http://192.168.10.134:5173",
-  "http://192.168.10.134:4173",
-  "http://192.168.10.140:4173/"
+
 ];
 console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
@@ -190,9 +185,15 @@ console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
 const jobRouter = require("./routes/jobs.js");
+const RadioRouter = require("./routes/radio.js");
 app.use("/jobs", jobRouter);
 console.log(`  .      Backend jobs`);
+
+app.use("/radio", new RadioRouter().router);
+console.log(`  .      Radio router`);
 console.log(`✅ Routes initialized`);
+
+
 app.get("/isResponding", (req, res) => {
   res.json({ message: "Server is responding" });
 });
@@ -201,6 +202,7 @@ app.use((err, req, res, next) => {
   console.error("Unhandled error:", err);
   res.status(500).json({ message: "Server error" });
 });
+
 
 // Fallback to React app for other routes.
 //If user navs to /home with react its fine, this is pure JS.
@@ -228,8 +230,9 @@ app.listen(PORT, () => {
 });
 const writeNewStorageEnv = async () => {
   const {free, size} = await checkDiskSpace(resolvedDataPath);
-
+//@ts-ignore
   process.env.CML_TOTAL_STORAGE = size;
+  //@ts-ignore
   process.env.CML_FREE_STORAGE = free;
   console.log(`  . 💾     Storage space: ${process.env.CML_TOTAL_STORAGE} bytes`);
 }

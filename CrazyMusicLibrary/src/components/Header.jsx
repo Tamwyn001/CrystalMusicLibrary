@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2 } from '@tabler/icons-react'
+import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
@@ -75,7 +75,9 @@ const Header = () => {
             <div className='trackinfo-desktop'>
                 <span id="songTitle">{currentTrackData.title}</span>
                 <span id="songArtist" className="artist-name" style={{fontSize: '13px'}}
-                 onClick={()=>{navigate(`/artists/${currentTrackData.artistId}`)}}>{currentTrackData.artist}</span>
+                 onClick={()=>{ if(currentTrackData?.type != "radio"){
+                    navigate(`/artists/${currentTrackData.artistId}`)}}}>
+                    {currentTrackData.artist}</span>
                 <SongProgress />
             </div>
             <div className='trackinfo-mobile'>
@@ -112,7 +114,7 @@ const Header = () => {
             
             return
         }
-        setIsAddMusicMinimized(!isAddMusicMinimized);
+        setIsAddMusicMinimized(!(document.getElementsByClassName("addMusicContainer")[0] != null));
         console.log("toggle")
     }
 
@@ -127,14 +129,17 @@ const Header = () => {
         <AudioControls context={{mobile : false}}/>
         <div className="musicPlayer">
             <div className='playPauseContainer'>
-                {(trackCoverUrl.split('/').pop() === 'null') ? <CML_logo  className="trackImage" />:  <img src={trackCoverUrl} className="trackImage" />}
+                {(currentTrackData?.type == "radio") ? 
+                ((currentTrackData.coverUrl == "") ? 
+                    <CML_logo  className="trackImage" /> :
+                    <img src={currentTrackData.coverUrl} className="trackImage" />
+                ) :
+                (trackCoverUrl.split('/').pop() === 'null') ?
+                 <CML_logo  className="trackImage" />:
+                  <img src={trackCoverUrl} className="trackImage" />}
                
                 <div className="playPauseButtons">
-                    {musicPaused ? (
-                        <IconPlayerPlay onClick={() => setMusicPaused(false)} onMouseEnter={() => playPauseVisibility(true)} onMouseLeave={() => playPauseVisibility(false)} />
-                    ) : (
-                        <IconPlayerPause onClick={() => setMusicPaused(true)} onMouseEnter={() => playPauseVisibility(true)} onMouseLeave={() => playPauseVisibility(false)} />
-                    )}
+                    <IconPrismLight style={{padding: "0px"}}/>
                 </div>
             </div>
             <TrackOverlay />

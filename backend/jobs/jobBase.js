@@ -10,7 +10,7 @@ class Job {
     status = JobStatus.INACTIVE
     jobKey = "";
     jobManager;
-    progress = {done : 0, total : 200};
+    progress = {done : 0, total : 0};
     constructor(jobKey, jobManager) {
         this.status = JobStatus.PENDING; 
         this.jobKey = jobKey;
@@ -25,11 +25,12 @@ class Job {
         console.log("[Job]", this.jobKey,"is now paused.");
     }
     resumeJob () {
+        if(this.status === JobStatus.RUNNING) {return;}
         this.status = JobStatus.RUNNING; 
         console.log("[Job]", this.jobKey,"is now running.");
     }
     stopJob () {
-        this.status = JobStatus.INACTIVE; 
+        // this.status = JobStatus.INACTIVE; 
         console.log("[Job]", this.jobKey,"is now stoped.")  ;
     }
 }

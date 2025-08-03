@@ -3,23 +3,30 @@ const { getDatabase } = require("../db");
 const {Job, JobStatus} = require("./jobBase");
 const {parseFile} = require('music-metadata');
 const { join, basename } = require("path");
-
+const { interpolateQuery,asTransaction } = require("../lib");
 class JobCD extends Job{
     jobPromises;
     toCheckTracks;
-    trackIdToCDLossless
+    trackIdToCD;
+    albumToLossless;
     
     fetchTracks () {
         var db = getDatabase();
-        this.toCheckTracks = db.prepare("SELECT id,path FROM tracks").all().map(track => {return {id: track.id, basename : basename(track.path)}});
+        this.toCheckTracks = db.prepare("SELECT id,path,album FROM tracks").all()
+        .map(track => {return {id: track.id, basename : basename(track.path), album : track.album}});
         this.updateProgress(0, this.toCheckTracks.length);
-        this.trackIdToCDLossless = new Map();
-        Promise.all(this.toCheckTracks.map( async ({id, basename}) => {
-
+        this.trackIdToCD = new Map();
+        this.albumToLossless = new Set();
+        Promise.all(this.toCheckTracks.map( async ({id, basename, album}) => {
+           
             var path = join(process.env.CML_DATA_PATH_RESOLVED, "music", basename);
             const fileMeta = await parseFile(path);
+            this.resumeJob();
             this.upgradeProgress();
-            this.trackIdToCDLossless.set(id, {disc : fileMeta.common.disk.no || 0, lossless : fileMeta.format.lossless});
+            this.trackIdToCD.set(id, fileMeta.common.disk.no || 0);
+            if(fileMeta.format.lossless === true){
+                this.albumToLossless.add(album);
+            }
         })).then(() => {
             // console.log(trackIdToCDLossless);
             this.writeIntoDatabase();
@@ -30,41 +37,82 @@ class JobCD extends Job{
     async writeIntoDatabase () {
         var db = getDatabase();
         const updateAllIndecies = async () =>{
-            var ids = this.trackIdToCDLossless.keys();
+            var ids = this.trackIdToCD.keys();
             var insertCD = [];
-            var placeholder = [];
-            for (let id of ids){
-                 this.trackIdToCDLossless.get(id);
-                insertCD.push(id, this.trackIdToCDLossless.get(id).disc);
-                placeholder.push("(?,?)");
-            }
-            
-            const query = `
-                CREATE TEMP TABLE temp_disc(
-                    id VARCAHR(36),
-                    disc INT
-                );
-                INSERT INTO temp_disc VALUES ${placeholder.join(",")};
+            var insertLossless = []
+            var placeholderCD = [];
+            var placeholderLossless = [];
 
-                UPDATE tracks SET 
-                    disc = tmp.disc
-                    FROM temp_disc AS tmp
-                WHERE tracks.id = tmp.id;
-            `;
-            db.prepare(query).run(insertCD);
+            for (let id of ids){
+                insertCD.push(id, this.trackIdToCD.get(id));
+                placeholderCD.push("(?,?)");
+            }
+            for( let album of this.albumToLossless){
+                placeholderLossless.push("(?,?)");
+                insertLossless.push(album, 1);
+            }
+            const rollback = db.prepare("ROLLBACK");
+            const begin = db.prepare("BEGIN");
+            const commit = db.prepare("COMMIT");
+            // CD ADD
+            try{
+                begin.run()
+                db.prepare(`CREATE TEMP TABLE temp_disc(
+                        id VARCAHR(36),
+                        disc INT
+                    );`).run();
+                db.prepare(`INSERT INTO temp_disc VALUES ${placeholderCD.join(",")};`).run(insertCD);
+                db.prepare(`UPDATE tracks SET 
+                        disc = tmp.disc
+                        FROM temp_disc AS tmp
+                    WHERE tracks.id = tmp.id;`).run();
+                db.prepare(`DROP TABLE temp.temp_disc;`).run();
+                commit.run();
+                console.log("   Sucessful write CD.");
+            }
+            catch{ (err) => {
+                console.log(err);
+            }}
+            finally{if(db.inTransaction){
+                rollback.run();
+            }}
+            try{
+                begin.run();
+                db.prepare(`CREATE TEMP TABLE temp_loss(
+                    id VARCAHR(36),
+                    loss INT
+                );`).run();
+                db.prepare(`INSERT INTO temp_loss (id,loss) VALUES ${placeholderLossless.join(",")};`).run(insertLossless);
+                db.prepare(`UPDATE albums SET 
+                        lossless = tmp.loss
+                        FROM temp_loss AS tmp
+                    WHERE albums.id = tmp.id;`).run();
+                db.prepare(`DROP TABLE temp.temp_loss;`).run();
+                commit.run();
+                console.log("   Successful write lossless.");
+            }
+            catch{ (err) => {
+                console.log(err);
+            }}
+            finally{if(db.inTransaction){
+                rollback.run();
+            }}
+
         } 
-        await updateAllIndecies();
-        this.jobManager.stopJob(this.jobKey);
+        updateAllIndecies().then(()=> {
+            this.jobManager.stopJob(this.jobKey);
+        });
     }
 
     upgradeProgress(){
         this.updateProgress(this.progress.done + 1, this.progress.total);
     }
     constructor()  {
+        // @ts-ignore
         super(...arguments);
-        this.resumeJob();
-        setTimeout(() => {this.fetchTracks();}, 1000);
-        
+        this.status = JobStatus.PENDING;
+        this.fetchTracks();
+       
     }  
 }
 module.exports = JobCD;

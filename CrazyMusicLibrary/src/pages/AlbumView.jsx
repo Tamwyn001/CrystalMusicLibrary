@@ -52,19 +52,31 @@ const AlbumView = ({isPlaylist = false}) => {
         })
         .then(data => {
             setCurrentPlayIcon(Math.floor(Math.random() * 3));
-            const tracks = data.tracks.filter(track => {
+            const localTracks = data.tracks.filter(track => {
                     if(!favFilterAvaliable && track.is_favorite === 1) {setFavFilterAvaliable(true);}
                     return showOnlyFavs ? track.is_favorite === 1 : true});
             if(isPlaylist){
                 setAlbum(data.playlistInfos);
-                setTracks(tracks);
+                setTracks(localTracks);
                 setArtists([data.owner, ...data.collaborators]);
                 setIsFavPlaylist(data.isFavPlaylist)
                 return;
             }
             setAlbum(data.albumInfos);
 
-            setTracks(tracks);
+
+            // We go trough the tracks and assign each disc from a song index.
+            // This skips if tracks have no discs : 0
+            let lastDisc = 0;
+            for (let index = 0; index < localTracks.length; index++) {
+                const track = localTracks[index];
+                if(track.disc > lastDisc){
+                    localTracks.splice(index,0,{disc: track.disc, type : "disc"})
+                    lastDisc = track.disc;
+                }
+            }
+            setTracks(localTracks);
+
             setGenres(data.genres);
             setArtists(data.artists);
             setIsFavPlaylist(false); //triggers container for the AudioContext
@@ -278,8 +290,12 @@ const AlbumView = ({isPlaylist = false}) => {
                                     
                                 </div>}
 
-                            {tracks.map((track, index) => (
-                                <TrackView key={track.id} index={index} track={track} onClick={trackCliced} playIconId={currentPlayIcon} showCover={isPlaylist}/>))}
+                            {tracks.map((track, index) => {return (
+                                track?.type === "disc" ? <span key={`disc-${index}`}>{`Disc ${track.disc}`}</span> : 
+                                <TrackView key={track.id} track={track}
+                                     onClick={trackCliced} playIconId={currentPlayIcon} 
+                                     showCover={isPlaylist}/>
+                                    )})}
                         </div>
                     </div>
                 </div>

@@ -3,7 +3,6 @@ import "./BackendJob.css"
 import ProgressBar from "./ProgressBar";
 import ButtonWithCallback from "./ButtonWithCallback";
 import { useEffect, useRef, useState } from "react";
-import { filter } from "lodash";
 import apiBase from "../../APIbase";
 
 const JobStatus = {
@@ -42,20 +41,24 @@ const BackendJob = ({jobName, description, jobKey}) => {
                         break;
     
                     case JobStatus.INACTIVE:
-                        setTimeout(() => {
-                            setProcessRunning(false);
-                            setPercent(0);
-                            setProgress(null);
-                            refetchStatus(true, res.status)
-                        }, lastState !== JobStatus.INACTIVE ? 2000 : 1);
-                        if(lastState !== JobStatus.INACTIVE){
+
+                        // Just finished job
+                        if( lastState === JobStatus.RUNNING ||  lastState === JobStatus.PENDING ){
+                            setTimeout(() => {
+                                setProcessRunning(false);
+                                setPercent(0);
+                                setProgress(null);
+                                refetchStatus(false, res.status)
+                            }, 2000 );
                             setPercent(100);
                             setProgress({done : lastTotal, total : lastTotal});
                             localTimeout = false;
-                            console.log("JUST FINISHED", lastState);
+                            console.log("espace");
+                            return;
                         }
+                        setProcessRunning(false);
                         // delay the **next status check** to match the UI delay
-                        delay = lastState !== JobStatus.INACTIVE ? 1 : 1000;
+                        // delay = lastState === JobStatus.RUNNING ? 1 : 1000;
                         break;
     
                     case JobStatus.PAUSED:
@@ -86,7 +89,7 @@ const BackendJob = ({jobName, description, jobKey}) => {
                         } else {
                             setProgress(null);
                         }
-                        refetchStatus(true, res.status, res.progress.total)
+                        refetchStatus(true, res.status, res.progress?.total ?? 0);
                     }, delay);
                 }
             });
@@ -116,7 +119,14 @@ const BackendJob = ({jobName, description, jobKey}) => {
         })
     }
     useEffect(()=>{
-        // refetchStatus();
+        refetchStatus(false);
+        return () => {
+            if(statusTimeoutRef.current){
+                console.log("trying clearTimout");
+                clearTimeout(statusTimeoutRef.current);
+                statusTimeoutRef.current = null;
+            }
+        }
     },[])
 
 
@@ -162,7 +172,7 @@ const BackendJob = ({jobName, description, jobKey}) => {
             <div className="job-status" data-running={isPaused ? "false" : "true"}
                  style={{backgroundColor : isProcessRuning ? initialising ? "purple" : (isPaused ? "red": "green"):"grey" }}>
                 <span>
-                    {isProcessRuning ? initialising ? "Initlialising" : (isPaused ? "Paused": "Running"):"Inactive"}
+                    {isProcessRuning ?( initialising ? "Initlialising" : (isPaused ? "Paused": "Running" )): "Inactive"}
                 </span>
             </div>
         </div>

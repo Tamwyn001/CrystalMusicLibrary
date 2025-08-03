@@ -28,6 +28,21 @@ const dirSize = async directory => {
     return ( await Promise.all( stats ) ).reduce( ( accumulator, { size } ) => accumulator + size, 0 );
   }
 
+  function asTransaction(dbInstance, func) {
+    let begin = dbInstance.prepare('BEGIN');
+    let commit = dbInstance.prepare('COMMIT');
+    let rollback = dbInstance.prepare('ROLLBACK');
+    return function (...args) {
+      begin.run();
+      try {
+        func(...args);
+        commit.run();
+      } finally {
+        if (dbInstance.inTransaction) rollback.run();
+      }
+    };
+  }
+
   function interpolateQuery(sql, params) {
     let i = 0;
     return sql.replace(/\?/g, () => {
@@ -42,4 +57,5 @@ const dirSize = async directory => {
   module.exports = {
     currentDate,
     dirSize,
-    interpolateQuery};
+    interpolateQuery,
+    asTransaction};

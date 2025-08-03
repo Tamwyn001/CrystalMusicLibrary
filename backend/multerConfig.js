@@ -4,10 +4,13 @@ const multer = require("multer");
 const getMulterInstance = (dataPath) => multer({
     storage: multer.diskStorage({ // Dynamic storage for multiple fields
         destination: (req, file, cb) => {
+
             if (file.fieldname === "music") {
                 cb(null, `${dataPath}/music/`);
             } else if (file.fieldname === "cover") {
                 cb(null, `${dataPath}/covers/`);
+            } else if (file.fieldname === "coverArtist") {
+                cb(null, `${dataPath}/covers/artists/`);
             } else {
                 cb(new Error("Invalid file field"));
             }
@@ -21,6 +24,10 @@ const getMulterInstance = (dataPath) => multer({
             } else if (file.fieldname === "cover") {
                 const album = JSON.parse(req.body.album || (req.body.playlist || req.body.artist)) ;
                 cb(null, `${album.uuid || album.id}.${album.ext}`); // Give the albums name to the cover
+            }
+            else if (file.fieldname === "coverArtist") {
+                const artist = JSON.parse(req.body.artist);
+                cb(null, `${artist.id}.${artist.ext}`); 
             }
         },
     }),

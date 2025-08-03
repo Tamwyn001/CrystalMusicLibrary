@@ -31,7 +31,7 @@
     display: grid;
     grid-template-columns: repeat(auto-fill, calc(50% - 10px));
     column-gap: 20px;
-    row-gap: auto;
+    row-gap: 30px;
     justify-content: center;
 
 }

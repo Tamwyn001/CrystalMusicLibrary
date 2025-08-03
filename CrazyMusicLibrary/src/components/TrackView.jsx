@@ -25,13 +25,13 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
   const GetRandomPlayIcon = () => {
     switch (playIconId) {
       case 0:
-        return <IconPiano className="track-number" playing="piano" data-showCover={showCover}/>;
+        return <IconPiano className="track-number" playing="piano" data-show-cover={showCover}/>;
       case 1:
-        return <IconVinyl className="track-number" playing="vinyl" data-showCover={showCover}/>;
+        return <IconVinyl className="track-number" playing="vinyl" data-show-cover={showCover}/>;
       case 2:
-        return <IconRadio className="track-number" playing="piano" data-showCover={showCover}/>;
+        return <IconRadio className="track-number" playing="piano" data-show-cover={showCover}/>;
       case 'salad':
-        return <IconSalad className="track-number" playing="piano" data-showCover={showCover}/>
+        return <IconSalad className="track-number" playing="piano" data-show-cover={showCover}/>
     }
   };
   useEffect(() =>{

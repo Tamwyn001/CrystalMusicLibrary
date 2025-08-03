@@ -3,7 +3,8 @@ const { currentDate, interpolateQuery } = require("./lib.js");
 const path = require("path")
 const { unlinkSync } = require("fs");
 const { v4 : uuidv4} = require("uuid");
-// const {_} = require("lodash");
+const { param } = require("./routes/auth.js");
+const _ = require("lodash");
 const db = getDatabase();
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
@@ -139,7 +140,7 @@ const getPlaylist = (id, usermail, shortInfos) => {
         ) as is_favorite, t.disc as disc
         FROM tracks AS t 
         WHERE t.album = ?
-        ORDER BY track_number ASC
+        ORDER BY disc, track_number ASC
     `;
 
     const artistInfos = `
@@ -154,6 +155,45 @@ const getPlaylist = (id, usermail, shortInfos) => {
         genres : db.prepare(genresInfos).all(id),
         tracks : db.prepare(tracksInfos).all([usermail, id]),
         artists : db.prepare(artistInfos).all(id)};
+}
+/**
+ * 
+ * @param {string} id 
+ * @param {{forAll : Boolean, userEmail: string}} forUser 
+ * @returns { {pictureName : string, leftAlbums : Number}}; The number of album left from this artist. Delete artist cover if null.
+ */
+const deleteAlbum = (id, forUser) => {
+    // Delete the actual album.
+    let query;
+    const params = [id];
+    console.log(interpolateQuery("SELECT artist FROM artists_to_albums WHERE taking_part = ?;",id));
+    const artistId = db.prepare("SELECT artist FROM artists_to_albums WHERE taking_part = ?;")
+        .get(id).artist;
+    if(forUser.forAll){
+        query = `
+            DELETE FROM albums WHERE id = ?`;
+    }else if( forUser.userEmail ){
+        console.error("User specific albums are not implemented yet.");
+        // query = `
+        //     DELETE FROM albums_to_users WHERE album = ? 
+        //     AND user IN (SELECT id FROM users WHERE email = ?)`;
+        // params.push(forUser.userEmail);
+    }
+    db.prepare(query).run(params);
+
+    // Removes the artist if no albums are bound.
+    const removeArtist = `
+        SELECT id FROM artists_to_albums WHERE artist = ?
+    `
+    console.log(artistId);
+    const artistTotalAlbums = db.prepare(removeArtist).all(artistId).length ?? 0;
+    var pictureName = "";
+    if(artistTotalAlbums == 0){
+        pictureName = db.prepare("SELECT picture FROM artists_descs WHERE id = ?")
+            .get(artistId).picture;
+        db.prepare("DELETE FROM artists_descs WHERE id = ?").run(artistId);
+    }
+    return { pictureName: pictureName, leftAlbums :artistTotalAlbums};
 }
 
 const getGenreAlbums = (id) => {
@@ -183,20 +223,8 @@ const getGenreTracks = (genreId, user) => {
         WHERE a2g.genre = ?
         ORDER BY a2g.album, t.id ASC;
     `;
-    const result =_.shuffle(db.prepare(genreTracks).all(genreId));
-        switch(result.length){
-            case 0:
-                break;
-            case 1:
-                result = [result[0], result[0], result[0]];
-                break;
-            case 2:
-                result = [result[0], result[1], result[1]];
-                break;
-            default:
-                result = [result[0], result[1], result[2]];
-        }
-    return ;
+   
+    return db.prepare(genreTracks).all(genreId);
 }
 
  const getTrackNameCover = (id) => {
@@ -209,6 +237,21 @@ const getGenreTracks = (genreId, user) => {
     return result;
 }
 
+/**
+ * 
+ * @param {*} id 
+ * @returns {Array<string>}
+ */
+
+const getAlbumTracksPath = (id) => {
+    const query = `
+        SELECT path FROM tracks WHERE album = ?
+    `;
+    const result = db.prepare(query).all(id).map(track => track.path);
+    return result;
+}
+
+
  const getTrackInfos = (id) => {
     const query = `
         SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist, ad.id as artistId
@@ -217,7 +260,7 @@ const getGenreTracks = (genreId, user) => {
         JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE t.id = ?
     `;
-    return db.prepare(query).get(id);
+    return {type : 'track', ... db.prepare(query).get(id)};
 }
 
  const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {
@@ -250,6 +293,9 @@ const getGenreTracks = (genreId, user) => {
 
     return db.prepare(query).all(params);
 }
+const getAlbumCoverPath = (albumId) => {
+    return db.prepare("SELECT cover FROM albums where id = ?").get(albumId)?.cover;
+}
 
  const getTrackCoverPath = (trackId) => {
     const query = `
@@ -273,9 +319,19 @@ const getThreeAlbumCoverForGenre = (genreId) => {
         WHERE a2g.genre = ?;
     `;
     // Todo: install Lodash and suffle the result
-    //  var result = _.shuffle(db.prepare(query).all(genreId));
-    var result = db.prepare(query).all(genreId);
-
+    var result = _.shuffle(db.prepare(query).all(genreId));
+    switch(result.length){
+        case 0:
+            break;
+        case 1:
+            result = [result[0], result[0], result[0]];
+            break;
+        case 2:
+            result = [result[0], result[1], result[1]];
+            break;
+        default:
+            result = [result[0], result[1], result[2]];
+    }
     return result.map(res => res.cover);
 }
 
@@ -316,10 +372,13 @@ const getThreeAlbumCoverForGenre = (genreId) => {
     return db.prepare(query).all();
 }
 
- const getArtist = (id) => {
+ const getArtist = (id, noAlbums = false) => {
     const queryInfos = `
-        SELECT id, name, bio, picture FROM artists_descs WHERE id = ?
+        SELECT * FROM artists_descs WHERE id = ?
     `;
+    if(noAlbums){
+        return db.prepare(queryInfos).get(id);
+    }
     const queryAlbum = `
         SELECT a.id AS id, a.title AS title, a.cover AS cover
         FROM albums AS a 
@@ -449,7 +508,7 @@ const applyAlbumsEdit = (album, newCoverName = null) => {
             // console.log("delteing cover at", path.join(uploadPath, 'covers' , oldCover.cover));
             unlinkSync(path.join(uploadPath, 'covers' , oldCover.cover));
         } catch{ (err) => {
-            throw new Error("Error deleting old cover: ", err);
+            throw new Error("Error deleting old cover: " + err);
         }}
     }
     const updateAlbum = `UPDATE albums SET title = ?, release_date = ?, description = ? ${(newCoverName) ? ", cover = ?": ""} WHERE id = ?`;
@@ -478,6 +537,26 @@ const applyAlbumsEdit = (album, newCoverName = null) => {
     }
     return;
 }
+const applyArtistEdit = (artist, newPictureName = null) => {
+    // for the many to one relationships, we need to delete all the old occurence and insert the new ones
+    // need to delete old cover. Even if uuid matches, the extension might not be the same
+    const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
+    const oldPicture = db.prepare("SELECT picture FROM artists_descs WHERE id = ?").get(artist.id);
+
+    if(oldPicture?.cover && newPictureName){
+        try{
+            // console.log("delteing cover at", path.join(uploadPath, 'covers' , oldCover.cover));
+            unlinkSync(path.join(uploadPath, 'covers' , 'artists',  oldPicture.cover));
+        } catch{ (err) => {
+            throw new Error("Error deleting old cover: " + err);
+        }}
+    }
+    const updateAlbum = `UPDATE artists_descs SET name = ?, active_since = ?, bio = ? ${(newPictureName) ? ", picture = ?": ""} WHERE id = ?`;
+    const updateAlbumArgs = [artist.name, artist.active_from, artist.description, artist.id];
+    const updateAlbumArgsFile = [artist.name, artist.active_from, artist.description, newPictureName, artist.id];
+    db.prepare(updateAlbum).run((newPictureName) ? updateAlbumArgsFile : updateAlbumArgs);
+
+};
 
 const applyPlaylistEdit = (playlist, newCoverName = null) => {
     // for the many to one relationships, we need to delete all the old occurence and insert the new ones
@@ -490,7 +569,7 @@ const applyPlaylistEdit = (playlist, newCoverName = null) => {
             // console.log("delteing cover at", path.join(uploadPath, 'covers' , oldCover.cover));
             unlinkSync(path.join(uploadPath, 'covers' , oldCover.cover));
         } catch{ (err) => {
-            throw new Error("Error deleting old cover: ", err);
+            throw new Error("Error deleting old cover: " + err);
         }}
     }
     const updateAlbum = `UPDATE playlists_descs SET name = ?, modified_at = ?, description = ? ${(newCoverName) ? ", cover = ?": ""} WHERE id = ?`;
@@ -766,7 +845,49 @@ const registerNewSaladForUser = (salad, email) => {
     return {id : newUuid, name : salad.name, color : salad.color, typeElem : "salad"}
 };
 
+/**
+ * Returns the user added radios' details. 
+ * @param {string} email 
+ */
+const getUserKnownRadios = (email) => {
+    const query = 
+        `SELECT r.id as id, url, coverUrl, name FROM radios r
+        JOIN radios_to_users r2u on r.id = r2u.radio
+        WHERE r2u.user IN (SELECT id FROM users WHERE email = ?);`
+    return db.prepare(query).all(email);
+};
+
+const getRadioInfos = (id) => {
+    const query = 
+        `SELECT * FROM radios WHERE id = ?;`
+    return db.prepare(query).get(id);
+};
+
+/**
+ * Adds a new radio record and binds it to a user.
+ * @param {string} email 
+ * @param {{ uuid: string, name: string; url: string; favicon: string; }} radioData
+ */
+const addUserKnowRadio = (email, radioData) => {
+    console.log("New radio! ", radioData.name);
+
+    const userId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
+
+    const queryRadio = `INSERT INTO radios (id, name, url, coverUrl) VALUES (?,?,?,?);`
+    db.prepare(queryRadio).run([radioData.uuid, radioData.name, radioData.url, radioData.favicon]);
+
+    const queryUserBind = `INSERT INTO radios_to_users (radio, user) VALUES (?,?);`
+    db.prepare(queryUserBind).run([radioData.uuid, userId]);
+}
+
 module.exports = {
+    getRadioInfos,
+    applyArtistEdit,
+    getAlbumCoverPath,
+    getAlbumTracksPath,   
+    deleteAlbum,
+    addUserKnowRadio,
+    getUserKnownRadios,
     getThreeAlbumCoverForGenre,
     getGenreTracks,
     applySaladEdits,

@@ -9,8 +9,8 @@ const LibArtistsCard = ({artist}) => {
     }
     return(
         <div className="artist-card" onClick={()=> viewArtist(artist.id)}>
-            {(artist.cover)?
-            <img src={`${apiBase}/covers/${artist.picture}`} alt={`${artist.name} cover`} className="artist-card-cover" />
+            {(artist.picture)?
+            <img src={`${apiBase}/covers/artists/${artist.picture}`} alt={`${artist.name} cover`} className="artist-card-cover" />
             : <CML_logo className="cover-image" />}
             <h3 className="artist-name">{artist.name}</h3>
         </div>

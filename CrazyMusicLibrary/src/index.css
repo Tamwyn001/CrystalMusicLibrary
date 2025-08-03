@@ -13,7 +13,9 @@
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
-
+*{
+  scrollbar-width: thin;
+}
 
 body {
   margin: 0;
@@ -61,3 +63,12 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 } */
+
+::-moz-selection { /* Code for Firefox */
+  background: #febe8f;
+}
+
+::selection {
+
+  background: #febe8f;
+}

@@ -1,12 +1,13 @@
-.songProgress{
+
+.songProgress > div {
     display: flex;
     flex-direction: row;
     align-content: space-between;
     width: 100%;
     align-items: center;
     gap: 10px;
-
 }
+
 .songProgress p{
     margin: 0px;
 }

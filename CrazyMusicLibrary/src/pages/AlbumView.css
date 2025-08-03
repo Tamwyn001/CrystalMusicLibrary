@@ -5,6 +5,9 @@
     flex: 1;
     width: calc(100% - 30px);
 }
+.artist-card-cover{
+    border-radius: 10px;
+}
 .lossless{
     display: flex;
     align-items: center;
@@ -146,7 +149,7 @@
 :root{
     --dashArray: 60;
 }
-.track-number[data-showCover="true"]{
+.track-number[data-show-cover="true"]{
     color: rgb(255, 255, 255);
 }
 .track-number[playing="piano"], .track-number[playing="vinyl"]{

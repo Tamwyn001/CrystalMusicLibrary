@@ -9,6 +9,7 @@ import { useNotifications } from "./GlobalNotificationsProvider.jsx";
 import { useNavigate } from "react-router-dom";
 import TagEditor from "./components/TagEditor.jsx";
 import EditTagsWindow from "./components/EditTagsWindow.jsx";
+import EditArtistInfos from "./components/EditArtistInfos.jsx";
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -41,6 +42,8 @@ export const AudioPlayerProvider = ({ children }) => {
     const playQueueRef = useRef(playQueue);
     const queuePointerRef = useRef(queuePointer);
     const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
+    const [editingArtist, setEditingArtist] = useState(null); // Flag to indicate if the album is being edited
+
     const albumAskRefreshRef = useRef(null); // Contains the refresh callback 
     const [ trackActionContext, setTrackActionContext ] = useState(null);
     const trackActionLoosesFocusRef = useRef(null);
@@ -72,7 +75,44 @@ export const AudioPlayerProvider = ({ children }) => {
         // NODE A
         audioRefA.current = new Audio();
         audioRefA.current.setAttribute("source", "A")
-
+        audioRefA.current.addEventListener('error', (e) => {
+            //Exit to avoid adding the current spoofing URI into a new one.
+            if(audioRefA.current.src.includes("spoof")){return;}
+            const error = audioRefA.current.error;
+            if (error) {
+              console.warn('Audio error occurred: code', error.code);
+              // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED (common for 403s or CORS)
+              if (error.code === 4) {
+                // fallback to backend stream.
+                const proxied = `${apiBase}/radio/spoof/${encodeURIComponent(audioRefA.current.src)}`;
+                audioRefA.current.src = proxied;
+                addNotification("Audio stream not reachable from browser. Streaming from backend..", notifTypes.INFO);
+                setIsPlaying(true);
+                audioRefA.current.play();
+                
+                const source = new EventSource(`${apiBase}/radio/trackStream/${encodeURIComponent(audioRefA.current.src)}`);
+            
+                source.onmessage = (event) => {
+                    console.log(event);
+                    const data = JSON.parse(event.data);
+                    console.log("Now playing:", data.metadata.StreamTitle);
+                    const title = data.metadata.adw_ad == "true" ? 
+                        "Advertisment - " + `${(Number(data.metadata.durationMilliseconds)/1000).toFixed(1)}s`: 
+                        data.metadata.StreamTitle;
+                    setCurrentTrackData(old => {return {...old, title : title}});
+                };
+        
+                source.addEventListener("error", (e) => {
+                    console.warn("Metadata stream error", e);
+                });
+              }
+            }
+          });
+          
+          audioRefA.current.addEventListener('canplay', () => {
+            console.log('Stream is playable!');
+          });
+          
 
         // NODE B
         audioRefB.current = new Audio();
@@ -92,15 +132,16 @@ export const AudioPlayerProvider = ({ children }) => {
     const destructAudioGraph = () =>{
         console.log("Audio graph destructed")
         audioRefA.current?.pause();
+        // audioRefA.current?.disconnect();
         audioRefA.current = null;
-        audioRefA.current?.disconnect();
-
         audioRefB.current?.pause();
+        // audioRefB.current?.disconnect();
         audioRefB.current = null;
-        audioRefB.current?.disconnect();
 
         audioRefA.current?.removeEventListener("timeupdate", updateTime);
         audioRefA.current?.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefA.current?.removeEventListener('error');
+        audioRefA.current?.removeEventListener('canplay');
         audioRefB.current?.removeEventListener("timeupdate", updateTime);
         audioRefB.current?.removeEventListener("ended", playNextTrackOnEnd);
     }
@@ -123,6 +164,9 @@ export const AudioPlayerProvider = ({ children }) => {
 
 
     useEffect(() =>{
+        if(!currentTrackData){ return; } 
+        // Radios do not need transitions. 
+        if(currentTrackData.type === 'radio'){ return; } 
         rescheduleAudioTransition();
     }, [currentTrackData]);
 
@@ -139,6 +183,8 @@ export const AudioPlayerProvider = ({ children }) => {
         , (Math.min(currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime) * 1000), 0);
     }
 
+
+
     //We asume A just started playing. So need an inializer before, like audio A source = ...
     //this is only called if a track will follow
     const playbackWithTransition = async (newQueuePointer) => {
@@ -147,7 +193,44 @@ export const AudioPlayerProvider = ({ children }) => {
         //if another track, we switch audios
         setQueuePointer(newQueuePointer);
         
-        globalAudioRef.current = targetAudioHelperRef.current === "A" ? audioRefA.current : audioRefB.current; 
+        globalAudioRef.current = targetAudioHelperRef.current === "A" ?
+            audioRefA.current : audioRefB.current; 
+
+        
+        if(playQueue[newQueuePointer].startsWith("url:")){
+            // Radios are passed as an object instead of a string (song uuid).
+            console.log(playQueue[newQueuePointer]);
+            const radioUuid = playQueue[newQueuePointer].slice(4);
+            // We expect newQueuePointer to always be 0.
+            const radioDetails = await fetch(`${apiBase}/radio/${radioUuid}`)
+                .then(res=>res.json());
+            console.log(radioDetails);
+            globalAudioRef.current.src = radioDetails.url;
+            setCurrentTrackData({type : 'radio', artist : radioDetails.name,
+                 ...radioDetails, duration : "0-"});
+
+            const source = new EventSource(`${apiBase}/radio/trackStream/${encodeURIComponent(radioDetails.url)}`);
+            
+            source.onmessage = (event) => {
+                console.log(event);
+                const data = JSON.parse(event.data);
+                console.log("Now playing:", data.metadata.StreamTitle);
+                setCurrentTrackData(old => {return {...old, title : data.metadata.StreamTitle}});
+            };
+    
+            source.addEventListener("error", (e) => {
+                console.warn("Metadata stream error", e);
+            });
+            resetTransition();
+            audioRefB.current.removeEventListener("timeupdate", updateTime);
+            audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
+            setIsPlaying(true);
+            globalAudioRef.current.play();
+
+            
+            return;
+            
+        }
         const splittedTrackName = playQueue[newQueuePointer].split('.');
         const trackId = splittedTrackName.length != 0? splittedTrackName[0] : playQueue[newQueuePointer];
         await fetch(`${apiBase}/read-write/trackInfos/${trackId}`, {
@@ -203,9 +286,9 @@ export const AudioPlayerProvider = ({ children }) => {
         }
 
     }
+
     const resetTransition = () =>{
-        if(transitionTimoutRef.current) clearTimeout(transitionTimoutRef.current);
-        if(trackBlendIntervalRef.current) clearInterval(trackBlendIntervalRef.current);
+        if(trackBlendIntervalRef?.current) clearInterval(trackBlendIntervalRef.current);
         //retarget all to node A
     }
 
@@ -249,7 +332,8 @@ export const AudioPlayerProvider = ({ children }) => {
     const playNextTrackOnEnd = () => {
 
           if(playQueue.length > 0 && playQueue.length <= queuePointer + 1){
-            stopMusic();}
+            stopMusic();
+        }
         };
 
     useEffect(() => {
@@ -369,6 +453,7 @@ export const AudioPlayerProvider = ({ children }) => {
     
         if (queue.length <= pointer + 1) {
             stopMusic();
+            console.log("stop");
         }
         
         setQueuePointer(pointer + 1);
@@ -380,6 +465,7 @@ export const AudioPlayerProvider = ({ children }) => {
         setCurrentTime(0); // Reset the current time state
         setIsPlaying(false);
         setCurrentTrackData(null);
+        setShouldInitPlay(false);
         setQueuePointer(-1);
         setTrackCoverUrl('null');
         setPlayQueue([]);
@@ -387,6 +473,7 @@ export const AudioPlayerProvider = ({ children }) => {
         console.log('No more songs in the queue');
         clearInterval(trackBlendIntervalRef.current);
         clearTimeout(trackBlendTimeoutRef.current);
+        resetTransition();
         return;
     }
 
@@ -544,6 +631,43 @@ export const AudioPlayerProvider = ({ children }) => {
         }, interval);
         
     }
+    const applyArtistChanges = (artistChanges, file = null) =>{
+        if(!artistChanges) { //no changes made
+            console.log('No changes made');
+            setEditingArtist(null);
+            return;
+        }
+        const data = new FormData();
+        data.append(`artist`, JSON.stringify(artistChanges));
+        //for uploading a new cover we need an object album.uuid, album.ext
+        if(file) {
+            data.append('coverArtist', file);
+        }
+        fetch(`${apiBase}/read-write/editContainer/artist`, 
+            {method: 'POST',
+            credentials: 'include',
+            body: data})
+        .then(()=> {
+            setEditingArtist(null); 
+            albumAskRefreshRef.current();    
+        })
+    };
+
+    const editArtist = (artistId) => {
+        fetch(`${apiBase}/read-write/artist/${artistId}/true`, {
+            method: 'GET', credentials: 'include'})
+        .then(res=> res.json())
+        .then((data) => {
+            setEditingArtist({
+                id: data.id,
+                picture: `${apiBase}/covers/artists/${data.picture}`,
+                name: data.name,
+                bio: data.bio,
+                active_from :  data.active_from
+            });
+        });
+        return;
+    }
     const applyContainerChanges = (containerClass, file = null) => {
         if(!containerClass) { //no changes made
             console.log('No changes made');
@@ -564,6 +688,23 @@ export const AudioPlayerProvider = ({ children }) => {
             setEditingAlbum(null); 
             albumAskRefreshRef.current();    
         })
+    }
+
+    const deleteAlbum = async (forMe, album) => {
+        const deletionParams = forMe ? "/forMe" : "";
+        const res = await fetch(`${apiBase}/read-write/delete/album/${album.id}${deletionParams}`,
+            {
+                method : "DELETE",
+                credentials : "include"
+            }
+        )
+        .then(res=>res.json());
+        if(res.success){
+            addNotification(`Album ${album.name} deleted.`, notifTypes.SUCCESS);
+            setEditingAlbum(null);
+            navigate("/home");
+        }
+        
     }
 
     const createNewPlaylist = async () => {
@@ -587,6 +728,14 @@ export const AudioPlayerProvider = ({ children }) => {
             setCreatingNewPlaylist(false);
             playlistAddedCallback.current();
         })
+    }
+
+
+    const playRadio = (URL) => {
+        setQueuePointer(0);
+        setPlayQueue([`url:${URL}`]);
+        setShouldInitPlay(true);
+
     }
 
     const closeNewPlaylistWindow = () =>{
@@ -676,9 +825,9 @@ export const AudioPlayerProvider = ({ children }) => {
                addNotification(`${track.title} removed.`, notifTypes.SUCCESS);})
     };
 
-    const linkNewContainer = (container, refreshCallback) => {
+    const linkNewContainer = (newContainer, refreshCallback) => {
         albumAskRefreshRef.current = refreshCallback;
-        setContainer(container);
+        setContainer(newContainer);
     };
 
     const applyTrackEditTags = (tags, track) =>{
@@ -713,6 +862,9 @@ export const AudioPlayerProvider = ({ children }) => {
     return (
         <AudioPlayerContext.Provider 
         value={{
+            deleteAlbum,
+            editArtist,
+            playRadio,
             playContainer,
             closeTagWindow,
             openTagWindow, 
@@ -760,6 +912,8 @@ export const AudioPlayerProvider = ({ children }) => {
                 : editingAlbum.type === "playlist" ? <CreatePlaylist editPlaylistClass={editingAlbum} applyCanges={applyContainerChanges}/> 
                 : null) : null
             }
+            {(editingArtist) && <EditArtistInfos applyChanges={applyArtistChanges} artist={editingArtist}/>}
+
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
             {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
             {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}

@@ -21,6 +21,7 @@ import PlaylistsView from './pages/PlaylistsView';
 import { NotificationsProvider } from './GlobalNotificationsProvider';
 import Cooking from './pages/Cooking';
 import { EventProvider } from './GlobalEventProvider';
+import Radio from './pages/Radio';
 function App() {
 
 
@@ -43,6 +44,8 @@ function App() {
                                 <Route path="playlists" element={<PlaylistsView/>}/>
                                 <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
                                 <Route path="cooking" element={<Cooking/>}/>
+                                <Route path="radio" element={<Radio/>}/>
+
                             </Route>
                             <Route path="account" element={<Account />} /> 
                             <Route path="settings" element={<Settings />} /> 

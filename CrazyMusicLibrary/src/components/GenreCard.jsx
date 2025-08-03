@@ -8,20 +8,48 @@ const GenreCard = ({genre}) =>{
     const navigate = useNavigate();
     const [ images, setImages ] = useState([]);
     const [ nextImages, setNextImages ] = useState([]);
+    const timeoutsRef = useRef([]);
     const nextImgRef = useRef(nextImages);
-    useEffect(() => {
+    const intervalRefs = useRef([]);
+
+    const change = (id) => {
+        console.log("changed on", id);
+        if(!nextImgRef.current?.length == 0){
+            return;
+        }
+        const currentImg = document.getElementById(`genre-${genre.id}-img-${id}`);
+        currentImg?.setAttribute("data-hidden", "true");
+        setTimeout(() => {
+          if (currentImg) {
+            currentImg.src = `${apiBase}/covers/${nextImgRef?.current[id]}`;
+          }
+          currentImg?.removeAttribute("data-hidden");
+        }, 500);
+      };
+    
+      useEffect(() => {
         getThreeRandomImages(setImages);
-        setTimeout(() => {
-            change(0, 500);
-        }, 2000);
-        setTimeout(() => {
-            change(1, 500);
-        }, 2500);
-        setTimeout(() => {
-            change(2, 500);
-        }, 3000);
         refetchNextImg();
-    }, []);
+    
+        const delays = [2000, 2500, 3000];
+        delays.forEach((delay, id) => {
+          // Call it once after initial delay
+          setTimeout(() => change(id), delay);
+    
+          // Then call it repeatedly every 7s
+          const interval = setInterval(() => change(id), 7000);
+          intervalRefs.current.push(interval);
+        });
+        return () => {
+            timeoutsRef.current.forEach(clearTimeout);
+            timeoutsRef.current = [];
+            intervalRefs.current.forEach(clearInterval);
+            intervalRefs.current = [];
+            nextImgRef.current = [];
+          };
+        }, 
+    []);
+
     const getThreeRandomImages = (func) => {
         fetch(`${apiBase}/read-write/trackCoversGenre/${genre.id}`, {method : "GET", credentials : "include"})
         .then(res => res.json())
@@ -38,17 +66,6 @@ const GenreCard = ({genre}) =>{
         setTimeout(refetchNextImg, 5500);
     }
 
-    const change = (id = 1, delay = 0) => {
-        const currentImg = document.getElementById(`genre-${genre.id}-img-${id}`);
-        currentImg?.setAttribute("data-hidden","true");
-        setTimeout(() => {
-            currentImg.src = `${apiBase}/covers/${nextImgRef.current[id]}`;
-            currentImg?.removeAttribute("data-hidden");
-        }, 500);
-        setTimeout(() => {
-            change(id);
-        }, 7000 + delay);
-    }
     return(
         <div className="genre-card" onClick={() => {navigate(`/genres/${genre.id}`)}}>
             {/* <IconPlayCard style={{position:"absolute", top : "50px", backgroundRepeat :"repeat"}}/> */}

@@ -4,14 +4,13 @@ import {IconX} from '@tabler/icons-react';
 import ActiveIndex from './ActiveIndex';
 import MusicSource from './AddMusic/MusicSource';
 import Loading from './Loading';
-import {parseBlob} from 'music-metadata';
+import {parseBlob, parseWebStream} from 'music-metadata';
 import AlbumsOverview from './AddMusic/AlbumsOverview';
 import { v4 as uuidv4 } from 'uuid';
 import AlbumWrapping from './AddMusic/AlbumWrapping';
 import axios from 'axios';
 import apiBase from '../../APIbase';
 import { useNotifications } from '../GlobalNotificationsProvider';
-
 
 
 
@@ -64,6 +63,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
     const {addNotification, notifTypes } = useNotifications();
      //contains all the metadatas that the user changed, used to avoid sending all the metas with the song with fetch
     const [trackMetaOverwrite, setTrackMetaOverwrite] = useState([]);
+    const [radios, setRadios] = useState(new Map());
     
     //this avoids fetching the metadate when we remove the songs from the list
     let deleting = false;
@@ -172,7 +172,34 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         }, 400);
     };
 
-    const fetchMetadata = async () => {
+    const fetchMetadata = async (URL = "") => {
+        if(!fromFile){
+            console.log("Fetching meta at source", URL);
+            
+            const radioFetch = await fetch(`${apiBase}/radio/metadata/${encodeURIComponent(URL)}`, {method :"GET"})
+                .then(res=>res.json()); 
+            if(!radioFetch){
+                addNotification("No radio found..", notifTypes.ERROR);
+                return;
+            } else{
+                addNotification( "Radio found! " + radioFetch[0].name, notifTypes.INFO);
+            }
+            
+            const radio =  radioFetch[0];
+            console.log(radio);
+            const oldRadios = radios;
+            // The UUID is from another service, which means it might be already used by a track here.
+            // This is not a big deal, because radios and tracks are not intended to be exposed
+            // in the same context. Rather, we use the uuid to fetch the radio's meta from the third party.
+            oldRadios.set(radio.stationuuid, {
+                url: radio.url_resolved,
+                favicon : radio.favicon,
+                name : radio.name,
+            })
+            setRadios(oldRadios);
+            setActiveIndex(2);
+            return;
+        }
         const tracks = pendingTracksForMetaFetch.current;
         // const tracks = rawTracks
         setActiveIndex(1);
@@ -209,7 +236,10 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         return localMetadatas; //this is to rebuild the albums
     }
 
-
+    const deleteRadio = (uuid) => {
+        const radiosFiltered = new Map([...radios].filter(([radUuid,v]) => radUuid != uuid));
+        setRadios(radiosFiltered);
+    }
 
     const deleteAlbum = (uuid) => {
         deleting = true;
@@ -287,7 +317,19 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
     const publish = async () => {
         if(deleting) {console.log("Deleting, aborting publish"); return;}; //if deleting, abort the publish
         console.log("Publishing tracks: ", toAddTracks);
-        if (toAddTracks.length === 0) {console.log("No track to publish, abort."); return};
+        console.log("Publishing radios: ", radios);
+        // RADIOS UPLOAD
+
+        radios.keys().forEach(async radioUuid => {
+            const radioData = new FormData();
+            console.log(radios.get(radioUuid));
+            radioData.append("radioData", JSON.stringify({uuid : radioUuid, ...radios.get(radioUuid)}));
+            const resRadio = await fetch(`${apiBase}/radio/newRadio`,
+                {method : "POST", credentials:"include", body : radioData})
+                .then(res => res.json());
+            console.log(resRadio);
+        })
+        if (toAddTracks.length > 0) {
         setActiveIndex(4);
 
         const covers =  albums.map((album) => {
@@ -338,6 +380,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         let totalBytes = toAddTracks.reduce((acc, track) => acc + track.size, 0); 
         setTotalMbUpload((totalBytes/1024/1024).toFixed(1));
 
+        // TRACK UPLOAD
         for (let i = 0; i < toAddTracks.length; i++) {
             const track = toAddTracks[i];
             let bodyFormData = new FormData();
@@ -369,6 +412,8 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
                 console.error("Error uploading track:", error);});
             bodyFormData = null; //clear the form data to free memory
         }
+    }
+
         console.log("Upload finished");
         uploadFinished();
         setTimeout(() => {
@@ -376,6 +421,9 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
             setMetadatas([]);
             setFinishedMeta(0);
             setAlbums([]);
+            const radioCopy = radios;
+            radioCopy.clear();
+            setRadios(radioCopy);
             setActiveIndex(0);
             setEditingAlbum("xxxxxxxx-xxxx-Mxxx-Nxxx-xxxxxxxxxxxx");
             setPercentageUpload(0);
@@ -402,7 +450,10 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
             case 1:
                 return <Loading text={`Fetching metadata... ${(totalMeta) ? finishedMeta+'/'+totalMeta : "-/-"}`} />;
             case 2:
-                return <AlbumsOverview albums={albums} addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} editAlbum={editAlbum} publish={publish}/>;
+                return <AlbumsOverview albums={albums} 
+                addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} 
+                editAlbum={editAlbum} publish={publish}
+                radios={radios} deleteRadio={deleteRadio}/>;
             case 3:
                 return <AlbumWrapping setEditUid={setEditingAlbum} albumClass={albums.find(album => album.uuid === editingAlbum)}/>;
             case 4:

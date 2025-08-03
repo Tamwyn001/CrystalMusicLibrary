@@ -66,8 +66,9 @@ export const lerp  = (a,b,x) => {
 } 
 
 export const trimString = (string, max ) => {
-  if (string.length > max){
-    return string.substring(0,max-2) + "..";
+  var stringNorm = string ?? "";
+  if (stringNorm.length > max){
+    return stringNorm.substring(0,max-2) + "..";
   }
-  return string;
+  return stringNorm;
 }

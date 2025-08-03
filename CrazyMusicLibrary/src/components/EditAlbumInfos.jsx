@@ -1,9 +1,14 @@
 import { useEffect, useState } from 'react';
 import CML_logo from './CML_logo';
 import './AddMusic/AlbumWrapping.css'
-import { IconFolderPlus, IconDirections } from '@tabler/icons-react';
+import { IconFolderPlus, IconDirections, IconTrashFilled, IconTrashX, IconTrash } from '@tabler/icons-react';
 import { FixedSizeList as List } from 'react-window';
 import TrackRemapAlbum from './TrackRemapAlbum';
+import ButtonWithCallback from './ButtonWithCallback';
+import apiBase from '../../APIbase';
+import { useNotifications } from '../GlobalNotificationsProvider';
+import { useNavigate } from 'react-router-dom';
+import { useAudioPlayer } from '../GlobalAudioProvider';
 
 
 const EditAlbumInfos = ({applyCanges, albumClass}) => {
@@ -12,6 +17,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [date, setDate] = useState("2000-00-00"); // Set the default date to today
     const [fileOverwrite, setFileOverwrite] = useState(null);
     const [ remapedSomeTrack, setRemapedSomeTracks ] = useState(false)
+    const {deleteAlbum } = useAudioPlayer();
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -69,6 +75,8 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
         }
         setShowTrackRemap({visible: false})
     }
+
+    
     return(
         <div className="albumWrapping-library-container">
             <div className="albumWrapping-library">
@@ -82,6 +90,14 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
                         <input type="file" id="coverInput" style={{display: "none"}} accept="image/*" onChange={selectNewImage} />
                     </div>
                     <button className="roundButton" onClick={() => handleApply()}>Apply</button>
+                    <ButtonWithCallback  onClick={async() => {
+                        deleteAlbum(true, {name: albumClass.name, id: albumClass.id});}}
+                         text={"Delete for me"} icon={<IconTrash/>}
+                         style={{marginTop: "auto"}}/>
+                    <ButtonWithCallback  onClick={async() => {
+                        deleteAlbum(false, {name: albumClass.name, id: albumClass.id});}}
+                         text={"Remove from library"} icon={<IconTrash/>}/>
+
                 </div>
                 <form className="albumDetails" id='editAlbumInfos' >
                     <label htmlFor="albumName">Album name</label>
