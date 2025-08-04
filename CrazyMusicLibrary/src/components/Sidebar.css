@@ -3,9 +3,8 @@
     flex-direction: column;
     justify-content: space-between;
     background: linear-gradient(90deg, rgb(208, 255, 235) -20px, rgb(208, 240, 246) 100%);
-    width: calc(100% - 20px);
-    margin-top: 10px;
-    margin-left: 10px;
+
+    margin: 10px;
     border-radius: 20px;
     border: solid white 3px;
 }
@@ -19,9 +18,18 @@
 .stat-short > p{
     margin: 0px;
 }
+#nav-recent{
+    display: none;
+}
 @media screen and (min-width: 714px) {
+    #nav-recent{
+        display: block;
+    }
     .sidebar{
+        width: calc(100% - 20px);
         width: 334px;
+        margin-bottom: 0px;
+        margin-right: 0px;
     }
     .stat-short{
         display: block;

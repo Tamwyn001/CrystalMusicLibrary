@@ -245,10 +245,11 @@ router.get("/user-data-usage/:id", async (req, res) => {
     const totalSize = await Promise.all(paths.map(async ({path}) => 
         {
             try{
-                stat(path)
+                return stat(path)
             }
             catch(err){
                 console.log("User data storage error: ", err);
+                return 0;
             }
             finally{}
         }));

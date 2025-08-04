@@ -5,7 +5,7 @@ const dotenv = require("dotenv");
 const path = require("path");
 const isPkg = typeof process.pkg !== "undefined";
 const readline = require("readline")
-const { existsSync, mkdirSync } = require("fs");
+const { existsSync, mkdirSync, writeFile } = require("fs");
 const APP_VERSION = "2.0.0";
 
 // Public path handling (for /dist and static files)
@@ -29,12 +29,12 @@ const resolvedDataPath = path.isAbsolute(rawPathData)
 
 console.log("Data path: ", resolvedDataPath);
 try{
-for(const uploadDir of ["music", "covers"]){
-    if (!existsSync(path.join(resolvedDataPath, uploadDir))){
-        console.log(`Creating directory ${path.join(resolvedDataPath, uploadDir)}`);
-        mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
-    }
-}
+  for(const uploadDir of ["music", "covers", "covers\\artists","ffts"]){
+      if (!existsSync(path.join(resolvedDataPath, uploadDir))){
+          console.log(`Creating directory ${path.join(resolvedDataPath, uploadDir)}`);
+          mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
+      }
+  }
 }
 catch (err) {
     console.log("\x1b[1;31mCan't create or find directory DATA\x1b[0m, is the disc mounted?");
@@ -142,6 +142,7 @@ const allowedDomains = [
   "http://localhost:5174",
   `http://${localIP}:4590`,
   `http://${localIP}:${PORT}`,
+  'http://172.20.10.2:5174', //Vite mobile debug
 
 ];
 console.log("✅ Web APP ready to be served");
@@ -186,12 +187,18 @@ app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
 const jobRouter = require("./routes/jobs.js");
 const RadioRouter = require("./routes/radio.js");
+const LibraryConfig = require("./routes/libraryConfig.js");
+
 app.use("/jobs", jobRouter);
 console.log(`  .      Backend jobs`);
-
-app.use("/radio", new RadioRouter().router);
+app.use("/radio", new RadioRouter().getRouter());
 console.log(`  .      Radio router`);
+const libraryConfig = new LibraryConfig(resolvedDataPath);
+
+app.use("/config", libraryConfig.router);
+console.log(`  .      Config router`);
 console.log(`✅ Routes initialized`);
+
 
 
 app.get("/isResponding", (req, res) => {

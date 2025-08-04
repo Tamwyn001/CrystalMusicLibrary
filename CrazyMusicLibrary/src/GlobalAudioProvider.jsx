@@ -69,6 +69,14 @@ export const AudioPlayerProvider = ({ children }) => {
     const trackBlendIntervalRef = useRef(null); 
     const volumeTransitionInterval = useRef(null);
     const volumeRef = useRef(0);
+
+    //== Audio analysis
+    const audioCtx = useRef(null);
+    const sourceA = useRef(null);
+    const sourceB = useRef(null);
+    const mixer = useRef(null);
+    const analyzer = useRef(null);
+    const frequencyDataArray = useRef(null);
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -125,9 +133,29 @@ export const AudioPlayerProvider = ({ children }) => {
             audioRef.current.volume = parseFloat(localStorage.getItem('volume')) * 0.75 || 0.5;
         }
         resetAudioNodes();
+
+        // The audio analysis plugs the web audio api onto the source
+        // but does not alter it. Makes it work for Safari.
+        // We use references for React.
+        audioCtx.current = new AudioContext();
+        mixer.current = audioCtx.current.createGain();
+        sourceA.current = audioCtx.current.createMediaElementSource(audioRefA.current);
+        sourceB.current = audioCtx.current.createMediaElementSource(audioRefB.current);
+        sourceA.current.connect(mixer.current);
+        sourceB.current.connect(mixer.current);
+        analyzer.current = audioCtx.current.createAnalyser();
+        mixer.current.connect(analyzer.current);
+
+        analyzer.current.fftSize = 256;
+        const bufferLength = analyzer.current.frequencyBinCount;
+        frequencyDataArray.current = new Uint8Array(bufferLength);
+        // analyzer.current.getByteFrequencyData(frequencyDataArray.current);
         console.log("Audio graph setted up")
     };
-
+    console.log(frequencyDataArray.current);
+    if(analyzer.current && frequencyDataArray.current){
+    analyzer.current.getByteFrequencyData(frequencyDataArray.current);
+}
     //call inside a mount
     const destructAudioGraph = () =>{
         console.log("Audio graph destructed")

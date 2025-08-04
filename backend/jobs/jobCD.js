@@ -5,15 +5,27 @@ const {parseFile} = require('music-metadata');
 const { join, basename } = require("path");
 const { interpolateQuery,asTransaction } = require("../lib");
 class JobCD extends Job{
+    /**
+     * @type {any}
+     */
     jobPromises;
+    /**
+     * @type {{ id: any; basename: any; album: any; }[]}
+     */
     toCheckTracks;
+    /**
+     * @type {Map<any, any>}
+     */
     trackIdToCD;
+    /**
+     * @type {Set<any>}
+     */
     albumToLossless;
     
     fetchTracks () {
         var db = getDatabase();
         this.toCheckTracks = db.prepare("SELECT id,path,album FROM tracks").all()
-        .map(track => {return {id: track.id, basename : basename(track.path), album : track.album}});
+        .map((/** @type {{ id: any; path: string; album: any; }} */ track) => {return {id: track.id, basename : basename(track.path), album : track.album}});
         this.updateProgress(0, this.toCheckTracks.length);
         this.trackIdToCD = new Map();
         this.albumToLossless = new Set();
@@ -70,7 +82,7 @@ class JobCD extends Job{
                 commit.run();
                 console.log("   Sucessful write CD.");
             }
-            catch{ (err) => {
+            catch{ (/** @type {any} */ err) => {
                 console.log(err);
             }}
             finally{if(db.inTransaction){
@@ -91,7 +103,7 @@ class JobCD extends Job{
                 commit.run();
                 console.log("   Successful write lossless.");
             }
-            catch{ (err) => {
+            catch{ (/** @type {any} */ err) => {
                 console.log(err);
             }}
             finally{if(db.inTransaction){

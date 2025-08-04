@@ -59,6 +59,7 @@
     padding: 4px 10px;
     border-radius: 0px;
     bottom: 0;
+    left: 0;
 }
 
 .trackinfos-parent{
@@ -96,7 +97,7 @@
 }
 
 .serach-button-div{
-    display: flex;
+    display: none;
     align-content: center;
     gap: 2px;
     cursor: pointer;

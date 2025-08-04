@@ -32,7 +32,7 @@ const Layout = () => {
     }
     const location = useLocation();
     const currentPath = location.pathname;
-    const pageWithSidebarPhone = ['/home', '/playlists', '/albums'];
+    const pageWithSidebarPhone = ['/home'];
     return (
         <div className="app-container">
             <Header />

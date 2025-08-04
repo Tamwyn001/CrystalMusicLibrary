@@ -34,3 +34,4 @@ HowTo.pdn
 CrazyMusicLibrary/CrazyMusicLibrary.rar
 !backend/.env
 !./backend/dist
+backend/config/config.json

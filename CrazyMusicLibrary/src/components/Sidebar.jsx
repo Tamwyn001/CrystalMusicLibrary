@@ -10,7 +10,7 @@ const Sidebar = () => {
     return(
         <div className="sidebar">
             <nav>
-                <Link to="/home"><IconAlbum/>Recent</Link> 
+                <Link id="nav-recent" to="/home"><IconAlbum/>Recent</Link> 
                 <Link to="/playlists"><IconPlaylist/>Playlists</Link>
                 <Link to="/artists"><IconChefHat/>Artists</Link>
                 <Link to="/genres"><IconList/>Genres</Link>
