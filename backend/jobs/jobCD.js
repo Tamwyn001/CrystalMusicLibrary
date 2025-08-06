@@ -1,9 +1,7 @@
-const { promises } = require("readline");
 const { getDatabase } = require("../db");
 const {Job, JobStatus} = require("./jobBase");
 const {parseFile} = require('music-metadata');
 const { join, basename } = require("path");
-const { interpolateQuery,asTransaction } = require("../lib");
 class JobCD extends Job{
     /**
      * @type {any}
@@ -54,11 +52,12 @@ class JobCD extends Job{
             var insertLossless = []
             var placeholderCD = [];
             var placeholderLossless = [];
-
+            // @ts-ignore
             for (let id of ids){
                 insertCD.push(id, this.trackIdToCD.get(id));
                 placeholderCD.push("(?,?)");
-            }
+            }           
+            // @ts-ignore
             for( let album of this.albumToLossless){
                 placeholderLossless.push("(?,?)");
                 insertLossless.push(album, 1);

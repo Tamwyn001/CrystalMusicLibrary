@@ -77,6 +77,13 @@ export const AudioPlayerProvider = ({ children }) => {
     const mixer = useRef(null);
     const analyzer = useRef(null);
     const frequencyDataArray = useRef(null);
+    const fftConfigRef = useRef(null);
+    const writeIndexRef = useRef(0);
+    const circularBufferRef = useRef(null);
+    const lastBufferedStartChunk = useRef(0); 
+    const SECONDS_TO_BUFFER = 5;
+    const FFTcurrentTrack = useRef("");
+    const startTimeRef = useRef(0);
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -134,28 +141,27 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         resetAudioNodes();
 
-        // The audio analysis plugs the web audio api onto the source
-        // but does not alter it. Makes it work for Safari.
-        // We use references for React.
-        audioCtx.current = new AudioContext();
-        mixer.current = audioCtx.current.createGain();
-        sourceA.current = audioCtx.current.createMediaElementSource(audioRefA.current);
-        sourceB.current = audioCtx.current.createMediaElementSource(audioRefB.current);
-        sourceA.current.connect(mixer.current);
-        sourceB.current.connect(mixer.current);
-        analyzer.current = audioCtx.current.createAnalyser();
-        mixer.current.connect(analyzer.current);
+        // // The audio analysis plugs the web audio api onto the source
+        // // but does not alter it. Makes it work for Safari.
+        // // We use references for React.
+        // audioCtx.current = new AudioContext();
+        // mixer.current = audioCtx.current.createGain();
+        // sourceA.current = audioCtx.current.createMediaElementSource(audioRefA.current);
+        // sourceB.current = audioCtx.current.createMediaElementSource(audioRefB.current);
+        // sourceA.current.connect(mixer.current);
+        // sourceB.current.connect(mixer.current);
+        // analyzer.current = audioCtx.current.createAnalyser();
+        // mixer.current.connect(analyzer.current);
 
-        analyzer.current.fftSize = 256;
-        const bufferLength = analyzer.current.frequencyBinCount;
-        frequencyDataArray.current = new Uint8Array(bufferLength);
+        // analyzer.current.fftSize = 256;
+        // const bufferLength = analyzer.current.frequencyBinCount;
+        // frequencyDataArray.current = new Uint8Array(bufferLength);
         // analyzer.current.getByteFrequencyData(frequencyDataArray.current);
         console.log("Audio graph setted up")
     };
-    console.log(frequencyDataArray.current);
-    if(analyzer.current && frequencyDataArray.current){
-    analyzer.current.getByteFrequencyData(frequencyDataArray.current);
-}
+    // if(analyzer.current && frequencyDataArray.current){
+    //     analyzer.current.getByteFrequencyData(frequencyDataArray.current);
+    // }
     //call inside a mount
     const destructAudioGraph = () =>{
         console.log("Audio graph destructed")
@@ -188,6 +194,12 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
         audioRefB.current.removeEventListener("timeupdate", updateTime);
         audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefA.current.addEventListener('timeupdate', debounce(() => {
+            maybeFetchFFT(FFTcurrentTrack.current, audioRefA.current.currentTime);
+        }, 10)); // 200ms delay
+        audioRefB.current.addEventListener('timeupdate', debounce(() => {
+            maybeFetchFFT(FFTcurrentTrack.current, audioRefB.current.currentTime);
+        }, 10)); // 200ms delay
     };
 
 
@@ -272,6 +284,19 @@ export const AudioPlayerProvider = ({ children }) => {
 
         const trackName = playQueue[newQueuePointer]
         globalAudioRef.current.currentTime = 0; // Reset the current time if the track is already loaded
+
+        fftConfigRef.current = await fetch(`${apiBase}/read-write/fftConfig/${trackId}`, {
+            method :"GET",
+            credentials : "include"
+        }).then(res => res.json()).then(data => JSON.parse(data));
+        const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // one value on int16
+        const TOTAL_CHUNKS = SECONDS_TO_BUFFER / fftConfigRef.current.interval; 
+        circularBufferRef.current = new Int16Array(TOTAL_CHUNKS * CHUNK_SIZE);
+        writeIndexRef.current = 0;
+        
+        lastBufferedStartChunk.current = -1;
+        console.log("New buffer!");
+
         if (globalAudioRef.current.src !== resolveTrackURL(trackName)) {
             globalAudioRef.current.src = resolveTrackURL(trackName); // Set the new track URL
         }else{
@@ -282,6 +307,7 @@ export const AudioPlayerProvider = ({ children }) => {
         globalAudioRef.current.play();
         clearTimeout(trackBlendIntervalRef.current);
         setPlayingTrack(trackName);
+        FFTcurrentTrack.current = trackName;
         setIsPlaying(true);
         
         fetchTrackCover(trackName);
@@ -311,8 +337,105 @@ export const AudioPlayerProvider = ({ children }) => {
 
             audioRefA.current.removeEventListener("timeupdate", updateTime);
             audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
-        }
+        };
 
+    }
+
+    const bufferFFTData = async (trackId, audioTime) => {
+        const [startByte, endByte] = getByteRangeForTime(audioTime);
+        // console.log(`Range bytes=${startByte}-${endByte - 1}`);
+
+        const res = await fetch(`${apiBase}/read-write/fft/${trackId}`, {
+          headers: {
+            Range: `bytes=${startByte}-${endByte - 1}`
+          }
+        });
+      
+        if (!res.ok && res.status !== 206) {
+          throw new Error("Failed to stream FFT data");
+        }
+      
+        const buffer = await res.arrayBuffer();
+        const incoming = new Int16Array(buffer);
+        const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; //One value
+        const numChunks = incoming.length / CHUNK_SIZE;
+
+        const CHUNK_DURATION = fftConfigRef.current.interval; // e.g., 0.1s
+        const TOTAL_CHUNKS = SECONDS_TO_BUFFER / CHUNK_DURATION;
+        // Imagine a buffer [=======] where ariving at the end makes it writing back from the start (%).
+        let writeIndex = writeIndexRef.current;
+        for (let i = 0; i < numChunks; i++) {
+            const offset = i * CHUNK_SIZE;
+            circularBufferRef.current.set(
+                incoming.slice(offset, offset + CHUNK_SIZE),
+                (writeIndex % TOTAL_CHUNKS) * CHUNK_SIZE
+            );
+            writeIndex++;
+            // console.log(writeIndex);
+        }
+        writeIndexRef.current = writeIndex;
+        startTimeRef.current = performance.now();
+    };
+
+    const debounce = (fn, delay) => {
+        let timeout;
+        return (...args) => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => fn(...args), delay);
+        };
+    }
+    
+    const maybeFetchFFT = (trackId, currentTime) => {
+        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+        const currentChunk = Math.floor(currentTime * CHUNKS_PER_SECOND);
+        // console.log("currentChunk", currentChunk);
+
+        if (currentChunk === lastBufferedStartChunk.current) return; // Already fetched
+        // console.log("Fetching new chunk, current time", currentTime);
+        lastBufferedStartChunk.current = currentChunk;
+        bufferFFTData(trackId, currentTime);    
+    };
+
+    const isFFTLoadedAtTime = (t) => {
+        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+        const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
+        const elapsedChunks = Math.floor((t - startTimeRef.current) * CHUNKS_PER_SECOND);
+        return elapsedChunks >= TOTAL_CHUNKS;
+
+    }
+    const getFFTAtTime = (t) => {
+        if(!fftConfigRef.current) {
+            return null;
+        }
+        const CHUNK_DURATION = fftConfigRef.current.interval;
+        const CHUNKS_PER_SECOND = 1 / CHUNK_DURATION;
+        const CHUNK_SIZE = fftConfigRef.current.fftSize;
+        const TOTAL_CHUNKS = SECONDS_TO_BUFFER / CHUNK_DURATION;
+
+        // t is the global time, so we subtract the last time we fetch the buffer;
+        const elapsedChunks = Math.floor((t - startTimeRef.current/1000) * CHUNKS_PER_SECOND);
+        // console.log(elapsedChunks , " of ", TOTAL_CHUNKS);
+        if (elapsedChunks < 0 || elapsedChunks >= TOTAL_CHUNKS) {
+            return null; // not in buffer
+        }
+    
+        const start = (elapsedChunks % TOTAL_CHUNKS) * CHUNK_SIZE;
+        return circularBufferRef.current.slice(start, start + CHUNK_SIZE);
+    }
+
+    const getByteRangeForTime = (seconds) => {
+        const CHUNK_BYTES = fftConfigRef.current.fftSize * 1 * 2; // abs (1 value) as int16 (2 bytes)
+        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;  // e.g., 10
+        
+
+        //Chunk numbers
+        const chunkStart = Math.floor(seconds * CHUNKS_PER_SECOND);
+        const chunkEnd = chunkStart +  SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
+
+        //Byte number
+        const chunkStartByte = chunkStart * CHUNK_BYTES;
+        const chunkEndByte = chunkEnd * CHUNK_BYTES;
+        return [chunkStartByte, chunkEndByte];  
     }
 
     const resetTransition = () =>{
@@ -498,6 +621,8 @@ export const AudioPlayerProvider = ({ children }) => {
         setTrackCoverUrl('null');
         setPlayQueue([]);
         setPlayingTrack('');
+        FFTcurrentTrack.current = '';
+
         console.log('No more songs in the queue');
         clearInterval(trackBlendIntervalRef.current);
         clearTimeout(trackBlendTimeoutRef.current);
@@ -890,6 +1015,8 @@ export const AudioPlayerProvider = ({ children }) => {
     return (
         <AudioPlayerContext.Provider 
         value={{
+            fftConfigRef,
+            getFFTAtTime,
             deleteAlbum,
             editArtist,
             playRadio,
@@ -929,6 +1056,7 @@ export const AudioPlayerProvider = ({ children }) => {
             editAlbum,
             editPlaylist,
             createNewPlaylist,
+            globalAudioRef,
             setPlaylistAddedCallback : (fn) => {
                 playlistAddedCallback.current = fn;
             },

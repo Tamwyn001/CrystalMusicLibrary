@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router(); 
 const JobCD = require("../jobs/jobCD");
 const { JobStatus } = require("../jobs/jobBase");
+const JobFFT = require("../jobs/jobFFT");
 
 class JobsManager {
     jobs = [];
@@ -21,6 +22,9 @@ class JobsManager {
         switch(jobKey){
             case 'JOB_CD':
                 newJob = new JobCD("JOB_CD", this);
+                break;
+            case 'JOB_FFT':
+                newJob = new JobFFT(true, "JOB_FFT", this);
                 break;
         }
         if(!newJob) return;

@@ -136,7 +136,6 @@ const localIP = getLocalIP();
 
 const app = express();
 const PORT = process.env.PORT || 4590;
-console.log(localIP);
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",

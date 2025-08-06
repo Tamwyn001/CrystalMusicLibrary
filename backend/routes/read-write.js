@@ -1,6 +1,6 @@
 const express = require( "express");
 // @ts-ignore
-const {existsSync, mkdirSync, statSync, createReadStream, unlink} = require( "fs");
+const {existsSync, mkdirSync, statSync, createReadStream, unlink, fstat} = require( "fs");
 // @ts-ignore
 const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
@@ -485,6 +485,60 @@ router.post("/newSalad", upload.none(), (req, res) => {
     
     // @ts-ignore
     res.json(registerNewSaladForUser(JSON.parse(req.body.salad), decoded.email))
+});
+
+router.get("/fftConfig/:id", (req,res) =>{
+    const fftConfig = require(
+        path.join(process.env.CML_DATA_PATH_RESOLVED,
+             "ffts", "stat_" + req.params.id + ".json"));
+    res.json(JSON.stringify(fftConfig));
+});
+
+router.get("/fft/:id", (req,res) =>{
+    const id = req.params.id;
+    if(id == ""){
+        return res.status(404).send("No track given");
+    }
+    const filePath = path.join(process.env.CML_DATA_PATH_RESOLVED, "ffts", `${id}.bin`);
+    // Check if file exists
+    stat(filePath).then((stats) => {
+        if (!stats.isFile()) {
+            return res.status(404).send('FFT file not found');
+        }
+
+        const range = req.headers.range;
+        if (!range) {
+            // No Range header, return the full file
+            res.setHeader('Content-Type', 'application/octet-stream');
+            res.setHeader('Content-Length', stats.size);
+            return createReadStream(filePath).pipe(res);
+        }
+
+        const bytesPrefix = "bytes=";
+        if (range.startsWith(bytesPrefix)) {
+            const [startStr, endStr] = range
+                .substring(bytesPrefix.length)
+                .split("-");
+
+            const start = parseInt(startStr, 10);
+            const end = endStr ? parseInt(endStr, 10) : stats.size - 1;
+
+            if (isNaN(start) || isNaN(end) || start > end || end >= stats.size) {
+                return res.status(416).send("Requested range not satisfiable");
+            }
+
+            res.status(206); // Partial content
+            res.setHeader("Content-Type", "application/octet-stream");
+            res.setHeader("Content-Length", end - start + 1);
+            res.setHeader("Content-Range", `bytes ${start}-${end}/${stats.size}`);
+
+            return createReadStream(filePath, { start, end }).pipe(res);
+        }
+
+        return res.status(400).send("Invalid Range header");
+    }).catch(err => {
+            return res.status(404).send('FFT file Error: '+ err);
+    });
 });
 
 module.exports = {router, runServerStats};

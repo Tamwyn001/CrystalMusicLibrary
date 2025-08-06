@@ -11,6 +11,11 @@ class Job {
     jobKey = "";
     jobManager;
     progress = {done : 0, total : 0};
+    
+    /**
+     * @param {string} jobKey
+     * @param {JobManager} jobManager 
+     */
     constructor(jobKey, jobManager) {
         this.status = JobStatus.PENDING; 
         this.jobKey = jobKey;

@@ -7,13 +7,15 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "../components/Loading";
 import apiBase from "../../APIbase";
+import FFTVisualizer from "./FFTVisualizer";
+import { useAudioPlayer } from "../GlobalAudioProvider";
 
 
 const Layout = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-
-    useEffect(() => {
+    const {playingTrack} = useAudioPlayer();
+    useEffect(() => {  
         const checkLogin = async () => {
             const resToken = await fetch(`${apiBase}/auth/verifyToken`, {method: 'POST', credentials: 'include'});
             const parsedToken = await resToken.json();
@@ -41,6 +43,7 @@ const Layout = () => {
                 <div className="content">
                     <Outlet /> {/* Route content will render here */}
                 </div>
+                {playingTrack ? <FFTVisualizer/> : null}
             </div>
         </div>
     )

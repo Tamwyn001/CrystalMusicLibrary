@@ -59,7 +59,10 @@ const AdminPannel = () => {
                 </div>
                 <div style={{display : "grid", gridTemplateColumns: "repeat(auto-fill, 500px)", gap:"10px", justifyContent: "center"}}>
                     <BackendJob jobKey={"JOB_CD"} jobName={"Recompute tracks number and CDs"}
-                        description={"Reextract the metadatas of the songs to remap them to the correct CD or track number."}/>
+                        description={"Reextract the metadatas of the songs to remap them to the correct CD or track number. Analyses lossless"}/>
+                     <BackendJob jobKey={"JOB_FFT"} jobName={"Compute audio spectras"}
+                        description={"Runs a fast Fourier transform on each audio files to extract the audio spectrum. The result is writen into .bin files. For a .flac audio of 41kHz, we expect 3Mb spectrum file."}/>
+                    
                     {/* <BackendJob jobKey={"JOB_LOSSLES"} jobName={"Analyse Lossless"}
                         description={"Reextract the metadatas of the songs to check for lossy or not songs."}/>
                     <BackendJob jobKey={"JOB_LYRICS"} jobName={"Analyse Lyrics"}

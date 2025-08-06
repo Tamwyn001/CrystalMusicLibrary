@@ -12,8 +12,8 @@ const defaultConfig = {
 
     useServerFFT : true,
     ServerFFT : {
-        samples : 256,
-        samplingInterval : 0.1,
+        samples : 1024,
+        samplingInterval : 0.01,
         parallelCompute : 5
     }
 }
