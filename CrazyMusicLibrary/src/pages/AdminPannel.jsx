@@ -1,11 +1,12 @@
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase";
 import Header from "../components/Header";
-import { IconArrowBackUp ,IconDatabaseHeart,IconMacro } from "@tabler/icons-react";
+import { IconArrowBackUp ,IconDatabaseHeart,IconMacro, IconPrismLight, IconSettingsCode } from "@tabler/icons-react";
 import UserAccountInfosEntry from "../components/UserAccountInfosEntry";
 import { useNavigate } from "react-router-dom";
 import './AdminPannel.css';
 import BackendJob from "../components/BackendJob";
+import AdminSettingEntry from "./AdminSettingEntry";
 
 const AdminPannel = () => {
     const [isAdmin, setIsAdmin] = useState(false);
@@ -67,6 +68,16 @@ const AdminPannel = () => {
                         description={"Reextract the metadatas of the songs to check for lossy or not songs."}/>
                     <BackendJob jobKey={"JOB_LYRICS"} jobName={"Analyse Lyrics"}
                         description={"Runs a voice recognition model to extract dynamic lyrics from the songs."}/> */}
+                </div>
+                <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline"}}>
+                    <IconSettingsCode/>
+                    <h2 style={{marginTop: "0"}}>Configuration</h2>    
+                </div>
+                <div className="admin-settings-list">
+                    <AdminSettingEntry 
+                        linkedSettingKey={"FFT"}
+                        entryName={"Audio spectra"} 
+                        entryIcon={<IconPrismLight/>}/> 
                 </div>
             </div>
         );

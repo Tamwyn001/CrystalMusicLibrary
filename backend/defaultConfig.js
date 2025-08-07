@@ -9,9 +9,8 @@
  on Safari.
  */
 const defaultConfig = {
-
-    useServerFFT : true,
     ServerFFT : {
+        useServerFFT : true,
         samples : 1024,
         samplingInterval : 0.01,
         parallelCompute : 5

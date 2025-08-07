@@ -1,0 +1,33 @@
+:root{
+    --toggle-button-height : 25px;
+    --toggle-button-width : 55px;
+}
+.toggle-button{
+    width: var( --toggle-button-width);
+    height: var( --toggle-button-height);
+    border-radius: calc(var( --toggle-button-height) / 2);
+    background-color: rgb(255, 107, 107);
+    transition: background-color 0.3s cubic-bezier(1, 0, 0, 1);
+    cursor: pointer;
+    padding: 0px;
+}
+.toggle-button[data-is-active="true"]{
+    background-color: rgb(139, 166, 255);
+
+}
+
+.toggle-button-active{
+    height: 100%;
+    aspect-ratio: 1;
+    border-radius: 50%;
+    transition: translate 0.3s cubic-bezier(1, 0, 0, 1);
+    left:0;
+    background-color: rgb(255, 255, 255);
+}
+.toggle-button:hover .toggle-button-active{
+    background-color: rgb(232, 232, 232);
+
+}
+.toggle-button-active[data-is-active="true"]{
+    translate: calc(var(--toggle-button-width) - var(--toggle-button-height)) 0px;
+}

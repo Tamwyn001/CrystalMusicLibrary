@@ -1,7 +1,10 @@
 const express = require("express");
 const { existsSync, mkdirSync, writeFile } = require("fs");
 const path = require("path");
-
+const verify = require("./verify.js");
+const { getMulterInstance } = require("../multerConfig.js");
+const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
+const upload = getMulterInstance(uploadPath);
 class LibraryConfig {
     currentConfig = {};
     router = express.Router();  
@@ -39,7 +42,17 @@ class LibraryConfig {
 
     }
     RegisterRoutes () {
-        // this.router. ...
+        this.router.post("/send/:key", verify.isAdmin, upload.none(), (req, res) => {
+          switch(req.params.key){
+            case "FFT":
+                const FFTdata = req.body.FFT;
+                this.currentConfig.ServerFFT.useServerFFT = FFTdata.useServerFFT; 
+                this.currentConfig.ServerFFT.samples = FFTdata.samples;
+                this.currentConfig.ServerFFT.samplingInterval = FFTdata.samplingInterval;
+                this.currentConfig.ServerFFT.parallelCompute = FFTdata.parallelCompute;
+              break;
+          }
+        })
     }
 }
 

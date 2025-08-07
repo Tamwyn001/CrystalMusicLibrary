@@ -6,3 +6,57 @@
     gap: 10px;
     width: 100%;
 }
+
+.admin-setting-entry{
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    background-color: #dfdfdf;
+    border-radius: 20px;
+
+}
+.admin-setting-entry-header{
+    border-radius: 20px;
+    display : flex;
+    flex-direction: row;
+    gap:10px;
+    align-items:center;
+    background-color: rgb(230, 232, 232);
+    padding: 10px;
+    cursor: pointer;
+    transition: border-radius 0.2s linear;
+}
+
+.admin-setting-entry-header[data-extended="true"]{
+    border-radius: 20px 20px 0px 0px;
+    background-color: rgb(205, 205, 205);
+
+}
+
+.admin-setting-entry-header svg{
+    padding: 10px;
+    border-radius: 10px;
+    background-color: white;
+}
+
+.admin-settings-list{
+    max-width: 700px;
+    margin: auto;
+}
+.admin-setting-entry-content{
+    padding: 20px;
+}
+.admin-setting-entry-line{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: baseline;
+    pointer-events: auto;
+    transition: filter 0.3s cubic-bezier(1, 0, 0, 1);
+}
+
+
+.admin-setting-entry-line[data-is-enabled="false"]{
+    pointer-events: none;
+    filter: opacity(0.5);
+}
