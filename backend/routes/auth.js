@@ -18,6 +18,10 @@ const { getMulterInstance } = require("../multerConfig.js");
 const { getUserRole, getUsersCount, checkUserExist, registerNewUser, getAllUsers, getUsers } = require('../db-utils.js');
 // @ts-ignore
 const multer = require("multer");
+const verify = require("./verify.js");
+const { join } = require("path");
+const { writeFile } = require("fs");
+const LibraryConfig = require("./libraryConfig.js");
 // import { sanitizeBody } from "../lib.js";
 //fetch auth
 const upload = getMulterInstance(process.env.CML_DATA_PATH_RESOLVED);
@@ -36,8 +40,11 @@ router.post("/init-admin-pannel", (req, res) => {
 router.post("/register", upload.none() ,async (req, res) => {
     const { email, password, name } = req.body;
     try{
-        registerNewUser(email, password, name);
+        const id = registerNewUser(email, password, name);
         console.log("User registered: \x1b[36m", name, "\x1b[0m");
+
+        //Create a new default config file.
+        LibraryConfig.CreateUserDefaultConfig(id);
     }catch (err) {
         if(err.code === 'SQLITE_CONSTRAINT_UNIQUE'){
              res.status(500).json({ error: "Email already in use." });
@@ -47,6 +54,7 @@ router.post("/register", upload.none() ,async (req, res) => {
         res.status(500).json({ error: "Error registering user." });
         return;
     }
+
     // @ts-ignore
     const token = jwt.sign(
         { email : email, username : name },
@@ -88,23 +96,8 @@ router.post("/login", upload.none(), (req, res) => {
 
 
 // @ts-ignore
-router.post("/verifyToken", (req, res) => {
-    const token = req.cookies.token;
-    if (!token) {
-        return res.status(401).json({ error: "Access denied. No token provided." });}
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
-        // @ts-ignore
-        if(!decoded.email){throw new Error("user not valid, redirect to login");
-        }
-        
-        res.json({success : true, message: "Token verified", user : decoded});
-        // console.log("Auto logged in \x1b[36m", decoded.username, "\x1b[0m")
-
-    }catch (err) {
-        console.error("Error verifying token:", err);
-        res.status(401).json({ error: "Invalid token." });
-    }
+router.post("/verifyToken", verify.token, (req, res) => {
+    res.json({success : true, message: "Token verified", user : req.decoded});
 });
 
 router.post("/logout", (req, res) => {
@@ -114,18 +107,8 @@ router.post("/logout", (req, res) => {
 });
 
 // @ts-ignore
-router.post("/is-admin", (req, res) => {
-    const token = req.cookies.token;
-    if (!token) {
-        return res.status(401).json({ error: "Access denied. No token provided." });}
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
-        // @ts-ignore
-        res.json(getUserRole(decoded.email) === 'admin')
-    }catch (err) {
-        console.error("Error verifying token:", err);
-        res.status(401).json({ error: "Invalid token." });
-    }
+router.post("/is-admin", verify.isAdmin, (req, res) => {
+    res.json(true);
 });
 
 router.get("/collaborators", (req, res) => {

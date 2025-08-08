@@ -23,6 +23,8 @@ import Cooking from './pages/Cooking';
 import { EventProvider } from './GlobalEventProvider';
 import Radio from './pages/Radio';
 import './components/UIControls.css';
+import FFTVisualizer from './pages/FFTVisualizer';
+import RouteWithFFT from './pages/RouteWithFFT';
 function App() {
 
 
@@ -34,24 +36,26 @@ function App() {
                         <Routes>    
                             <Route path="/" element={<Authentification />} />
                             <Route path="register" element={<Register />} />
-                            <Route element={<Layout />}>
-                                <Route path='home' element={<Home />}/>
-                                <Route path="albums" element={<Albums />}/>
-                                <Route path="albums/:albumId" element={<AlbumView />}/>
-                                <Route path="artists" element={<ArtistsView />} />
-                                <Route path="artists/:artistId" element={<ArtistView />}/>
-                                <Route path="genres" element={<GenresView/>}/>   
-                                <Route path="genres/:genreId" element={<GenreView />} />
-                                <Route path="playlists" element={<PlaylistsView/>}/>
-                                <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
-                                <Route path="cooking" element={<Cooking/>}/>
-                                <Route path="radio" element={<Radio/>}/>
+                            <Route element={<RouteWithFFT/>}>
+                                <Route element={<Layout />}>
+                                    <Route path='home' element={<Home />}/>
+                                    <Route path="albums" element={<Albums />}/>
+                                    <Route path="albums/:albumId" element={<AlbumView />}/>
+                                    <Route path="artists" element={<ArtistsView />} />
+                                    <Route path="artists/:artistId" element={<ArtistView />}/>
+                                    <Route path="genres" element={<GenresView/>}/>   
+                                    <Route path="genres/:genreId" element={<GenreView />} />
+                                    <Route path="playlists" element={<PlaylistsView/>}/>
+                                    <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
+                                    <Route path="cooking" element={<Cooking/>}/>
+                                    <Route path="radio" element={<Radio/>}/>
 
+                                </Route>
+                                <Route path="account" element={<Account />} /> 
+                                <Route path="settings" element={<Settings />} /> 
+                                <Route path="admin-pannel" element={<AdminPannel />} />
+                                <Route path="*" element={<NotFound />} /> 
                             </Route>
-                            <Route path="account" element={<Account />} /> 
-                            <Route path="settings" element={<Settings />} /> 
-                            <Route path="admin-pannel" element={<AdminPannel />} />
-                            <Route path="*" element={<NotFound />} /> 
                         </Routes>  
                     </GlobalActionBarProvider>
                 </AudioPlayerProvider>

@@ -42,7 +42,9 @@
 .admin-settings-list{
     max-width: 700px;
     margin: auto;
+    width: 100%;
 }
+
 .admin-setting-entry-content{
     padding: 20px;
 }

@@ -80,10 +80,18 @@ export const AudioPlayerProvider = ({ children }) => {
     const fftConfigRef = useRef(null);
     const writeIndexRef = useRef(0);
     const circularBufferRef = useRef(null);
-    const lastBufferedStartChunk = useRef(0); 
+    const lastBufferedEndChunk = useRef(0); 
+    const bufferStartChunkRef = useRef(0); 
     const SECONDS_TO_BUFFER = 5;
     const FFTcurrentTrack = useRef("");
-    const startTimeRef = useRef(0);
+    const FFTUserSetingsRef = useRef(null);
+    const lastTimeRef = useRef(0);
+    const audioTimeTrackingRef = useRef({
+        lastAudioTime: 0,
+        lastPerformanceNow: 0
+    });
+    const resnapIntervalRef = useRef(null);
+    const DRIFT_THRESHOLD = 0.1; // seconds
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -97,7 +105,7 @@ export const AudioPlayerProvider = ({ children }) => {
             if (error) {
               console.warn('Audio error occurred: code', error.code);
               // 4 = MEDIA_ERR_SRC_NOT_SUPPORTED (common for 403s or CORS)
-              if (error.code === 4) {
+              if (error.code === 4 && playingTrack) {
                 // fallback to backend stream.
                 const proxied = `${apiBase}/radio/spoof/${encodeURIComponent(audioRefA.current.src)}`;
                 audioRefA.current.src = proxied;
@@ -139,7 +147,18 @@ export const AudioPlayerProvider = ({ children }) => {
             audioRef.current.setAttribute('webkit-playsinline', ''); // For iOS Safari compatibility
             audioRef.current.volume = parseFloat(localStorage.getItem('volume')) * 0.75 || 0.5;
         }
+        audioRefA.current?.addEventListener('timeupdate', detectSeek);
+        audioRefB.current?.addEventListener('timeupdate', detectSeek);
+        audioRefA.current?.addEventListener('playing', onPlaying);
+        audioRefB.current?.addEventListener('playing', onPlaying);
+        audioRefA.current?.addEventListener("play", handlePlay);
+        audioRefA.current?.addEventListener("pause", handlePause);
+        audioRefB.current?.addEventListener("play", handlePlay);
+        audioRefB.current?.addEventListener("pause", handlePause);
         resetAudioNodes();
+
+    
+
 
         // // The audio analysis plugs the web audio api onto the source
         // // but does not alter it. Makes it work for Safari.
@@ -159,6 +178,7 @@ export const AudioPlayerProvider = ({ children }) => {
         // analyzer.current.getByteFrequencyData(frequencyDataArray.current);
         console.log("Audio graph setted up")
     };
+
     // if(analyzer.current && frequencyDataArray.current){
     //     analyzer.current.getByteFrequencyData(frequencyDataArray.current);
     // }
@@ -178,6 +198,14 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefA.current?.removeEventListener('canplay');
         audioRefB.current?.removeEventListener("timeupdate", updateTime);
         audioRefB.current?.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefA.current?.removeEventListener('timeupdate', detectSeek);
+        audioRefB.current?.removeEventListener('timeupdate', detectSeek);
+        audioRefA.current?.removeEventListener('playing', onPlaying);
+        audioRefB.current?.removeEventListener('playing', onPlaying);
+        audioRefA.current?.removeEventListener("play", handlePlay);
+        audioRefA.current?.removeEventListener("pause", handlePlay);
+        audioRefB.current?.removeEventListener("play", handlePlay);
+        audioRefB.current?.removeEventListener("pause", handlePlay);
     }
 
     const resetAudioNodes = () => {
@@ -194,14 +222,67 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
         audioRefB.current.removeEventListener("timeupdate", updateTime);
         audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
-        audioRefA.current.addEventListener('timeupdate', debounce(() => {
-            maybeFetchFFT(FFTcurrentTrack.current, audioRefA.current.currentTime);
-        }, 10)); // 200ms delay
-        audioRefB.current.addEventListener('timeupdate', debounce(() => {
-            maybeFetchFFT(FFTcurrentTrack.current, audioRefB.current.currentTime);
-        }, 10)); // 200ms delay
+
+        // audioRefA.current.addEventListener('timeupdate', debounce(() => {
+        //     maybeFetchFFT(FFTcurrentTrack.current, audioRefA.current.currentTime);
+        // }, 10)); // 200ms delay
+        // audioRefB.current.addEventListener('timeupdate', debounce(() => {
+        //     maybeFetchFFT(FFTcurrentTrack.current, audioRefB.current.currentTime);
+        // }, 10)); // 200ms delay
     };
 
+    const onPlaying = () => {
+        console.log("Record start playing", globalAudioRef.current.currentTime);
+        audioTimeTrackingRef.current.lastAudioTime = globalAudioRef.current.currentTime;
+        audioTimeTrackingRef.current.lastPerformanceNow = performance.now();
+    };
+    const snapIntervalCallback = () => {
+        const audio = globalAudioRef.current;
+        if (!audio || audio.paused) return;
+        
+        if (Math.abs(audio.currentTime - getAccurateTime()) > DRIFT_THRESHOLD) {
+            resetTracking();
+        }
+    }
+    const startResnapInterval = () => {
+        const RESNAP_INTERVAL = 5000; // every 5 seconds
+        //tiny delay to sync when audio started
+        setTimeout(snapIntervalCallback, 200);
+        const intervalId = setInterval(snapIntervalCallback, RESNAP_INTERVAL);
+    
+        return intervalId;
+    };
+
+
+    const handlePlay = () => {
+        resetTracking();
+        if (resnapIntervalRef.current) clearInterval(resnapIntervalRef.current);
+        resnapIntervalRef.current = startResnapInterval();
+    };
+    
+    const handlePause = () => {
+        if (resnapIntervalRef.current) {
+            clearInterval(resnapIntervalRef.current);
+            resnapIntervalRef.current = null;
+        }
+    };
+
+    const detectSeek = () => {
+        const t = globalAudioRef.current.currentTime;
+        if (Math.abs(t - lastTimeRef.current) > 1.0) {
+            const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+            const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
+            const seekChunk = Math.floor(t * CHUNKS_PER_SECOND);
+            writeIndexRef.current = 0;
+
+             // This tells us: chunk 0 in buffer == chunk N in audio
+            bufferStartChunkRef.current = seekChunk; 
+            bufferFFTData(FFTcurrentTrack.current, seekChunk, seekChunk + TOTAL_CHUNKS);
+        }else{
+            maybeFetchFFT(FFTcurrentTrack.current, t);
+        }
+        lastTimeRef.current = t;
+    };
 
     useEffect(() =>{
         if(!currentTrackData){ return; } 
@@ -293,8 +374,8 @@ export const AudioPlayerProvider = ({ children }) => {
         const TOTAL_CHUNKS = SECONDS_TO_BUFFER / fftConfigRef.current.interval; 
         circularBufferRef.current = new Int16Array(TOTAL_CHUNKS * CHUNK_SIZE);
         writeIndexRef.current = 0;
-        
-        lastBufferedStartChunk.current = -1;
+        bufferStartChunkRef.current = 0;
+        lastBufferedEndChunk.current = 0;
         console.log("New buffer!");
 
         if (globalAudioRef.current.src !== resolveTrackURL(trackName)) {
@@ -341,8 +422,11 @@ export const AudioPlayerProvider = ({ children }) => {
 
     }
 
-    const bufferFFTData = async (trackId, audioTime) => {
-        const [startByte, endByte] = getByteRangeForTime(audioTime);
+    const bufferFFTData = async (trackId, fromChunk, toChunk) => {
+        const CHUNK_BYTES = fftConfigRef.current.fftSize * 1 * 2; //int16 has 2 bytes, for one value
+        const startByte = CHUNK_BYTES * fromChunk;
+        const endByte = CHUNK_BYTES * toChunk;
+        // const [startByte, endByte] = getByteRangeForTime(audioTime);
         // console.log(`Range bytes=${startByte}-${endByte - 1}`);
 
         const res = await fetch(`${apiBase}/read-write/fft/${trackId}`, {
@@ -354,6 +438,7 @@ export const AudioPlayerProvider = ({ children }) => {
         if (!res.ok && res.status !== 206) {
           throw new Error("Failed to stream FFT data");
         }
+        lastBufferedEndChunk.current = toChunk;
       
         const buffer = await res.arrayBuffer();
         const incoming = new Int16Array(buffer);
@@ -363,80 +448,88 @@ export const AudioPlayerProvider = ({ children }) => {
         const CHUNK_DURATION = fftConfigRef.current.interval; // e.g., 0.1s
         const TOTAL_CHUNKS = SECONDS_TO_BUFFER / CHUNK_DURATION;
         // Imagine a buffer [=======] where ariving at the end makes it writing back from the start (%).
-        let writeIndex = writeIndexRef.current;
+        let writeIndexStart = writeIndexRef.current;
         for (let i = 0; i < numChunks; i++) {
             const offset = i * CHUNK_SIZE;
+            const writeIndex = (writeIndexStart + i) % TOTAL_CHUNKS;
+    
             circularBufferRef.current.set(
-                incoming.slice(offset, offset + CHUNK_SIZE),
-                (writeIndex % TOTAL_CHUNKS) * CHUNK_SIZE
+                incoming.subarray(offset, offset + CHUNK_SIZE),
+                writeIndex * CHUNK_SIZE
             );
-            writeIndex++;
-            // console.log(writeIndex);
         }
-        writeIndexRef.current = writeIndex;
-        startTimeRef.current = performance.now();
+    
+        writeIndexRef.current = (writeIndexStart + numChunks) % TOTAL_CHUNKS;
     };
 
-    const debounce = (fn, delay) => {
-        let timeout;
-        return (...args) => {
-            clearTimeout(timeout);
-            timeout = setTimeout(() => fn(...args), delay);
-        };
-    }
+    const resetTracking = () => {
+        audioTimeTrackingRef.current.lastAudioTime = globalAudioRef.current.currentTime;
+        audioTimeTrackingRef.current.lastPerformanceNow = performance.now();
+    };
+    
+    const getHighPrecisionAudioTime = () => {
+        const { lastAudioTime, lastPerformanceNow } = audioTimeTrackingRef.current;
+        const elapsed = (performance.now() - lastPerformanceNow) / 1000;
+        return lastAudioTime + elapsed;
+    };
+
+    const getAccurateTime = () => {
+        if (globalAudioRef.current.paused) return globalAudioRef.current.currentTime;
+        return getHighPrecisionAudioTime();
+    };
     
     const maybeFetchFFT = (trackId, currentTime) => {
         const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
         const currentChunk = Math.floor(currentTime * CHUNKS_PER_SECOND);
         // console.log("currentChunk", currentChunk);
-
-        if (currentChunk === lastBufferedStartChunk.current) return; // Already fetched
-        // console.log("Fetching new chunk, current time", currentTime);
-        lastBufferedStartChunk.current = currentChunk;
-        bufferFFTData(trackId, currentTime);    
+        const remainingBufferedChunks = lastBufferedEndChunk.current - currentChunk;
+        const TOTAL_CHUNK_TO_BUFFER = CHUNKS_PER_SECOND * SECONDS_TO_BUFFER;
+        const missingChunks  =  TOTAL_CHUNK_TO_BUFFER - remainingBufferedChunks
+        if (missingChunks < 1) return;
+        
+        bufferFFTData(trackId, 
+            lastBufferedEndChunk.current, 
+            TOTAL_CHUNK_TO_BUFFER + currentChunk);
+        
     };
 
-    const isFFTLoadedAtTime = (t) => {
+    const getCurrentFFTChunkIndex = () => {
         const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
-        const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
-        const elapsedChunks = Math.floor((t - startTimeRef.current) * CHUNKS_PER_SECOND);
-        return elapsedChunks >= TOTAL_CHUNKS;
+        const currentChunk = Math.floor(getAccurateTime() * CHUNKS_PER_SECOND);
 
-    }
-    const getFFTAtTime = (t) => {
-        if(!fftConfigRef.current) {
+        const relativeChunk = currentChunk - bufferStartChunkRef.current;
+        const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
+
+        // if (relativeChunk < 0 || relativeChunk >= TOTAL_CHUNKS) {
+        //     return null; // Not in buffer!
+        // }
+
+        const circularIndex = relativeChunk % TOTAL_CHUNKS;
+        return circularIndex;
+    };
+
+
+    const getFFTAtCurrentTime = () => {
+        if (!fftConfigRef.current || !circularBufferRef.current) {
             return null;
         }
-        const CHUNK_DURATION = fftConfigRef.current.interval;
-        const CHUNKS_PER_SECOND = 1 / CHUNK_DURATION;
-        const CHUNK_SIZE = fftConfigRef.current.fftSize;
-        const TOTAL_CHUNKS = SECONDS_TO_BUFFER / CHUNK_DURATION;
-
-        // t is the global time, so we subtract the last time we fetch the buffer;
-        const elapsedChunks = Math.floor((t - startTimeRef.current/1000) * CHUNKS_PER_SECOND);
-        // console.log(elapsedChunks , " of ", TOTAL_CHUNKS);
-        if (elapsedChunks < 0 || elapsedChunks >= TOTAL_CHUNKS) {
-            return null; // not in buffer
-        }
     
-        const start = (elapsedChunks % TOTAL_CHUNKS) * CHUNK_SIZE;
-        return circularBufferRef.current.slice(start, start + CHUNK_SIZE);
-    }
-
-    const getByteRangeForTime = (seconds) => {
-        const CHUNK_BYTES = fftConfigRef.current.fftSize * 1 * 2; // abs (1 value) as int16 (2 bytes)
-        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;  // e.g., 10
+        const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // One value per bin
+        const chunkIndex = getCurrentFFTChunkIndex();
         
+        if (chunkIndex === null) return null;
+    
+        const TOTAL_CHUNKS = Math.floor(SECONDS_TO_BUFFER / fftConfigRef.current.interval);
+        const totalBufferSize = TOTAL_CHUNKS * CHUNK_SIZE;
+    
+        const start = chunkIndex * CHUNK_SIZE;
+        const end = start + CHUNK_SIZE;
+    
+        if (end > totalBufferSize) return null; // Avoid out-of-bounds
+    
+        return circularBufferRef.current.slice(start, end);
+    };
 
-        //Chunk numbers
-        const chunkStart = Math.floor(seconds * CHUNKS_PER_SECOND);
-        const chunkEnd = chunkStart +  SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
-
-        //Byte number
-        const chunkStartByte = chunkStart * CHUNK_BYTES;
-        const chunkEndByte = chunkEnd * CHUNK_BYTES;
-        return [chunkStartByte, chunkEndByte];  
-    }
 
     const resetTransition = () =>{
         if(trackBlendIntervalRef?.current) clearInterval(trackBlendIntervalRef.current);
@@ -668,9 +761,17 @@ export const AudioPlayerProvider = ({ children }) => {
         setPlayQueue([]);
         setQueuePointer(-1);
     }
+    const fetchFFTUserSettings = () => {
+        fetch(`${apiBase}/config/user/FFT`, {
+            method : "GET",
+            credentials: "include"
+        }).then(res => res.json())
+        .then(data => {FFTUserSetingsRef.current = data;})
+    }
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
         setupAudioGraph();
+        fetchFFTUserSettings();
         return () => {
             destructAudioGraph();
         }
@@ -1015,8 +1116,9 @@ export const AudioPlayerProvider = ({ children }) => {
     return (
         <AudioPlayerContext.Provider 
         value={{
+            FFTUserSetingsRef,
             fftConfigRef,
-            getFFTAtTime,
+            getFFTAtCurrentTime,
             deleteAlbum,
             editArtist,
             playRadio,

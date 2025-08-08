@@ -5,36 +5,40 @@ const FFTVisualizer = () => {
 	const animationRef = useRef();
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
-	const {getFFTAtTime, fftConfigRef, globalAudioRef} = useAudioPlayer();
-	const barNumber = 100;
-  	const animate = (time) => {
+	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef} = useAudioPlayer();
+	
+  	const animate = () => {
 		// Do your animation logic here
 		// Example: update canvas or sync with audio time
 		const ctx = canvasRef.current.getContext("2d");
 		
-		if(ctx){
+		if(ctx && FFTUserSetingsRef.current){
+			const barNumber = FFTUserSetingsRef.current.bars;
 			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
-			let FFTdata = getFFTAtTime(time/1000);
-			
+
+
+			const FFTdata = getFFTAtCurrentTime();
 			if(!FFTdata){
 				animationRef.current = requestAnimationFrame(animate);
 				return;
 			};
 			const deltaFrequency = fftConfigRef.current.sampleRate / FFTdata.length;
-			FFTdata = FFTdata.slice(0, Math.floor(22000/deltaFrequency));
-			const barSummation = Math.floor(FFTdata.length / barNumber);
+			// FFTdata = FFTdata.slice(0, Math.floor(22000/deltaFrequency));
+			const barSummation = Math.max(1,FFTdata.length / barNumber);
 			const display = new Array(barNumber);
 			display.fill(0);
 			for (let i = 0; i < FFTdata.length; i++) {
+				// todo Math.floor leaves some artefect for bar > fftsise/2 
 				display[Math.floor(i/barSummation)] += Number(FFTdata[i]);
+
 			}
-			let barWidth = (canvasRef.current.width ) / barNumber ;
+			let barWidth = (canvasRef.current.width / barNumber - 1);
+			// console.log(barWidth, canvasRef.current.width , barNumber)
 			let x = 0;
-// rgb(147, 137, 255)
 			for (let i = 0; i < display.length; i++) {
-				const barHeight = Math.sqrt(display[i]) * (barNumber / 5) * globalAudioRef.current?.volume;
+				const barHeight = Math.log2(display[i]) * (barNumber / 5) * globalAudioRef.current?.volume;
 				ctx.fillStyle = `rgb(${barHeight-100} 137 255)`;
-				ctx.fillRect(x, canvasRef.current.height - barHeight / 2, barWidth, barHeight);
+				ctx.fillRect(x, canvasRef.current.height - barHeight, barWidth, barHeight);
 
 				x += barWidth + 1;
 			  }

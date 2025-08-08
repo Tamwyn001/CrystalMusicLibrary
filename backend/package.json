@@ -32,13 +32,17 @@
     "scripts": [
       "server.js",
       "db.js",
-      "./routes/auth.js",
+      "./routes/*.js",
       "./routes/read-write.js",
       "lib.js",
       "./jobs/jobCD.js",
       "./jobs/jobBase.js",
       "node_modules/music-metadata/lib/**/*.js",
-      "node_modules/strtok3/lib/**/*.js"
+      "node_modules/strtok3/lib/**/*.js",
+      "./defaultConfig.js",
+      "./jobs/*.js",
+      "./jobs/workers/*.js",
+      "./verify.js"
     ],
     "outputPath": "../pkg-dist"
   },

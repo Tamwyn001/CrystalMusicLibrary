@@ -14,7 +14,6 @@ import { useAudioPlayer } from "../GlobalAudioProvider";
 const Layout = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const {playingTrack} = useAudioPlayer();
     useEffect(() => {  
         const checkLogin = async () => {
             const resToken = await fetch(`${apiBase}/auth/verifyToken`, {method: 'POST', credentials: 'include'});
@@ -43,7 +42,6 @@ const Layout = () => {
                 <div className="content">
                     <Outlet /> {/* Route content will render here */}
                 </div>
-                {playingTrack ? <FFTVisualizer/> : null}
             </div>
         </div>
     )

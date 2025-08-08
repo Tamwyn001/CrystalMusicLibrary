@@ -414,8 +414,7 @@ const getThreeAlbumCoverForGenre = (genreId) => {
 
 const getUserRole = (email) =>{
     const query = `SELECT role FROM users WHERE email = ?`
-    const res = db.prepare(query).get(email);
-    return res.role
+    return db.prepare(query).get(email).role;
 }
 
 const getUsersCount = () => {
@@ -436,7 +435,8 @@ const registerNewUser = (email, password, name) => {
     const isFirstUser = getUsersCount() === 0;
     const role = isFirstUser ? "admin" : "user";
     const query = "INSERT INTO users (email, password, username, role, created_at) VALUES (?, ?, ?, ?, ?)";
-    db.prepare(query).run([email, password, name ,role, currentDate()]);
+    const res = db.prepare(query).run([email, password, name ,role, currentDate()]);
+    return res.lastInsertRowid;
 }
 
 const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/album/playlist mapping, please use ...
@@ -880,7 +880,12 @@ const addUserKnowRadio = (email, radioData) => {
     db.prepare(queryUserBind).run([radioData.uuid, userId]);
 }
 
+const getUserId = (email) => {
+    return db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
+}
+
 module.exports = {
+    getUserId,
     getRadioInfos,
     applyArtistEdit,
     getAlbumCoverPath,

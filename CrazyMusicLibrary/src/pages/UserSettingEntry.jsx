@@ -1,13 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import FFTSettings from "../components/AdminSettings/FFTSettings";
+import FFTSettingsUser from "../components/UserSettings/FFTSettingsUser";
 
 const settingComponents = {
-    FFT: FFTSettings,
+    FFT: FFTSettingsUser,
     // Add more keys as needed
   };
   
 
-const AdminSettingEntry = ({entryName, entryIcon, linkedSettingKey}) => {
+const UserSettingEntry = ({entryName, entryIcon, linkedSettingKey}) => {
     const [extended, setExtended] = useState(false);
     const SettingComponent = useMemo(
             () => settingComponents[linkedSettingKey] || null,
@@ -29,4 +29,4 @@ const AdminSettingEntry = ({entryName, entryIcon, linkedSettingKey}) => {
     );
 }
 
-export default AdminSettingEntry;
+export default UserSettingEntry;

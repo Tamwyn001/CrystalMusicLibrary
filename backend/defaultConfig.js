@@ -11,10 +11,16 @@
 const defaultConfig = {
     ServerFFT : {
         useServerFFT : true,
-        samples : 1024,
-        samplingInterval : 0.01,
+        samples : 512,
+        samplingInterval : 0.0166, //60fps
         parallelCompute : 5
     }
 }
 
-module.exports = defaultConfig;
+const UserDefaultConfig = {
+    FFT : {
+        bars : 255
+    }
+};
+
+module.exports = {defaultConfig, UserDefaultConfig};

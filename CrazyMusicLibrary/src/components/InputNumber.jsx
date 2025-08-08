@@ -1,21 +1,25 @@
 import { useRef } from "react";
 
-const InputNumber = ({stateChanged, min, max}) => {
-    const userInputsRef = useRef(false);
-
-    const change = (e) => {
+const InputNumber = ({stateChanged, min=0, max=0, ref}) => {
+    const noRange =  (min === max && max === 0);
+    const handleChange = (e) => {
         const value = e.target.value;
-        if(value > max || value < min) {
-            userInputsRef.current = true;
-            e.target.value = Math.min(max, Math.max(min, value));
-            change(e);
-            return;
+        stateChanged(value); // Let them type anything for now
+    };
+    
+    const handleBlur = (e) => {
+        console.log("blur");
+        let value = parseFloat(e.target.value);
+        if (isNaN(value)) value = min; // fallback if input is empty or invalid
+        if(!noRange){
+            value = Math.min(max, Math.max(min, value)); // clamp
         }
-        userInputsRef.current = false;
-        stateChanged(value);
-    }
-    return (
-       <input min={min} max={max} type="number" onChange={change}/>
+        e.target.value = value;
+        stateChanged(value); // update with clamped value
+    };
+    return (noRange ? <input ref={ref}  type="number" onBlur={handleBlur} onChange={handleChange}/>
+        :
+       <input min={min} ref={ref} max={max} type="number" onBlur={handleBlur} onChange={handleChange}/>
     )
 }
 
