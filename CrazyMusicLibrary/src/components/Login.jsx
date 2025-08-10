@@ -5,6 +5,7 @@ import CML_logo from "./CML_logo";
 import ThreePointsLoader from "./ThreePointsLoader";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useState } from "react";
+import { useEventContext } from "../GlobalEventProvider";
 const LoginStatus = {
     FETCHING : "fetching",
     SUCCESS : "success",
@@ -15,6 +16,7 @@ const Register = () => {
     const [status, setStatus] = useState(LoginStatus.NONE);
     const [displayedStatus, setDisplayedStatus] = useState(LoginStatus.NONE);
     const navigate = useNavigate();
+    const {emit} = useEventContext();
     const handleLogin = async (e) => {
         e.preventDefault() // prevent form reload
         if (!e.target.email.value || !e.target.password.value) {
@@ -59,6 +61,7 @@ const Register = () => {
                 }, 1000)
             case LoginStatus.SUCCESS:
                 setTimeout(() => {
+                    emit("login");
                     navigate('/home')
                 }, 1000)
                 break
@@ -74,9 +77,9 @@ const Register = () => {
         <p>We were not able to connect you, please login.</p>
         <form onSubmit={handleLogin}>
             <label htmlFor="email">Email</label>
-            <input type="text" name="email" placeholder="Username" autocomplete="email"/>
+            <input type="text" name="email" placeholder="Username" autoComplete="email"/>
             <label htmlFor="password">Password</label>
-            <input type="password" placeholder="Password" name="password" autocomplete="password"/>
+            <input type="password" placeholder="Password" name="password" autoComplete="password"/>
             <button type="submit">Login </button>
         </form>
         <RequestStatus/>

@@ -9,6 +9,9 @@ const upload = getMulterInstance(uploadPath);
 const {defaultConfig, UserDefaultConfig} = require('../defaultConfig.js');
 
 class LibraryConfig {
+  /**
+   * @type {defaultConfig}
+   */
     currentConfig = {};
     router = express.Router();  
 

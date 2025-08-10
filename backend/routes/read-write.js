@@ -12,6 +12,7 @@ const { stat, unlink : unlinkPromise } = require("fs/promises");
 const jwt = require("jsonwebtoken");
 const path = require("path")
 const icy = require("icy");
+const verify = require("./verify.js");
 
 const router = express.Router();
 // @ts-ignore
@@ -28,8 +29,8 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
         res.json({ message: "Album uploaded successfully" });
         return;
     }
-    //the subroute for uploading tracks
-    //link tracks to albumUuid
+    // Setted from the server.js
+
     const musicFileProcess = new Promise(async (resolve, reject) => {
         const meta = JSON.parse(req.body.trackMeta);
         // @ts-ignore
@@ -56,7 +57,10 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
             reject(err);
         }
     });
-    musicFileProcess.then((trackName) => {console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m");});
+    musicFileProcess.then((trackName) => {
+        console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m");
+        router.jobManager.registerNewJob("JOB_FFT", {tracks : [req.files.music[0].path]}, true);
+    });
     res.json({ message: "Files uploaded successfully" });
     
     }
@@ -68,7 +72,7 @@ router.get("/albums",  (req, res) => {
     res.json(albums);
 });
 
-router.get("/album/:id",  (req, res) => {
+router.get("/album/:id", verify.token, (req, res) => {
     const token = req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
     // @ts-ignore
@@ -488,9 +492,13 @@ router.post("/newSalad", upload.none(), (req, res) => {
 });
 
 router.get("/fftConfig/:id", (req,res) =>{
-    const fftConfig = require(
-        path.join(process.env.CML_DATA_PATH_RESOLVED,
-             "ffts", "stat_" + req.params.id + ".json"));
+    const configPath = path.join(process.env.CML_DATA_PATH_RESOLVED,
+        "ffts", "stat_" + req.params.id + ".json");
+    if(!existsSync(configPath)){
+        res.status(404).send("No fft found.");
+        return;
+    }
+    const fftConfig = require(configPath);
     res.json(JSON.stringify(fftConfig));
 });
 

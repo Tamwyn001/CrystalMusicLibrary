@@ -27,7 +27,8 @@
       "node_modules/token-types/**/*",
       "node_modules/peek-readable/**/*",
       "node_modules/strtok3/**/*",
-      "node_modules/music-metadata/**/*"
+      "node_modules/music-metadata/**/*",
+      "./jobs/workers/fftWorker.js"
     ],
     "scripts": [
       "server.js",

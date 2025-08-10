@@ -5,15 +5,19 @@ const FFTVisualizer = () => {
 	const animationRef = useRef();
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
-	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef} = useAudioPlayer();
+	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef,fetchFFTUserSettings} = useAudioPlayer();
 	
   	const animate = () => {
 		// Do your animation logic here
 		// Example: update canvas or sync with audio time
+		if(!canvasRef.current) {
+			animationRef.current = requestAnimationFrame(animate);
+			return;
+		}
 		const ctx = canvasRef.current.getContext("2d");
-		
 		if(ctx && FFTUserSetingsRef.current){
 			const barNumber = FFTUserSetingsRef.current.bars;
+
 			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
 
@@ -45,6 +49,15 @@ const FFTVisualizer = () => {
 		}
 		animationRef.current = requestAnimationFrame(animate);
   	};
+	useEffect(() => {
+		if(!fftConfigRef.current){
+			cancelAnimationFrame(animationRef.current);
+			console.log("No FFT data to display, releasing anim frame.");
+			return;
+		} 
+		animationRef.current = requestAnimationFrame(animate);
+		console.log("FFT found, requested animation frame.");
+	},[fftConfigRef.current]);
 
 	useEffect(() => {
 		animationRef.current = requestAnimationFrame(animate);

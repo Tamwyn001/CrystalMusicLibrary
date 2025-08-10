@@ -4,6 +4,7 @@ import ProgressBar from "./ProgressBar";
 import ButtonWithCallback from "./ButtonWithCallback";
 import { useEffect, useRef, useState } from "react";
 import apiBase from "../../APIbase";
+import { words } from "lodash";
 
 const JobStatus = {
     PENDING : "pending",
@@ -12,7 +13,7 @@ const JobStatus = {
     INACTIVE : "inactive"
 }
 
-const BackendJob = ({jobName, description, jobKey}) => {
+const BackendJob = ({jobName, description, jobKey, payload={}, doneTotalView = null}) => {
 
     const  [isProcessRuning, setProcessRunning] = useState(false);  
     const [isPaused, setIsPaused ] = useState(true);
@@ -27,7 +28,7 @@ const BackendJob = ({jobName, description, jobKey}) => {
             .then(res => res.json())
             .then(res => {
                 setInitialiasing(false);
-                console.log("Refetching with", res.status, lastState);
+                // console.log("Refetching with", res.status, lastState);
                 
     
                 let delay = 1000; // default delay
@@ -51,9 +52,9 @@ const BackendJob = ({jobName, description, jobKey}) => {
                                 refetchStatus(false, res.status)
                             }, 2000 );
                             setPercent(100);
-                            setProgress({done : lastTotal, total : lastTotal});
+                            setProgress({done : lastTotal, total : lastTotal, working : 0});
                             localTimeout = false;
-                            console.log("espace");
+                            console.log("Stop fast fetch job");
                             return;
                         }
                         setProcessRunning(false);
@@ -71,7 +72,6 @@ const BackendJob = ({jobName, description, jobKey}) => {
                         setIsPaused(false);
                         setProcessRunning(true);
                         delay = 10;
-                        console.log("fast refresh");
                         break;
                 }
                 
@@ -82,7 +82,7 @@ const BackendJob = ({jobName, description, jobKey}) => {
                 if (localTimeout) {
                     statusTimeoutRef.current = setTimeout(() => {
                         if (res.progress) {
-                            console.log(res.progress);
+                            // console.log(res.progress);
                             const rawPercent = res.progress.done / res.progress.total * 100;
                             setPercent(rawPercent);
                             setProgress(res.progress);
@@ -95,9 +95,22 @@ const BackendJob = ({jobName, description, jobKey}) => {
             });
     };
     
+    /**
+     * First simple check on startup, if it runs, we proceed with a auto refresh
+     */
+    const simpleRefetch = () => {
+        fetch(`${apiBase}/jobs/status/${jobKey}`, { method: "GET", credentials: "include" })
+        .then(res => res.json())
+        .then(res => {
+            //This would be false by default
+            refetchStatus(res.status === JobStatus.RUNNING);
+        });
+    };
 
     const run = () =>{
-        fetch(`${apiBase}/jobs/run/${jobKey}`, {method : "GET", credentials: "include"})
+        const data = new FormData();
+        data.append("payload", JSON.stringify(payload));
+        fetch(`${apiBase}/jobs/run/${jobKey}`, {method : "POST", credentials: "include", body: data})
         .then(res => res.json())
         .then(res => {
             refetchStatus(true);
@@ -111,6 +124,13 @@ const BackendJob = ({jobName, description, jobKey}) => {
             refetchStatus(false);
         })
     }
+    const resume = () =>{
+        fetch(`${apiBase}/jobs/resume/${jobKey}`, {method : "GET", credentials: "include"})
+        .then(res => res.json())
+        .then(res => {
+            refetchStatus(true);
+        })
+    }
     const stop = () =>{
         fetch(`${apiBase}/jobs/stop/${jobKey}`, {method : "GET", credentials: "include"})
         .then(res => res.json())
@@ -119,10 +139,10 @@ const BackendJob = ({jobName, description, jobKey}) => {
         })
     }
     useEffect(()=>{
-        refetchStatus(false);
+        simpleRefetch();
         return () => {
             if(statusTimeoutRef.current){
-                console.log("trying clearTimout");
+                console.log("Trying clearTimout");
                 clearTimeout(statusTimeoutRef.current);
                 statusTimeoutRef.current = null;
             }
@@ -132,7 +152,7 @@ const BackendJob = ({jobName, description, jobKey}) => {
 
     const toggleResumePause = async () =>{
         if(isProcessRuning){
-            if(isPaused){ run(); } else{ pause(); }
+            if(isPaused){ resume(); } else{ pause(); }
             setIsPaused(!isPaused);
             return;
         }
@@ -159,10 +179,11 @@ const BackendJob = ({jobName, description, jobKey}) => {
                     icon={isProcessRuning ? (isPaused ? <IconClockPlay/> : <IconClockPause/>) : <IconRun/>}
                     onClick={toggleResumePause}/>
                 <ButtonWithCallback text={'Stop'} icon={<IconBusStop/>} onClick={abort}/>
-                <ProgressBar style={{height : "20px", filter: `grayscale(${isPaused && isProcessRuning ? 0.8 : 0 })`}} 
+                <ProgressBar style={{height : "25px", filter: `grayscale(${isPaused && isProcessRuning ? 0.8 : 0 })`}} 
                     percent={percent} 
                     showPercent={false}
-                    text={progress ? `${progress.done}/${progress.total}` : null}
+                    text={progress ? (doneTotalView.current ? `${progress.done}/${progress.total}` :
+                        `Working: ${progress.working} | Left : ${progress.total - progress.done}`) : null}
                     fillColor="linear-gradient(90deg, rgb(187, 251, 223) 0%, rgb(198, 203, 253) 50%, rgb(239, 201, 249) 100%)"
                     initialising={initialising}
                     initialisingColor="violet"/>

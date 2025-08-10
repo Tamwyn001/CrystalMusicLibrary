@@ -6,7 +6,9 @@ module.exports = {
     isAdmin: (req, res, next) =>{
         const token = req.cookies.token;
         if (!token) {
-            res.status(403).json({ error: "Access denied. No token provided." });}
+            res.status(403).json({ error: "Access denied. No token provided." });
+            return;
+        }
         try {
             const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
             // @ts-ignore

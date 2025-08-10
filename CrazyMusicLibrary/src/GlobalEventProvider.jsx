@@ -6,6 +6,7 @@ export const EventProvider = ({ children }) => {
 
     const listenersRef = useRef({});
 
+    
     const subscribe = (eventName, callback) => {
         //init an array for a new event
         if (!listenersRef.current[eventName]) listenersRef.current[eventName] = [];

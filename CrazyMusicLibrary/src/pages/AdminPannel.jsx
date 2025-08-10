@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import apiBase from "../../APIbase";
 import Header from "../components/Header";
 import { IconArrowBackUp ,IconDatabaseHeart,IconMacro, IconPrismLight, IconSettingsCode } from "@tabler/icons-react";
@@ -7,12 +7,21 @@ import { useNavigate } from "react-router-dom";
 import './AdminPannel.css';
 import BackendJob from "../components/BackendJob";
 import AdminSettingEntry from "./AdminSettingEntry";
+import TwoOptionSwitch from "../components/TwoOptionSwitch";
+
 
 const AdminPannel = () => {
+    const getJobViewValue = () => {
+        return localStorage.getItem("job-progress-view") ?
+                localStorage.getItem("job-progress-view") === "true" :
+                true
+    }
     const [isAdmin, setIsAdmin] = useState(false);
     const [allUsers, setAllUsers] = useState([]);
     const [totalStorage, setTotalStorage] = useState(0);
+    const doneTotalView = useRef(getJobViewValue());
     const navigate = useNavigate();
+
     useEffect(()=>{
         fetch(`${apiBase}/auth/is-admin`, {
             method: 'POST',
@@ -21,7 +30,7 @@ const AdminPannel = () => {
         .then(res => res.json())
         .then(data => {setIsAdmin(data);})
     },[]);
-    
+    console.log(getJobViewValue());
     useEffect(() => {
         if(isAdmin.error) return;
         fetch(`${apiBase}/auth/init-admin-pannel`, {
@@ -42,6 +51,11 @@ const AdminPannel = () => {
             </div>
         );
     }
+    const changeView = (index) => {
+        const useDoneTotal = index === 0;
+        doneTotalView.current = useDoneTotal;
+        localStorage.setItem("job-progress-view", useDoneTotal)
+    }
     const AdminPannel = () => {
         return (
             <div>
@@ -56,14 +70,21 @@ const AdminPannel = () => {
                 </div>
                 <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline"}}>
                     <IconMacro/>
-                    <h2 style={{marginTop: "0"}}>Backend processes</h2>    
+                    <h2 style={{marginTop: "0"}}>Backend processes</h2>  
+                    <TwoOptionSwitch data={["Done/Total","Working/Remaining"]}
+                        currentActive={getJobViewValue() ? 0 : 1}
+                        onClick={changeView}
+                    />
                 </div>
                 <div style={{display : "grid", gridTemplateColumns: "repeat(auto-fill, 500px)", gap:"10px", justifyContent: "center"}}>
                     <BackendJob jobKey={"JOB_CD"} jobName={"Recompute tracks number and CDs"}
-                        description={"Reextract the metadatas of the songs to remap them to the correct CD or track number. Analyses lossless"}/>
+                        description={"Reextract the metadatas of the songs to remap them to the correct CD or track number. Analyses lossless"}
+                        doneTotalView={doneTotalView}/>
                      <BackendJob jobKey={"JOB_FFT"} jobName={"Compute audio spectras"}
-                        description={"Runs a fast Fourier transform on each audio files to extract the audio spectrum. The result is writen into .bin files. For a .flac audio of 41kHz, we expect 3Mb spectrum file."}/>
-                    
+                        description={"Runs a fast Fourier transform on each audio files to extract the audio spectrum. The result is writen into .bin files. For a .flac audio of 41kHz, we expect 3Mb spectrum file."}
+                        payload={{completeLibrary : true}}
+                        doneTotalView={doneTotalView}/>
+
                     {/* <BackendJob jobKey={"JOB_LOSSLES"} jobName={"Analyse Lossless"}
                         description={"Reextract the metadatas of the songs to check for lossy or not songs."}/>
                     <BackendJob jobKey={"JOB_LYRICS"} jobName={"Analyse Lyrics"}

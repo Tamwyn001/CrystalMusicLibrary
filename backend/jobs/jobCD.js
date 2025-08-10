@@ -33,6 +33,7 @@ class JobCD extends Job{
             const fileMeta = await parseFile(path);
             this.resumeJob();
             this.upgradeProgress();
+            this.progress.working = this.progress.total - this.progress.done;
             this.trackIdToCD.set(id, fileMeta.common.disk.no || 0);
             if(fileMeta.format.lossless === true){
                 this.albumToLossless.add(album);

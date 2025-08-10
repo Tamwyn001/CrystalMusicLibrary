@@ -184,15 +184,20 @@ app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
-const jobRouter = require("./routes/jobs.js");
+const JobsManager = require("./routes/jobs.js");
 const RadioRouter = require("./routes/radio.js");
 const LibraryConfig = require("./routes/libraryConfig.js");
 
-app.use("/jobs", jobRouter);
+const jobsManager = new JobsManager();
+
+// Pass a reference of the job manager to the router.
+readWriteRouter.jobManager = jobsManager;
+app.use("/jobs", jobsManager.router);
 console.log(`  .      Backend jobs`);
 app.use("/radio", new RadioRouter().getRouter());
 console.log(`  .      Radio router`);
 const libraryConfig = new LibraryConfig(resolvedDataPath);
+jobsManager.libraryConfig = libraryConfig;
 
 app.use("/config", libraryConfig.router);
 console.log(`  .      Config router`);

@@ -1,29 +1,31 @@
 
-
 const JobStatus = {
     PENDING : "pending",
     RUNNING : "running",
     PAUSED : "paused",
-    INACTIVE : "inactive"
+    INACTIVE : "inactive",
+    STOPPING : "stopping" 
 }
 class Job {
     status = JobStatus.INACTIVE
     jobKey = "";
     jobManager;
-    progress = {done : 0, total : 0};
+    progress = {done : 0, total : 0, working : 0};
+
     
     /**
      * @param {string} jobKey
      * @param {JobManager} jobManager 
      */
-    constructor(jobKey, jobManager) {
+    constructor(jobKey, jobManager, payload) {
         this.status = JobStatus.PENDING; 
         this.jobKey = jobKey;
         this.jobManager = jobManager;
         console.log("[Job]", this.jobKey,"is initialising.");
     }
     updateProgress (done, total){
-        this.progress = {done : done, total : total};
+        this.progress.done = done;
+        this.progress.total = total;
     }
     pauseJob () {
         this.status = JobStatus.PAUSED; 
@@ -38,5 +40,6 @@ class Job {
         // this.status = JobStatus.INACTIVE; 
         console.log("[Job]", this.jobKey,"is now stoped.")  ;
     }
+    addNewTask(payload){}
 }
 module.exports= {Job, JobStatus};

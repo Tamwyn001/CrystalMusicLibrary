@@ -23,7 +23,6 @@ import Cooking from './pages/Cooking';
 import { EventProvider } from './GlobalEventProvider';
 import Radio from './pages/Radio';
 import './components/UIControls.css';
-import FFTVisualizer from './pages/FFTVisualizer';
 import RouteWithFFT from './pages/RouteWithFFT';
 function App() {
 

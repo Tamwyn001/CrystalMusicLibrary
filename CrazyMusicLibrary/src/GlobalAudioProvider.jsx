@@ -10,6 +10,7 @@ import { useNavigate } from "react-router-dom";
 import TagEditor from "./components/TagEditor.jsx";
 import EditTagsWindow from "./components/EditTagsWindow.jsx";
 import EditArtistInfos from "./components/EditArtistInfos.jsx";
+import { useEventContext } from "./GlobalEventProvider.jsx";
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -43,7 +44,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const queuePointerRef = useRef(queuePointer);
     const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
     const [editingArtist, setEditingArtist] = useState(null); // Flag to indicate if the album is being edited
-
+    const {emit, subscribe} = useEventContext();
     const albumAskRefreshRef = useRef(null); // Contains the refresh callback 
     const [ trackActionContext, setTrackActionContext ] = useState(null);
     const trackActionLoosesFocusRef = useRef(null);
@@ -232,6 +233,7 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const onPlaying = () => {
+        if(!fftConfigRef.current){return;}
         console.log("Record start playing", globalAudioRef.current.currentTime);
         audioTimeTrackingRef.current.lastAudioTime = globalAudioRef.current.currentTime;
         audioTimeTrackingRef.current.lastPerformanceNow = performance.now();
@@ -255,6 +257,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
 
     const handlePlay = () => {
+        if(!fftConfigRef.current){return;}
         resetTracking();
         if (resnapIntervalRef.current) clearInterval(resnapIntervalRef.current);
         resnapIntervalRef.current = startResnapInterval();
@@ -268,6 +271,7 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const detectSeek = () => {
+        if(!fftConfigRef.current){return;}
         const t = globalAudioRef.current.currentTime;
         if (Math.abs(t - lastTimeRef.current) > 1.0) {
             const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
@@ -366,17 +370,26 @@ export const AudioPlayerProvider = ({ children }) => {
         const trackName = playQueue[newQueuePointer]
         globalAudioRef.current.currentTime = 0; // Reset the current time if the track is already loaded
 
-        fftConfigRef.current = await fetch(`${apiBase}/read-write/fftConfig/${trackId}`, {
+        await fetch(`${apiBase}/read-write/fftConfig/${trackId}`, {
             method :"GET",
             credentials : "include"
-        }).then(res => res.json()).then(data => JSON.parse(data));
-        const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // one value on int16
-        const TOTAL_CHUNKS = SECONDS_TO_BUFFER / fftConfigRef.current.interval; 
-        circularBufferRef.current = new Int16Array(TOTAL_CHUNKS * CHUNK_SIZE);
-        writeIndexRef.current = 0;
-        bufferStartChunkRef.current = 0;
-        lastBufferedEndChunk.current = 0;
-        console.log("New buffer!");
+        }).then(async res => {
+            writeIndexRef.current = 0;
+            bufferStartChunkRef.current = 0;
+            lastBufferedEndChunk.current = 0;
+            
+            if(!res.ok){
+                fftConfigRef.current = null;
+                return;
+            }
+            const data = await res.json()
+            fftConfigRef.current = JSON.parse(data);
+            const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // one value on int16
+            const TOTAL_CHUNKS = SECONDS_TO_BUFFER / fftConfigRef.current.interval; 
+            circularBufferRef.current = new Int16Array(TOTAL_CHUNKS * CHUNK_SIZE);
+            console.log("New buffer!");
+        })
+
 
         if (globalAudioRef.current.src !== resolveTrackURL(trackName)) {
             globalAudioRef.current.src = resolveTrackURL(trackName); // Set the new track URL
@@ -423,6 +436,7 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const bufferFFTData = async (trackId, fromChunk, toChunk) => {
+        if(!fftConfigRef.current) return null;
         const CHUNK_BYTES = fftConfigRef.current.fftSize * 1 * 2; //int16 has 2 bytes, for one value
         const startByte = CHUNK_BYTES * fromChunk;
         const endByte = CHUNK_BYTES * toChunk;
@@ -771,9 +785,16 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
         setupAudioGraph();
+        // In case mounts after logged in;
         fetchFFTUserSettings();
+        // In case mounts before login;
+        const unsubscribeOnLogin = subscribe("login", () => {
+            console.warn("login triggered!")
+            fetchFFTUserSettings();
+        });
         return () => {
             destructAudioGraph();
+            unsubscribeOnLogin();
         }
     }, []);
 
@@ -1115,7 +1136,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
     return (
         <AudioPlayerContext.Provider 
-        value={{
+        value={{fetchFFTUserSettings,
             FFTUserSetingsRef,
             fftConfigRef,
             getFFTAtCurrentTime,
