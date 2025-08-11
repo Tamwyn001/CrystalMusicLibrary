@@ -389,7 +389,7 @@ router.post("/getSalad",upload.none() , (req,res) => {
     res.json(JSON.stringify(getSaladTracks(tags, salads)));
 });
 
-router.get("/mostUsedTags", (req, res) => {
+router.get("/mostUsedTags", verify.token, (req, res) => {
     const token =req.cookies.token;
     const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
     // @ts-ignore

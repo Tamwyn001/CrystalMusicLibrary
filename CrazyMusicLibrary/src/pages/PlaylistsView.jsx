@@ -4,6 +4,7 @@ import PlaylistCard from "../components/PlaylistCard";
 import { IconCategoryPlus } from "@tabler/icons-react";
 import ButtonWithCallback from "../components/ButtonWithCallback";
 import { useAudioPlayer } from "../GlobalAudioProvider";
+import { asVerified, verifyToken } from "../../lib";
 
 const PlaylistsView = () => {
     const [playlists, setPlaylists] = useState([]);
@@ -19,8 +20,11 @@ const PlaylistsView = () => {
     }
 
     useEffect(() => {
-        refetch();
-        setPlaylistAddedCallback(refetch);
+        const verify = asVerified(() => {
+            refetch();
+            setPlaylistAddedCallback(refetch);
+        });
+        verify();   
     },[]);
     
     return(

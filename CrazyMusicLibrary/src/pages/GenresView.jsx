@@ -3,6 +3,7 @@ import apiBase from "../../APIbase";
 
 import GenreCard from "../components/GenreCard";
 import { AddMusicShortcut } from "../components/AddMusicShortcut";
+import { asVerified, verifyToken } from "../../lib";
 
 const GenresView = ({}) => {
     const [genres, setGenres] = useState([]);
@@ -16,18 +17,21 @@ const GenresView = ({}) => {
             setGenres(data);
         })
     }
-    useEffect(() =>{
-        refetch();
-        const handleMusicUploaded = (e) => {
-            console.log("Music uploaded:", e.detail);
-            refetch(); // your data reload function
-          };
-        
-          window.addEventListener("musicUploaded", handleMusicUploaded);
-          return () => {
-            window.removeEventListener("musicUploaded", handleMusicUploaded);
-          };
-        }
+    useEffect( () =>{
+        const verify = asVerified(() => {
+            refetch();
+            const handleMusicUploaded = (e) => {
+                console.log("Music uploaded:", e.detail);
+                refetch(); // your data reload function
+            };
+            
+            window.addEventListener("musicUploaded", handleMusicUploaded);
+            return () => {
+                window.removeEventListener("musicUploaded", handleMusicUploaded);
+            };
+        });
+        verify();
+    }
     ,[]);
 
     return( 

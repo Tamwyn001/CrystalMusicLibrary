@@ -17,7 +17,6 @@ const FFTVisualizer = () => {
 		const ctx = canvasRef.current.getContext("2d");
 		if(ctx && FFTUserSetingsRef.current){
 			const barNumber = FFTUserSetingsRef.current.bars;
-
 			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
 

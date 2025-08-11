@@ -785,7 +785,7 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
         setupAudioGraph();
-        // In case mounts after logged in;
+        // In case mounts after logged in or already auto logged in;
         fetchFFTUserSettings();
         // In case mounts before login;
         const unsubscribeOnLogin = subscribe("login", () => {

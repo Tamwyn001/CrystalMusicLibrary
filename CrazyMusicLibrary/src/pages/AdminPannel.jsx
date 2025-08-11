@@ -8,6 +8,7 @@ import './AdminPannel.css';
 import BackendJob from "../components/BackendJob";
 import AdminSettingEntry from "./AdminSettingEntry";
 import TwoOptionSwitch from "../components/TwoOptionSwitch";
+import { asVerified, verifyToken } from "../../lib";
 
 
 const AdminPannel = () => {
@@ -23,14 +24,16 @@ const AdminPannel = () => {
     const navigate = useNavigate();
 
     useEffect(()=>{
-        fetch(`${apiBase}/auth/is-admin`, {
-            method: 'POST',
-            credentials: 'include'
-        })
-        .then(res => res.json())
-        .then(data => {setIsAdmin(data);})
+        const verify = asVerified(() => {
+            fetch(`${apiBase}/auth/is-admin`, {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(res => res.json())
+            .then(data => {setIsAdmin(data);})
+        });
+        verify();
     },[]);
-    console.log(getJobViewValue());
     useEffect(() => {
         if(isAdmin.error) return;
         fetch(`${apiBase}/auth/init-admin-pannel`, {

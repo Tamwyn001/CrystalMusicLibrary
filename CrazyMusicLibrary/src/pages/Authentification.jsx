@@ -48,7 +48,7 @@ const Authentification = () => {
     }, [navigate]);
 
     if(isLoading) {
-       return <Loading text={result}/>;
+       return null;
     }
 
     if(result === stauts.LOGIN) {

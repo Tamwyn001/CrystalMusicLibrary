@@ -4,7 +4,7 @@ import apiBase from "../../APIbase";
 import CML_logo from "./CML_logo";
 import ThreePointsLoader from "./ThreePointsLoader";
 import { IconCheck, IconX } from "@tabler/icons-react";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useEventContext } from "../GlobalEventProvider";
 const LoginStatus = {
     FETCHING : "fetching",
@@ -13,7 +13,7 @@ const LoginStatus = {
     NONE: "none"
 };
 const Register = () => {
-    const [status, setStatus] = useState(LoginStatus.NONE);
+    const status = useRef(LoginStatus.NONE);
     const [displayedStatus, setDisplayedStatus] = useState(LoginStatus.NONE);
     const navigate = useNavigate();
     const {emit} = useEventContext();
@@ -28,16 +28,17 @@ const Register = () => {
             method: 'POST',
             credentials: 'include',
             body: formData
-        })
+        });
     
         const json = await res.json()
-    
+
         if (res.ok) {
             localStorage.setItem('username', json.username)
-            setStatus(LoginStatus.SUCCESS)
+            status.current = LoginStatus.SUCCESS;
         } else {
-            setStatus(LoginStatus.REJECTED)
+            status.current = LoginStatus.REJECTED;
         }
+        redisplayStatus();
       }
       const RequestStatus = () => {
         switch (displayedStatus) {
@@ -52,23 +53,22 @@ const Register = () => {
         }
       }
     
-    useEffect(() => {
-        setDisplayedStatus(status)
-        switch (status) {
+    const redisplayStatus = () => {
+        setDisplayedStatus(status.current);
+        switch (status.current) {
             case LoginStatus.REJECTED:
                 setTimeout(() => {
                     setDisplayedStatus(LoginStatus.NONE)
-                }, 1000)
+                }, 1000);
+                break;
             case LoginStatus.SUCCESS:
                 setTimeout(() => {
                     emit("login");
                     navigate('/home')
                 }, 1000)
-                break
-            default:
-                break
+                break;
         }
-    }, [status])
+    }
 
     return (
         <div className="authDiv">

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react"
 import ButtonWithCallback from "../components/ButtonWithCallback";
 import apiBase from "../../APIbase";
 import LibRadioCard from "../components/LibRadioCard";
+import { asVerified, verifyToken } from "../../lib";
 
 const Radio = () => {
     const [ radioFetched, setRadioFetched ] = useState(false);
@@ -16,7 +17,9 @@ const Radio = () => {
         </div>)
     } 
     useEffect(() => {
-        refetchRadios();
+        const verify = asVerified(()=>{
+            refetchRadios();
+        })        
     }, [])
 
     const refetchRadios = async () => {

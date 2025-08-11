@@ -12,7 +12,7 @@ import { useAudioPlayer } from "../GlobalAudioProvider";
 import { useNotifications } from "../GlobalNotificationsProvider";
 import TrackView from "../components/TrackView";
 import { HexColorPicker } from "react-colorful";
-import { HSLToHex } from "../../lib";
+import { asVerified, HSLToHex, verifyToken } from "../../lib";
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -30,34 +30,38 @@ const Cooking = () => {
     const [ color, setColor ] = useState('#aabbcc');
     const [ allowsSave, setAllowSave ] = useState(true);
     useEffect(() => {
-        const handleClickedOutside = (e) =>{            
-            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-                closeSearchBar();
-            }}
+        const verify = asVerified(() => {
+    
+            const handleClickedOutside = (e) =>{            
+                if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                    closeSearchBar();
+                }}
 
-        if(currentCookingContent.length === 0 ){
-            setCurrentCookingContent(saladContext || [])
-        }
-        fetch(`${apiBase}/read-write/mostUsedTags`, {
-            method : "GET",
-            credentials : "include"
-        })
-        .then(res => res.json())
-        .then(data => {
-
-            const proposed = data.map(tag => {
-                return {...tag, type : tag.total, typeElem: "tag", icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
+            if(currentCookingContent.length === 0 ){
+                setCurrentCookingContent(saladContext || [])
+            }
+            fetch(`${apiBase}/read-write/mostUsedTags`, {
+                method : "GET",
+                credentials : "include"
             })
-            setMostUsedTags(proposed);
-            setProposedEntryToAdd(proposed)
-        });
+            .then(res => res.json())
+            .then(data => {
 
-        document.addEventListener("mousedown", handleClickedOutside);
-        document.addEventListener("touchstart", handleClickedOutside);
-        return () => {
-            document.removeEventListener("mousedown", handleClickedOutside);
-            document.removeEventListener("touchstart", handleClickedOutside);
-        }
+                const proposed = data.map(tag => {
+                    return {...tag, type : tag.total, typeElem: "tag", icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
+                })
+                setMostUsedTags(proposed);
+                setProposedEntryToAdd(proposed)
+            });
+
+            document.addEventListener("mousedown", handleClickedOutside);
+            document.addEventListener("touchstart", handleClickedOutside);
+            return () => {
+                document.removeEventListener("mousedown", handleClickedOutside);
+                document.removeEventListener("touchstart", handleClickedOutside);
+            }
+        });
+        verify();
     },[]);
 
     

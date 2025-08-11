@@ -1,3 +1,5 @@
+import apiBase from "./APIbase";
+
 export const parseAudioDuration = (rawDuration) => {
     var pad = function(num) { return ('00'+num).slice(-2) };
     const hours = Math.floor(rawDuration / 3600);
@@ -71,4 +73,35 @@ export const trimString = (string, max ) => {
     return stringNorm.substring(0,max-2) + "..";
   }
   return stringNorm;
+}
+
+export const verifyToken = () => { 
+	return new Promise (async (resolve) => {
+		const ok = await fetch(`${apiBase}/auth/verifyToken`,  
+				{method: 'POST', credentials: 'include'})
+			.then(async res => {
+				if(!res.ok){
+					await fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
+					.then((response) => {
+						if (response.ok) {
+							window.location.href = '/';
+							
+						} else {
+							console.error('Logout failed');
+						}
+					});
+					return false;
+				}
+				return true;
+			});
+		resolve(ok);
+	});
+}
+
+export const asVerified = (fn) => {
+	return async function verify() { 
+		if(!  verifyToken()) return;
+		fn()
+	};
+
 }

@@ -5,30 +5,23 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import apiBase from "../../APIbase";
 import UserSettingEntry from "./UserSettingEntry";
+import { asVerified, verifyToken } from "../../lib";
 
 
 const Settings = () => {
     const [isAdmin, setIsAdmin] = useState(false)
-    useEffect(()=>{
-        fetch(`${apiBase}/auth/is-admin`, {
-            method: 'POST',
-            credentials: 'include'
-        })
-        .then(res => {
-            if(!res.ok)
-            {
-                fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
-                .then((response) => {
-                    if (response.ok) {
-                        window.location.href = '/';
-                    } else {
-                        console.error('Logout failed');
-                    }
-                })
-            }
-            return res.json()
-        })
-        .then(data => {setIsAdmin(data);})
+    useEffect( ()=>{
+        const verify = asVerified(() => {
+            fetch(`${apiBase}/auth/is-admin`, {
+                method: 'POST',
+                credentials: 'include'
+            })
+            .then(res => {
+                return res.json()
+            })
+            .then(data => {setIsAdmin(data);})
+        });
+        verify();
     },[])
     const navigate = useNavigate();
     return (
