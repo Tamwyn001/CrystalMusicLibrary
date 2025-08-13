@@ -112,7 +112,8 @@ const { default: checkDiskSpace } = require("check-disk-space");
 // -----------------------------------
 // 📡 Get local IP
 // -----------------------------------
-function getLocalIP() {
+function getLocalIPs() {
+  const validIP = ['localhost'];
   const interfaces = networkInterfaces();
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
@@ -121,14 +122,13 @@ function getLocalIP() {
         !iface.internal &&
         !iface.address.startsWith('169.254')
       ) {
-        return iface.address;
+        validIP.push(iface.address);
       }
     }
   }
-  return 'localhost';
+  return validIP;
 }
 
-const localIP = getLocalIP();
 
 // -----------------------------------
 // 🚀 Initialize server
@@ -136,14 +136,15 @@ const localIP = getLocalIP();
 
 const app = express();
 const PORT = process.env.PORT || 4590;
+const localDomains = getLocalIPs().map(ip => {return `http://${ip}:${PORT}`});
+
 const allowedDomains = [
   "http://localhost:5173",
   "http://localhost:5174",
-  `http://${localIP}:4590`,
-  `http://${localIP}:${PORT}`,
   'http://172.20.10.2:5174', //Vite mobile debug
 
 ];
+allowedDomains.push(...localDomains);
 console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
 
@@ -236,7 +237,7 @@ runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n
 \x1b[92m. 🚀     Crystal Music Library Server online\x1b[0m v${APP_VERSION}\n
-✅ The library can be accesed at \x1b[96m http://${localIP}:${PORT}\x1b[0m\n
+✅ The library can be accesed at \x1b[96m ${localDomains.join(" , ")}\x1b[0m\n
 ==========================================`);
 });
 const writeNewStorageEnv = async () => {

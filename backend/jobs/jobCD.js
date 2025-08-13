@@ -1,3 +1,4 @@
+const { existsSync } = require("fs");
 const { getDatabase } = require("../db");
 const {Job, JobStatus} = require("./jobBase");
 const {parseFile} = require('music-metadata');
@@ -30,6 +31,9 @@ class JobCD extends Job{
         Promise.all(this.toCheckTracks.map( async ({id, basename, album}) => {
            
             var path = join(process.env.CML_DATA_PATH_RESOLVED, "music", basename);
+            if(!existsSync(path)){
+                return;
+            }
             const fileMeta = await parseFile(path);
             this.resumeJob();
             this.upgradeProgress();

@@ -1,13 +1,15 @@
 import { useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../GlobalAudioProvider';
 import './FFTVisualizer.css';
+import { max } from 'lodash';
 const FFTVisualizer = () => {
 	const animationRef = useRef();
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
-	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef,fetchFFTUserSettings} = useAudioPlayer();
-	
-  	const animate = () => {
+	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef,
+		fetchFFTUserSettings, colorOverride} = useAudioPlayer();
+	const lastTime = useRef(0);
+  	const animate = (now) => {
 		// Do your animation logic here
 		// Example: update canvas or sync with audio time
 		if(!canvasRef.current) {
@@ -16,6 +18,11 @@ const FFTVisualizer = () => {
 		}
 		const ctx = canvasRef.current.getContext("2d");
 		if(ctx && FFTUserSetingsRef.current){
+			if(now - lastTime.current < (1000 / FFTUserSetingsRef.current.FPS)){
+				animationRef.current = requestAnimationFrame(animate);
+				return;
+			}
+			lastTime.current = now;
 			const barNumber = FFTUserSetingsRef.current.bars;
 			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
@@ -39,8 +46,22 @@ const FFTVisualizer = () => {
 			// console.log(barWidth, canvasRef.current.width , barNumber)
 			let x = 0;
 			for (let i = 0; i < display.length; i++) {
-				const barHeight = Math.log2(display[i]) * (barNumber / 5) * globalAudioRef.current?.volume;
-				ctx.fillStyle = `rgb(${barHeight-100} 137 255)`;
+				const barHeight = FFTUserSetingsRef.current.scale * 
+						 Math.log2(display[i])
+					* (barNumber / 5) * globalAudioRef.current?.volume;
+				if(colorOverride.current?.length > 0) {
+					const alpha = Math.min(1, Math.max(0,barHeight/FFTUserSetingsRef.current.scale / FFTUserSetingsRef.current.contrast / 300));
+					ctx.fillStyle = `rgb(
+						${lerp(colorOverride.current[0][0], colorOverride.current[1][0], alpha)} 
+						${lerp(colorOverride.current[0][1], colorOverride.current[1][1],alpha)}
+						${lerp(colorOverride.current[0][2], colorOverride.current[1][2], alpha)}
+						)`;
+					console.log(ctx.fillStyle);
+
+				}
+				else{
+					ctx.fillStyle = `rgb(${barHeight/FFTUserSetingsRef.current.scale / FFTUserSetingsRef.current.contrast} 137 255)`;
+				}
 				ctx.fillRect(x, canvasRef.current.height - barHeight, barWidth, barHeight);
 
 				x += barWidth + 1;
@@ -48,6 +69,9 @@ const FFTVisualizer = () => {
 		}
 		animationRef.current = requestAnimationFrame(animate);
   	};
+	const lerp = (a,b,t) =>{
+		return a + t*(b-a);
+	}
 	useEffect(() => {
 		if(!fftConfigRef.current){
 			cancelAnimationFrame(animationRef.current);

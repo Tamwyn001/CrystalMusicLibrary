@@ -24,6 +24,7 @@ import { EventProvider } from './GlobalEventProvider';
 import Radio from './pages/Radio';
 import './components/UIControls.css';
 import RouteWithFFT from './pages/RouteWithFFT';
+import FullScreenSong from './pages/FullScreenSong';
 function App() {
 
 
@@ -48,8 +49,8 @@ function App() {
                                     <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
                                     <Route path="cooking" element={<Cooking/>}/>
                                     <Route path="radio" element={<Radio/>}/>
-
                                 </Route>
+                                <Route path="full-screen" element={<FullScreenSong/>}/>
                                 <Route path="account" element={<Account />} /> 
                                 <Route path="settings" element={<Settings />} /> 
                                 <Route path="admin-pannel" element={<AdminPannel />} />

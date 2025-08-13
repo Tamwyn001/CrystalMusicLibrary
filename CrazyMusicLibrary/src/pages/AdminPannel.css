@@ -12,6 +12,7 @@
     padding: 10px 20px;
     transition: background-color 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
     border: 2px solid aliceblue;
+    cursor: pointer;
 }
 .cornered-button[data-active="true"]{
     background-color: white;
@@ -81,4 +82,29 @@
 .admin-setting-entry-line[data-is-enabled="false"]{
     pointer-events: none;
     filter: opacity(0.5);
+}
+.job-grid{
+    display : grid;
+    grid-template-columns: repeat(auto-fill, 500px);
+    gap:10px;
+    justify-content: center;
+}
+
+@media screen and (max-width: 900px) {
+    .job-grid{
+        grid-template-columns: auto;
+    }
+}
+
+.admin-category{
+    display: flex;
+    gap : 10px;
+    flex-direction: row;
+    margin: 20px 0px 10px 0px;
+    flex-wrap: wrap;
+    align-items: center;
+}
+.admin-category h2{
+    margin-top: 0px;
+    margin-bottom: 0px;
 }

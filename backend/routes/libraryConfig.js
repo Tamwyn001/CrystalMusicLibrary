@@ -3,10 +3,11 @@ const { existsSync, mkdirSync, writeFile } = require("fs");
 const path = require("path");
 const verify = require("./verify.js");
 const { getMulterInstance } = require("../multerConfig.js");
-const { getUserId } = require("../db-utils.js");
+const { getUserId, getAllUsersId } = require("../db-utils.js");
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
 const upload = getMulterInstance(uploadPath);
-const {defaultConfig, UserDefaultConfig} = require('../defaultConfig.js');
+const {defaultConfig, UserDefaultConfig,
+   migrateServerConfigIfNecessary, migrateUserConfigIfNecessary} = require('../defaultConfig.js');
 
 class LibraryConfig {
   /**
@@ -21,24 +22,47 @@ class LibraryConfig {
     constructor(resolvedDataPath) {
         
         // Default config file creation if needed
-          this.configFolder = path.join(resolvedDataPath, "..", "config");
-          if (!existsSync(this.configFolder)){
-            console.log(`Creating directory ${this.configFolder}`);
-            mkdirSync(this.configFolder, { recursive: true });
-          }
-          this.configFilePath = path.join(this.configFolder, "config.json");
-          
-          if (!existsSync(this.configFilePath)){
-            console.log(`Creating default config file ${this.configFilePath}`);
-            const defaultConfigJson = JSON.stringify(defaultConfig, null, 3);
-            writeFile(this.configFilePath, defaultConfigJson, 'utf8', (err) => {
-              if(!err) return;
-              console.error("Error during default config file creation:", err);
-            });
-            this.currentConfig = defaultConfig;
-          } else {
-            this.currentConfig = require(this.configFilePath);
-          }
+		this.configFolder = path.join(resolvedDataPath, "..", "config");
+		if (!existsSync(this.configFolder)){
+		console.log(`Creating directory ${this.configFolder}`);
+		mkdirSync(this.configFolder, { recursive: true });
+		}
+		this.configFilePath = path.join(this.configFolder, "config.json");
+		
+		if (!existsSync(this.configFilePath)){
+		console.log(`Creating default config file ${this.configFilePath}`);
+		const defaultConfigJson = JSON.stringify(defaultConfig, null, 3);
+		writeFile(this.configFilePath, defaultConfigJson, 'utf8', (err) => {
+			if(!err) return;
+			console.error("Error during default config file creation:", err);
+		});
+		this.currentConfig = defaultConfig;
+		} else {
+			this.currentConfig = require(this.configFilePath);
+			const upToDate = migrateServerConfigIfNecessary(this.currentConfig);
+			if(!upToDate){
+				writeFile(this.configFilePath, JSON.stringify(this.currentConfig, null, 4), 'utf8', (err) => {
+					if(!err) return;
+					console.error("Error during default config file creation:", err);
+				});
+			}
+		}
+		const users = getAllUsersId();
+
+		for(const user of users){
+			const userConfigPath = this.BuildUserConfigName(user.id);
+			if(!existsSync(userConfigPath)) continue;
+
+			const tempLoadedConfig = require(userConfigPath);
+			const upToDate = migrateUserConfigIfNecessary(tempLoadedConfig);
+			if(!upToDate){
+				writeFile(userConfigPath, JSON.stringify(tempLoadedConfig, null, 4), 'utf8', (err) => {
+					if(!err) return;
+					console.error("Error during migrating config:", err);
+				});
+			}
+		}
+
         this.RegisterRoutes();
     }
 
@@ -69,6 +93,11 @@ class LibraryConfig {
       });
 
     }
+	/**
+	 * 
+	 * @param {number} userId 
+	 * @returns 
+	 */
     BuildUserConfigName = (userId) => {
       return path.join(this.configFolder, "userConfig_" + userId + ".json");
     }
@@ -100,8 +129,14 @@ class LibraryConfig {
           switch(req.params.key){
             case "FFT":
                 const fftData = JSON.parse(req.body.FFT);
-				//@ts-ignore
-                const userId = getUserId(req.decoded.email);
+				        //@ts-ignore
+                let userId;
+                try{
+                  //@ts-ignore
+                  userId = getUserId(req.decoded.email);
+                } catch (err) {
+                  return res.status(401).json({ error: "Access denied. No valid token provided." });
+                }
                 const userConfig = require(this.BuildUserConfigName(userId));
                 userConfig.FFT = fftData;
                 this.UpdateConfigFile({id : userId, config : userConfig});
@@ -111,8 +146,14 @@ class LibraryConfig {
         });
 
         this.router.get("/user/:key", verify.token, (req, res) => {
-		//@ts-ignore
-          const userId = getUserId(req.decoded.email);
+          let userId;
+          try{
+            //@ts-ignore
+            userId = getUserId(req.decoded.email);
+          } catch (err) {
+             return res.status(401).json({ error: "Access denied. No valid token provided." });
+          }
+          
           if(!existsSync(this.BuildUserConfigName(userId))){
             LibraryConfig.CreateUserDefaultConfig(userId);
           }

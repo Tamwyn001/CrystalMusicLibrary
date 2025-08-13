@@ -174,12 +174,13 @@ const BackendJob = ({jobName, description, jobKey, payload={}, doneTotalView = n
     return(
         <div className="backend-job">
             <h3>{jobName}</h3>
-            <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline"}}>
+            <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems: "baseline", flexWrap :"wrap"}}>
                 <ButtonWithCallback text={isProcessRuning ? (isPaused ? 'Resume' : 'Pause') : 'Run'} 
                     icon={isProcessRuning ? (isPaused ? <IconClockPlay/> : <IconClockPause/>) : <IconRun/>}
                     onClick={toggleResumePause}/>
                 <ButtonWithCallback text={'Stop'} icon={<IconBusStop/>} onClick={abort}/>
-                <ProgressBar style={{height : "25px", filter: `grayscale(${isPaused && isProcessRuning ? 0.8 : 0 })`}} 
+                <ProgressBar style={{height : "25px", filter: `grayscale(${isPaused && isProcessRuning ? 0.8 : 0 })`}}
+                    minWidth = {"200px"}
                     percent={percent} 
                     showPercent={false}
                     text={progress ? (doneTotalView.current ? `${progress.done}/${progress.total}` :

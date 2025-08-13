@@ -33,7 +33,7 @@
     "scripts": [
       "server.js",
       "db.js",
-      "./routes/*.js",
+      "./routes/**/*.js",
       "./routes/read-write.js",
       "lib.js",
       "./jobs/jobCD.js",
@@ -42,8 +42,7 @@
       "node_modules/strtok3/lib/**/*.js",
       "./defaultConfig.js",
       "./jobs/*.js",
-      "./jobs/workers/*.js",
-      "./verify.js"
+      "./jobs/workers/*.js"
     ],
     "outputPath": "../pkg-dist"
   },

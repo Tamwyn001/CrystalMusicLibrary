@@ -23,7 +23,7 @@ const Header = () => {
     const [queueShown, setQueueShown] = useState(false);
     const [volumeShown, setVolumeShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
-    const {currentTrackData, trackCoverUrl, volume} = useAudioPlayer();
+    const {currentTrackData, trackCoverUrl, volume, toggleFullScreenView} = useAudioPlayer();
     const { openSearchBar } = useGlobalActionBar();
     const [isAddMusicMinimized, setIsAddMusicMinimized] = useState(false); 
     const [uploadProgress, setUploadProgress] = useState(null) //{done : Numver, total: Number}
@@ -138,7 +138,7 @@ const Header = () => {
                  <CML_logo  className="trackImage" />:
                   <img src={trackCoverUrl} className="trackImage" />}
                
-                <div className="playPauseButtons">
+                <div className="playPauseButtons" onClick={toggleFullScreenView}>
                     <IconPrismLight style={{padding: "0px"}}/>
                 </div>
             </div>

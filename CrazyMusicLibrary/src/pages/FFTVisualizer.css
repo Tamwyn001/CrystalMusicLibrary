@@ -1,8 +1,15 @@
 #fft-canvas{
     display: block;
     position: fixed;
-    bottom: 0;
+    bottom: 83px;
     width: 100%;
     height: 25%;
     pointer-events: none;
+}
+
+@media screen and (min-width: 714px) {
+    #fft-canvas{
+        bottom: 0px;
+    }
+
 }

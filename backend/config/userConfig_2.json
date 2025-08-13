@@ -1,5 +1,10 @@
 {
     "FFT": {
-        "bars": 42
-    }
+        "bars": 42,
+        "contrast": 1,
+        "cutoff": 0,
+        "scale": 1,
+        "FPS": 60
+    },
+    "version": 2
 }

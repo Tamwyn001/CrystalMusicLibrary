@@ -1,4 +1,7 @@
 import { useState } from "react";
+import TwoOptionSwitch from "../TwoOptionSwitch";
+import ButtonWithCallback from "../ButtonWithCallback";
+import { IconFileAi, IconFilePlus, IconLinkPlus } from "@tabler/icons-react";
 
 const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching }) =>{
     const [musicDetected, setMusicDetected ] = useState(false);
@@ -16,20 +19,30 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
     }
     return (
         <div className="addMusicSource">
-            <p>Select the source.</p>
-            <nav className="addMusicNav">
-                <a onClick={() =>setFromFile(true)}>From file</a>
-                <a onClick={()=>setFromFile(false)}>From URL</a>
-            </nav>
+            <div className="add-audio-source-selection">
+                <p>Select the source: </p>
+                <TwoOptionSwitch currentActive={fromFile ? 0 : 1} onClick={(v) => {setFromFile(v == 0)}} data={["From file", "From URL"]}/>
+            </div>
             {fromFile ? (
-                <div className="addMusicInput">
-                    <input multiple type="file" accept="audio/*" onChange={handleFileChange} />
+                <>
+                <p>Select files from a local storage.</p>
+                <div className="add-music-input">
+                    <label for="files" className="file-select">
+                        <IconFilePlus/>
+                        <span>Select file</span>
+                        </label>
+                    <input id="files" multiple type="file" accept="audio/*" onChange={handleFileChange} />
                 </div>
+                </>
             ):(
-                <div className="addMusicInput">
+                <>
+                <p>Link to a radio steam.</p>
+                <div className="add-music-input">
+                   
                     <input type="text" placeholder="Enter URL" onChange={handleURLChanged}/>
-                    <button className="buttonRound" onClick={() => {initMetadataFetching(URL)}}>Add</button>
+                    <ButtonWithCallback onClick={async () => {initMetadataFetching(URL)}} text={"Resolve"} icon={<IconLinkPlus/>}/>
                 </div>
+                </>
             ) }
             {(musicDetected) && <p>Hold a sec'.. The metadata fetch is about to beggin.</p>}
         </div>

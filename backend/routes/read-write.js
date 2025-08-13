@@ -13,6 +13,7 @@ const jwt = require("jsonwebtoken");
 const path = require("path")
 const icy = require("icy");
 const verify = require("./verify.js");
+const { parseFile } = require("music-metadata");
 
 const router = express.Router();
 // @ts-ignore
@@ -248,12 +249,15 @@ router.get("/user-data-usage/:id", async (req, res) => {
     const paths = getTracksAddedByUsers(userId);
     const totalSize = await Promise.all(paths.map(async ({path}) => 
         {
+            if(!existsSync(path)){
+                return { size : 0};
+            }
             try{
                 return stat(path)
             }
             catch(err){
                 console.log("User data storage error: ", err);
-                return 0;
+                return { size : 0};
             }
             finally{}
         }));
@@ -547,6 +551,26 @@ router.get("/fft/:id", (req,res) =>{
     }).catch(err => {
             return res.status(404).send('FFT file Error: '+ err);
     });
+});
+
+router.get("/getSongMetaDataCover/:id", async (req,res) => {
+    try {
+        const path = getTrackPath(req.params.id)?.path;
+        if (!path) return res.status(404).send("File not found.");
+
+        const metadata = await parseFile(path);
+        const picture = metadata.common.picture?.[0];
+
+        if (!picture) {
+            return res.status(404).send("No cover art found.");
+        }
+
+        res.setHeader("Content-Type", picture.format); // e.g., "image/jpeg" or "image/png"
+        res.send(picture.data); // send raw binary buffer
+    } catch (err) {
+        console.error(err);
+        return res.status(500).send("Error reading metadata.");
+    }
 });
 
 module.exports = {router, runServerStats};

@@ -7,12 +7,32 @@ import { useAudioPlayer } from "../../GlobalAudioProvider.jsx";
 
 
 const FFTSettingsUser = () =>{
-    const FFTSettingRef = useRef(null);
     const BarsRef = useRef(null);
+    const ScaleRef = useRef(null);
+    const FPSRef = useRef(null);
+    const ContrastRef = useRef(null);
+    const CutoffRef = useRef(null);
     const {FFTUserSetingsRef, fftConfigRef} = useAudioPlayer();
 
     const changeBars = (value) => {
         FFTUserSetingsRef.current.bars = Math.floor(value);
+        submit();
+    }
+
+    const changeCutoff = (value) => {
+        FFTUserSetingsRef.current.cutoff = parseFloat(value);
+        submit();
+    }
+    const changeScale = (value) => {
+        FFTUserSetingsRef.current.scale = parseFloat(value);
+        submit();
+    }
+    const changeContrast = (value) => {
+        FFTUserSetingsRef.current.contrast = parseFloat(value);
+        submit();
+    }
+    const changeFPS= (value) => {
+        FFTUserSetingsRef.current.FPS = parseFloat(value);
         submit();
     }
 
@@ -35,6 +55,11 @@ const FFTSettingsUser = () =>{
         .then(data => {
             FFTUserSetingsRef.current = data
             BarsRef.current.value = FFTUserSetingsRef.current.bars;
+            ContrastRef.current.value = FFTUserSetingsRef.current.contrast;
+            ScaleRef.current.value = FFTUserSetingsRef.current.scale;
+            CutoffRef.current.value = FFTUserSetingsRef.current.cutoff;
+            FPSRef.current.value = FFTUserSetingsRef.current.FPS;
+
         });
     };
 
@@ -57,7 +82,29 @@ const FFTSettingsUser = () =>{
         <div className="admin-setting-entry-line" data-is-enabled={true}>
             <span>Number of bars</span>
             <InputNumber ref={BarsRef} stateChanged={changeBars} min={1} max={fftConfigRef.current?.fftSize}/>
+
         </div>
+        <div className="admin-setting-entry-line" data-is-enabled={true}>
+            <span>FPS (High number may cause strong battery usage)</span>
+            <InputNumber ref={FPSRef} stateChanged={changeFPS} />
+
+        </div>
+        <div className="admin-setting-entry-line" data-is-enabled={true}>
+            <span>Scale</span>
+            <InputNumber ref={ScaleRef} stateChanged={changeScale} />
+        </div>
+        <div className="admin-setting-entry-line" data-is-enabled={true}>
+            <span>Contrast</span>
+            <InputNumber ref={ContrastRef} stateChanged={changeContrast} />
+
+        </div>
+        <div className="admin-setting-entry-line" data-is-enabled={true}>
+            <span>Cutoff</span>
+            <InputNumber ref={CutoffRef} stateChanged={changeCutoff} />
+
+        </div>
+
+        
         {/* <div className="admin-setting-entry-line" data-is-enabled={active}>
             <span>Frame per second</span>
             <InputNumber ref={FPSRef} stateChanged={changeFramePerSec} max={120} min={0}/>

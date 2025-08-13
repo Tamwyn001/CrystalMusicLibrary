@@ -81,9 +81,10 @@ const Register = () => {
             <label htmlFor="password">Password</label>
             <input type="password" placeholder="Password" name="password" autoComplete="password"/>
             <button type="submit">Login </button>
+            <p>Don't have an account?</p>
+            <button onClick={()=> {navigate('/register')}}>Register</button>
         </form>
         <RequestStatus/>
-        <p>Don't have an account?</p><button onClick={()=> {navigate('/register')}}>Register</button>
         </div>
     );
 }

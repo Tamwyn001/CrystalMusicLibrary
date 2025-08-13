@@ -174,6 +174,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
 
     const fetchMetadata = async (URL = "") => {
         if(!fromFile){
+            if(!URL) return;
             console.log("Fetching meta at source", URL);
             
             const radioFetch = await fetch(`${apiBase}/radio/metadata/${encodeURIComponent(URL)}`, {method :"GET"})

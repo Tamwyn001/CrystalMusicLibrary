@@ -3,10 +3,12 @@
     height: calc(100% );
     max-width: 1200px;
     border-radius: 20px;
-    width: 100%;
+    width: calc(100% - 60px);
     margin-top: 20px;
     padding: 20px;
 }
+
+
 .account-page{
     height: 100%;
     display: flex;
@@ -27,4 +29,10 @@
     gap: 10px;
     width: 100%;
     flex: 1;
+}
+@media screen and (max-width: 714px) {
+    .account-info{
+        margin-bottom: 200px;
+    }
+
 }

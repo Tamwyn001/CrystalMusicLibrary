@@ -6,7 +6,7 @@ import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
 import CreatePlaylist from "./components/CreatePlaylist.jsx";
 import TrackActions from "./components/TrackActions.jsx";
 import { useNotifications } from "./GlobalNotificationsProvider.jsx";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import TagEditor from "./components/TagEditor.jsx";
 import EditTagsWindow from "./components/EditTagsWindow.jsx";
 import EditArtistInfos from "./components/EditArtistInfos.jsx";
@@ -72,12 +72,6 @@ export const AudioPlayerProvider = ({ children }) => {
     const volumeRef = useRef(0);
 
     //== Audio analysis
-    const audioCtx = useRef(null);
-    const sourceA = useRef(null);
-    const sourceB = useRef(null);
-    const mixer = useRef(null);
-    const analyzer = useRef(null);
-    const frequencyDataArray = useRef(null);
     const fftConfigRef = useRef(null);
     const writeIndexRef = useRef(0);
     const circularBufferRef = useRef(null);
@@ -93,6 +87,13 @@ export const AudioPlayerProvider = ({ children }) => {
     });
     const resnapIntervalRef = useRef(null);
     const DRIFT_THRESHOLD = 0.1; // seconds
+
+    //== Song full screen
+    const fullScreenMode = useRef(false);
+        const location = useLocation();
+    const locationBeforeFullScreen = useRef("");
+    const colorOverride = useRef([]);
+    const fullScreenImage = useRef(null);
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -785,6 +786,11 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
         setupAudioGraph();
+        console.log("mount",location.pathname);
+        if(location.pathname === "/full-screen"){
+            locationBeforeFullScreen.current = "";
+            fullScreenMode.current = true;
+        }
         // In case mounts after logged in or already auto logged in;
         fetchFFTUserSettings();
         // In case mounts before login;
@@ -1133,10 +1139,40 @@ export const AudioPlayerProvider = ({ children }) => {
     const closeTagWindow = () => {
         setTagWindowOpen(false);
     }
-
+    const toggleFullScreenView = () =>{
+        fullScreenMode.current = !fullScreenMode.current;
+        if(fullScreenMode.current){
+            locationBeforeFullScreen.current = location.pathname;
+        }
+        console.log(locationBeforeFullScreen.current);
+        navigate(fullScreenMode.current ? "/full-screen" : 
+            (locationBeforeFullScreen.current 
+            && locationBeforeFullScreen.current !== "/full-screen" ?
+             locationBeforeFullScreen.current : "/home" ));
+    }
+    const requestNewFullScreenImage = () => {
+        return new Promise((resolve) => {
+            fetch(`${apiBase}/read-write/getSongMetaDataCover/${playingTrack}`, 
+            {
+                method : "GET",
+                credentials : "include"
+            }).then(res => res.blob())
+            .then(blob => {
+                fullScreenImage.current = {track : playingTrack, blob : blob};
+                
+                resolve({track : playingTrack, blob : blob});
+            });
+        });
+            
+    }
     return (
         <AudioPlayerContext.Provider 
-        value={{fetchFFTUserSettings,
+        value={{
+            colorOverride,
+            requestNewFullScreenImage,
+            fullScreenImage : fullScreenImage.current,
+            toggleFullScreenView,
+            fetchFFTUserSettings,
             FFTUserSetingsRef,
             fftConfigRef,
             getFFTAtCurrentTime,

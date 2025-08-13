@@ -2,6 +2,8 @@ img{
     width: 200px;
 
 }
+
+
 .authDiv{
     margin: 30px auto;
     display: flex;
@@ -9,7 +11,7 @@ img{
     text-align: center;
     align-items: center;
     max-width: 400px;
-    width: 70%;
+    width: calc(100% - 70px);
     background-color: aliceblue;
     border-radius: 20px;
     padding: 10px 20px;
@@ -22,7 +24,17 @@ img{
 .authDiv > form {
     display: flex;
     flex-direction: column;
+    width: calc(100% - 30px);
+    max-width: 300px;
 }
+
+@media screen and (min-width: 714px) {
+    .authDiv{
+        max-width: 400px;
+    }
+}
+
+
 
 input, textarea, select{
     height: 30px;

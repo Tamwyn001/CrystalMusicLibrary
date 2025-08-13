@@ -43,6 +43,10 @@
   align-content: center;
   width: fit-content;
   gap: 3px;
+  background-color: #f3f3f3;
+}
+.button-with-callback:hover{
+  background-color: #cce9ec;
 }
 
 .button-with-callback[data-is-active='true']{

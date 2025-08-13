@@ -414,7 +414,8 @@ const getThreeAlbumCoverForGenre = (genreId) => {
 
 const getUserRole = (email) =>{
     const query = `SELECT role FROM users WHERE email = ?`
-    return db.prepare(query).get(email).role;
+    const role = db.prepare(query).get(email)?.role;
+    return role || "";
 }
 
 const getUsersCount = () => {
@@ -426,9 +427,21 @@ const getAllUsers = () => {
     const res = db.prepare("SELECT id, username, email, role FROM users ORDER BY id ASC").all();
     return res
 }
+/**
+ * 
+ * @returns {{id: Number}[]}
+ */
+const getAllUsersId = () => {
+    const res = db.prepare("SELECT id FROM users").all();
+    return res
+}
 
 const checkUserExist = (email, password) =>{
     return db.prepare("SELECT * FROM users WHERE email = ? AND password = ?").get([email, password]);
+}
+
+const checkUserExistsEmailName = (email, username) =>{
+    return db.prepare("SELECT * FROM users WHERE email = ? AND username = ?").get([email, username]);
 }
 
 const registerNewUser = (email, password, name) => {
@@ -885,6 +898,7 @@ const getUserId = (email) => {
 }
 
 module.exports = {
+    checkUserExistsEmailName,
     getUserId,
     getRadioInfos,
     applyArtistEdit,
@@ -948,4 +962,5 @@ module.exports = {
     getPlaylists,
     getUsers,
     createPlaylist,
-    getPlaylist };
+    getPlaylist,
+    getAllUsersId };

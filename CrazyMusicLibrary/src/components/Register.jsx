@@ -40,7 +40,10 @@ const Register = () => {
     }, [])
 
     const DisplayGotoLogin = () => {
-        return <div><p>Already an account?</p><button onClick={()=> {navigate('/')}}>Login</button></div>
+        return <div style={{marginBottom : "30px"}}>
+                    <p>Already an account?</p>
+                    <button style={{width : "100%"}} onClick={()=> {navigate('/')}}>Login</button>
+                </div>
     }
 
     return (
@@ -51,8 +54,9 @@ const Register = () => {
             `Welcome to the crystal_Music Library! Since you are the first 
             to show up here, we would like you to create the admin account.`
             :'Please fill the form to register as a new user.'}</p>
-        {(!welcomeMessage) && <DisplayGotoLogin/>}
+        
         <form onSubmit={handleRegister}>
+        {(!welcomeMessage) && <DisplayGotoLogin/>}
             <label htmlFor="email">Email</label>
             <input type="text" name="email" placeholder="Username" autoComplete="email"/>
             <label htmlFor="password">Password</label>

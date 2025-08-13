@@ -1,0 +1,37 @@
+.full-screen-image{
+    position: relative;
+    top: 0px;
+    height: 100%;
+    width: auto;
+    margin: auto;
+}
+.full-screen-image-back{
+    position: fixed;
+    width: 100%;
+    filter: blur(4px);
+    left: 0;
+    top: 0;
+    z-index: 0;
+}
+
+
+.full-screen{
+    width: 100%;
+    height: 100%;
+    position: fixed;
+    display: flex;
+    align-content: center;
+}
+.full-screen-back{
+    opacity: 0.6;
+    display:initial;
+    transition: opacity 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+.full-screen-back:hover{
+    opacity: 0.9;
+    display:initial;
+
+}
+.full-screen-back[data-inactive="true"]{
+    opacity: 0;
+}

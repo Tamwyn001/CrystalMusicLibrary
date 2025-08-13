@@ -1,11 +1,12 @@
 .backend-job{
-
-    width: 400px;
-    height: 170px;
+    max-width: 400px;
+    height: fit-content;
+    min-height: 175px;
     background-color: rgb(255, 255, 255);
-    margin: auto;
+    margin-left: auto;
+    margin-right: auto;
     border-radius: 20px;
-    padding: 10px 30px;
+    padding: 10px 30px 20px 30px;
     overflow: hidden;
     position: relative;
 }

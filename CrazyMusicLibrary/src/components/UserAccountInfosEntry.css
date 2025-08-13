@@ -6,6 +6,8 @@
     padding: 10px 30px;
     background-color: white;
     border-radius: 20px;
+    flex-wrap: wrap;
+    gap: 20px;
 }
 
 .user-account-infos-entry p {
