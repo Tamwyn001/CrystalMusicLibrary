@@ -8,6 +8,7 @@ import { asVerified, verifyToken } from "../../lib";
 const Radio = () => {
     const [ radioFetched, setRadioFetched ] = useState(false);
     const [radios, setRadios] = useState([]);
+    const [randomRadios, setRandomRadios] = useState([]);
     const SkeletonLoader = () => {
         return (
         <div className="album-card-loader loader-div">
@@ -19,7 +20,8 @@ const Radio = () => {
     useEffect(() => {
         const verify = asVerified(()=>{
             refetchRadios();
-        })        
+        });
+        verify();     
     }, [])
 
     const refetchRadios = async () => {
@@ -36,8 +38,13 @@ const Radio = () => {
 
     }
 
-    const playRandomRadio = () => {
-
+    const playRandomRadio = async () => {
+        const res = await fetch(`${apiBase}/radio/stations`)
+            .then(res => res.json()).then(json => JSON.parse(json));
+        console.log(res);
+        const pured = res.map(radio => {return {
+            coverUrl: radio.favicon, name : radio.name, url : radio.url_resolved}})
+        setRandomRadios(pured);
     }
 
     const externalSearch = async () =>{
@@ -46,7 +53,7 @@ const Radio = () => {
     return(
         <div className="home">
             <h3>Recently heard</h3>
-            <div className="album-displayer" data-no-tracks={(radios?.length == 0 && radioFetched) ? "true" : "false"}>
+            <div className="album-displayer" data-flat={"true"} data-no-tracks={(radios?.length == 0 && radioFetched) ? "true" : "false"}>
             {!radioFetched?  
             <SkeletonLoader/>
             : radios?.length !== 0 ? radios.map((radio) => (
@@ -60,7 +67,13 @@ const Radio = () => {
                 <ButtonWithCallback text={'Random'} icon={<IconArrowsShuffle />} onClick={playRandomRadio}/>
                 <ButtonWithCallback text={'External search'} icon={<IconDatabaseSearch />} onClick={externalSearch}/>
 
-
+            
+            </div>
+            <div className="album-displayer">
+                {
+                    randomRadios?.length !== 0 ? randomRadios.map((radio, id) => (
+                <LibRadioCard key={id} radio={radio}/>)) : null
+                }
             </div>
         </div>
     )

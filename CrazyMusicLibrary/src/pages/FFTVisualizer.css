@@ -13,3 +13,10 @@
     }
 
 }
+
+#fft-canvas-small{
+    position: absolute;
+    right: 10px;
+    height: 30px;
+    top: 10px;
+}

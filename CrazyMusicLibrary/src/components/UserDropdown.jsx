@@ -1,24 +1,25 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import'./UserDropdown.css'
 import { IconUserScreen } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
 import apiBase from "../../APIbase";
+import { useEventContext } from "../GlobalEventProvider";
 
 const userDropdown = () =>{
     const [isOpened, setIsOpened] = useState(false);
     const [isAdmin, setIsAdmin] = useState(false)
     const navigate = useNavigate();
-    function toggleDropdown() {
+    const wrapperRef = useRef(null);
+    const {subscribe} = useEventContext();
+    const toggleDropdown = () => {
         setIsOpened(!isOpened);
     }
-    const UserImage = () => {
-        return(<IconUserScreen className="userImage buttonRound" onClick={toggleDropdown}/>)
-    }
+
     const logout = () => {
         fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
         .then((response) => {
             if (response.ok) {
-                window.location.href = '/';
+                navigate('/');
             } else {
                 console.error('Logout failed');
             }
@@ -41,23 +42,24 @@ const userDropdown = () =>{
             credentials: 'include'
         })
         .then(res => res.json())
-        // .then(res =>{
-        //     // %{
-        //     //     fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
-        //     //     .then((response) => {
-        //     //         if (response.ok) {
-        //     //             window.location.href = '/';
-        //     //         } else {
-        //     //             console.error('Logout failed');
-        //     //         }
-        //     //     })
-        //     // }
-        // })
-        .then(data => {setIsAdmin(data);})
-    },[])
+        .then(data => {setIsAdmin(data);});
+        const handleClickedOutside = (e) =>{            
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                if(e.target.closest('svg')?.id === 'user-button' ){return;}
+                setIsOpened(false);
+            }}
+        subscribe("action-bar-open", () => {setIsOpened(false)});
+        document.addEventListener("mousedown", handleClickedOutside);
+        document.addEventListener("touchstart", handleClickedOutside);
+        return () => {
+            document.removeEventListener("mousedown", handleClickedOutside);
+            document.removeEventListener("touchstart", handleClickedOutside);
+        }
+    },[]);
+
     return (
-        <div className="userDropdown">
-          <UserImage />
+        <div className="userDropdown" ref={wrapperRef}>
+          <IconUserScreen id="user-button" className="userImage buttonRound" onClick={toggleDropdown}/>
           {isOpened && (
             <div className="dropdown">
 

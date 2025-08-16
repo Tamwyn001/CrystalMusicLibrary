@@ -1,11 +1,11 @@
 'use client'
 
-import { useEffect, useState } from 'react'
-import Register from '../components/Register.jsx';
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
-import Loading from '../components/Loading.jsx';
 import apiBase from '../../APIbase.js';
+import CMLLogoAnimated from '../components/CMLLogoAnimated.jsx';
+// import authBackground from "../assets/auth-background.svg"
 
 const stauts = Object.freeze({
     LOGIN : "login",
@@ -14,11 +14,14 @@ const stauts = Object.freeze({
     VERIF_TOKEN : "verif_token"
 });
 
+
 const Authentification = () => {
     const navigate = useNavigate();
     const [areUsers, setAreUsers] = useState([]);
     const [result, setResult] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
+    const BGImageRef = useRef(null);
+
     useEffect(() => {
         const fetchUsers = async () => { 
             setResult(stauts.ANY_USER);
@@ -46,18 +49,13 @@ const Authentification = () => {
         }
         fetchUsers();
     }, [navigate]);
-
-    if(isLoading) {
-       return null;
-    }
-
-    if(result === stauts.LOGIN) {
-        return <Login />;     
-    }
-    if(result === stauts.REGISTER) {
+    if(result === stauts.REGISTER && !isLoading) {
         navigate('/register');    
     }
-   
-    return null;
+    return <>
+        <CMLLogoAnimated/>
+        {!isLoading && result === stauts.LOGIN  ? <Login /> :null}
+    </>
+
 }
 export default Authentification;

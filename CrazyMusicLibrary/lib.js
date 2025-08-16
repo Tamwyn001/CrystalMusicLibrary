@@ -1,3 +1,4 @@
+import { useNavigate } from "react-router-dom";
 import apiBase from "./APIbase";
 
 export const parseAudioDuration = (rawDuration) => {
@@ -63,9 +64,84 @@ export const HSLToHex = (h,s,l) => {
     return "#" + r + g + b;
   }
 
-export const lerp  = (a,b,x) => {
-  return a + (b-a)*x
+  export const RGBAToHexA = (r,g,b,a) =>{
+    r = r.toString(16);
+    g = g.toString(16);
+    b = b.toString(16);
+    a = Math.round(a * 255).toString(16);
+  
+    if (r.length == 1)
+      r = "0" + r;
+    if (g.length == 1)
+      g = "0" + g;
+    if (b.length == 1)
+      b = "0" + b;
+    if (a.length == 1)
+      a = "0" + a;
+  
+    return "#" + r + g + b + a;
+  }
+
+  export const RGBToHex = (r,g,b) =>{
+    r = r.toString(16);
+    g = g.toString(16);
+    b = b.toString(16);
+  
+    if (r.length == 1)
+      r = "0" + r;
+    if (g.length == 1)
+      g = "0" + g;
+    if (b.length == 1)
+      b = "0" + b;
+  
+    return "#" + r + g + b;
+  }
+
+export const hexToRGB = (h) => {
+  let r = 0, g = 0, b = 0;
+
+  // 3 digits
+  if (h.length == 4) {
+    r = "0x" + h[1] + h[1];
+    g = "0x" + h[2] + h[2];
+    b = "0x" + h[3] + h[3];
+
+  // 6 digits
+  } else if (h.length == 7) {
+    r = "0x" + h[1] + h[2];
+    g = "0x" + h[3] + h[4];
+    b = "0x" + h[5] + h[6];
+  }
+  
+  return "rgb("+ +r + "," + +g + "," + +b + ")";
+}
+
+export const hexToRGBArray = (h) => {
+  let r = 0, g = 0, b = 0;
+
+  // 3 digits
+  if (h.length == 4) {
+    r = "0x" + h[1] + h[1];
+    g = "0x" + h[2] + h[2];
+    b = "0x" + h[3] + h[3];
+
+  // 6 digits
+  } else if (h.length == 7) {
+    r = "0x" + h[1] + h[2];
+    g = "0x" + h[3] + h[4];
+    b = "0x" + h[5] + h[6];
+  }
+  
+  return [parseInt(r), parseInt(g), parseInt(b)];
+}
+export const lerp  = (a,b,t) => {
+  return a + (b-a)*t
 } 
+
+export const remap  = (x,a,b,c,d) => {
+  return lerp(c,d,(x-a)/(b-a));
+} 
+
 
 export const trimString = (string, max ) => {
   var stringNorm = string ?? "";
@@ -84,7 +160,7 @@ export const verifyToken = () => {
 					await fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
 					.then((response) => {
 						if (response.ok) {
-							window.location.href = '/';
+							window.location.href = "/";
 							
 						} else {
 							console.error('Logout failed');

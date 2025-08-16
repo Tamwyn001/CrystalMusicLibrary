@@ -4,10 +4,17 @@
     align-items: center;
     justify-content: space-between;
     padding: 10px 30px;
-    background-color: white;
+    background-color: var(--cards-background);
     border-radius: 20px;
     flex-wrap: wrap;
     gap: 20px;
+    border: solid 2px var(--solid-border);
+    transition: var(--border-transition);
+    transition: background-color 0.2s;
+}
+.user-account-infos-entry:hover{
+    background-color: var(--cards-background-hovered);
+    border-color: var(--solid-border-hover);
 }
 
 .user-account-infos-entry p {

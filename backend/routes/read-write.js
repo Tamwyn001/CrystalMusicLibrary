@@ -535,16 +535,16 @@ router.get("/fft/:id", (req,res) =>{
             const start = parseInt(startStr, 10);
             const end = endStr ? parseInt(endStr, 10) : stats.size - 1;
 
-            if (isNaN(start) || isNaN(end) || start > end || end >= stats.size) {
+            if (isNaN(start) || isNaN(end) || start > end) {
                 return res.status(416).send("Requested range not satisfiable");
             }
-
+            const clampedEnd = Math.min(end, stats.size);
             res.status(206); // Partial content
             res.setHeader("Content-Type", "application/octet-stream");
-            res.setHeader("Content-Length", end - start + 1);
-            res.setHeader("Content-Range", `bytes ${start}-${end}/${stats.size}`);
+            res.setHeader("Content-Length", clampedEnd - start + 1);
+            res.setHeader("Content-Range", `bytes ${start}-${clampedEnd}/${stats.size}`);
 
-            return createReadStream(filePath, { start, end }).pipe(res);
+            return createReadStream(filePath, { start, end : clampedEnd }).pipe(res);
         }
 
         return res.status(400).send("Invalid Range header");

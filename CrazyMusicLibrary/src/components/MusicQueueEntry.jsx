@@ -1,4 +1,4 @@
-import {  useEffect, useState } from "react";
+import {  useEffect, useRef, useState } from "react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import CML_logo from "./CML_logo";
 import apiBase from "../../APIbase";
@@ -9,6 +9,8 @@ const MusicQueueEntry = ({index, trackId,style}) => {
     const { getTrack, setTrack } = useTrackCache();
     const [trackInfo, setTrackInfo] = useState(getTrack(trackId) || null);
     const { jumpToQueueTrack, queuePointer } = useAudioPlayer(); 
+    const trackNameRef = useRef("");
+    const coverURLRef = useRef(null);
     const { ref, inView } = useInView({
         threshold: 0.1, // 10% of the component is visible
         triggerOnce: true
@@ -28,11 +30,12 @@ const MusicQueueEntry = ({index, trackId,style}) => {
             .then(data => {
                 setTrackInfo(data);
                 setTrack(trackId, data); //cache the values
-            })
+            });
         }
-    }, [ inView, trackId, trackInfo, setTrack]);
-    const trackName = trackInfo?.title ?? null;
-    const coverURL = trackInfo?.cover ?? null;
+        trackNameRef.current = trackInfo?.title ?? null;
+        coverURLRef.current = trackInfo?.cover ?? null;
+    }, [ inView, trackId, trackInfo]);
+   
 
     return (
         <div
@@ -43,12 +46,12 @@ const MusicQueueEntry = ({index, trackId,style}) => {
             ref={ref}
             onClick={() => jumpToQueueTrack(index)}
         >
-            {coverURL ? (
-                <img src={`${apiBase}/covers/${coverURL}`} ralt={`${trackName} cover`} className="track-image-small" />
+            {coverURLRef.current ? (
+                <img src={`${apiBase}/covers/${coverURLRef.current}`} alt={"cover"} className="track-image-small" />
             ) : (
                 <CML_logo className="track-image-small" />
             )}
-            <p className="track-title" style={{whiteSpace : 'nowrap'}}>{index} {trackName}</p>
+            <p className="track-title" style={{whiteSpace : 'nowrap'}}>{index} {trackNameRef.current}</p>
         </div>
     );
 }

@@ -11,7 +11,7 @@
 }
 
 .trackRemapAlbum{
-    background-color: rgb(255, 240, 255);
+    background-color: var(--cards-background);
     border-radius: 10px;
     padding: 25px;
     position: relative;
@@ -29,7 +29,7 @@
     margin-top: 10px;
 }
 .last-track-notify{
-    color: red;
+    color: var(--red);
     font-size: 12px;
     margin-top: 5px;
 }

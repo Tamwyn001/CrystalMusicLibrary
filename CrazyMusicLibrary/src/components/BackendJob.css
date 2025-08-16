@@ -1,14 +1,22 @@
 .backend-job{
     max-width: 400px;
-    height: fit-content;
     min-height: 175px;
-    background-color: rgb(255, 255, 255);
+    transition: var(--border-transition);
     margin-left: auto;
     margin-right: auto;
     border-radius: 20px;
     padding: 10px 30px 20px 30px;
     overflow: hidden;
     position: relative;
+    border: 2px solid var(--solid-border);
+    background: white;
+}
+:root.dark .backend-job{
+    background: var(--header-gradient-simple-3);
+}
+
+:root.dark .backend-job:hover{
+    border-color: var(--solid-border-hover);
 }
 .backend-job h3{
     margin: 0;
@@ -18,25 +26,38 @@
     display: flex;
     height: 30px;
     position: absolute;
-    background-color: blueviolet;
     bottom: 0;
     width: 100%;
     left: 0;
     align-content: center;
-    opacity: 0.3;
+    opacity: var(--job-status-min-opacity);
     transition: opacity 0.2s;
 }
-
+.job-status[data-status="init"]{
+    background-color: blueviolet;
+}
+.job-status[data-status="stop"]{
+    background-color: var(--red);
+}
+.job-status[data-status="run"]{
+    background-color: var(--green);
+}
+.job-status[data-status="inactive"]{
+    background-color: var(--gray);
+}
+.job-status span {
+    margin: auto;
+    color:white;
+}
 
 .backend-job:hover .job-status{
-    opacity: 0.5;
+    opacity: calc(var(--job-status-min-opacity) + 0.3);
 }
 .job-status[data-running="true"]{
     animation: running 1s infinite;
 }
-.job-status span{
-    margin: auto;
-    color: white;
+:root.dark .job-status span{
+    color: var(--font-color-base);
 }
 
 @keyframes running {

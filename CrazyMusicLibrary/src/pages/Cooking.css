@@ -21,7 +21,7 @@
     align-items: center;
     gap: 10px;
     padding: 10px 10px;
-    background-color: white;
+    background-color: var(--cards-background-hovered);
     border-radius: 20px;   
     min-height: 60px;
     height: 100%;

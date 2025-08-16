@@ -192,7 +192,7 @@ const BackendJob = ({jobName, description, jobKey, payload={}, doneTotalView = n
             </div>
             <p>{description}</p>
             <div className="job-status" data-running={isPaused ? "false" : "true"}
-                 style={{backgroundColor : isProcessRuning ? initialising ? "purple" : (isPaused ? "red": "green"):"grey" }}>
+                 data-status={isProcessRuning ? initialising ? "init" : (isPaused ? "stop": "run"):"inactive"}>
                 <span>
                     {isProcessRuning ?( initialising ? "Initlialising" : (isPaused ? "Paused": "Running" )): "Inactive"}
                 </span>

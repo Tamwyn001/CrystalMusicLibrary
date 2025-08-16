@@ -6,8 +6,12 @@
     flex-direction: column;
     border-radius: 20px;
     width: 200px;
-    background-color: rgb(242, 215, 250);
+    background: var(--white-gradient-simple);
     padding: 10px 10px;
     gap:10px;
     z-index: 10;   
+}
+
+:root.dark .dropdown{
+    background: var(--header-gradient-simple-3);
 }

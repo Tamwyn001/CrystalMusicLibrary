@@ -37,6 +37,8 @@ function App() {
                             <Route path="/" element={<Authentification />} />
                             <Route path="register" element={<Register />} />
                             <Route element={<RouteWithFFT/>}>
+                            <Route path="full-screen" element={<FullScreenSong/>}/>
+                            </Route>
                                 <Route element={<Layout />}>
                                     <Route path='home' element={<Home />}/>
                                     <Route path="albums" element={<Albums />}/>
@@ -50,12 +52,10 @@ function App() {
                                     <Route path="cooking" element={<Cooking/>}/>
                                     <Route path="radio" element={<Radio/>}/>
                                 </Route>
-                                <Route path="full-screen" element={<FullScreenSong/>}/>
                                 <Route path="account" element={<Account />} /> 
                                 <Route path="settings" element={<Settings />} /> 
                                 <Route path="admin-pannel" element={<AdminPannel />} />
                                 <Route path="*" element={<NotFound />} /> 
-                            </Route>
                         </Routes>  
                     </GlobalActionBarProvider>
                 </AudioPlayerProvider>

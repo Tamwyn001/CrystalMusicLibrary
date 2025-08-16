@@ -1,9 +1,10 @@
 import { useNavigate  } from "react-router-dom"
 import './Auth.css'
 
-import apiBase from "../../APIbase";
-import CML_logo from "./CML_logo";
+import apiBase from "../../APIbase.js";
+import CML_logo from "./CML_logo.jsx";
 import { useEffect, useState } from "react";
+import CMLLogoAnimated from "./CMLLogoAnimated.jsx";
 const Register = () => {
     const [welcomeMessage, setWelcomeMessage] = useState(true);
     const navigate = useNavigate();
@@ -42,12 +43,15 @@ const Register = () => {
     const DisplayGotoLogin = () => {
         return <div style={{marginBottom : "30px"}}>
                     <p>Already an account?</p>
-                    <button style={{width : "100%"}} onClick={()=> {navigate('/')}}>Login</button>
+                    <button style={{width : "100%"}} onClick={(e)=> {
+                        e.stopPropagation();
+                        navigate('/')}}>Login</button>
                 </div>
     }
 
     return (
         <div className="authDiv">
+            <CMLLogoAnimated/>
         <CML_logo />
         <h1>Register</h1>
         <p>{(welcomeMessage) ? 
@@ -56,7 +60,7 @@ const Register = () => {
             :'Please fill the form to register as a new user.'}</p>
         
         <form onSubmit={handleRegister}>
-        {(!welcomeMessage) && <DisplayGotoLogin/>}
+            {(!welcomeMessage) && <DisplayGotoLogin/>}
             <label htmlFor="email">Email</label>
             <input type="text" name="email" placeholder="Username" autoComplete="email"/>
             <label htmlFor="password">Password</label>

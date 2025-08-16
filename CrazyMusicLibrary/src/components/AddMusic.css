@@ -10,16 +10,23 @@
     right: calc(50% - (var(--width) / 2));   
     width: var(--width);
     height: var(--height);
-    background-color: rgba(240, 248, 255, 0.968);
+    background: var(--white-gradient-simple);
     border-radius: 25px;
     z-index: 5;
-    border: solid white 2px;
+    border: solid var(--solid-border) 3px;
     max-width: calc(100% - 40px);
+    max-height: calc(100% - 100px);
+
+}
+:root.dark .addMusicContainer{
+    background : var(--header-gradient-simple-2);
 }
 @media screen and (max-width: 714px) {
     .addMusicContainer{
         right: 20px;
-        margin: auto;
+        margin: auto;   
+         max-height: initial;
+
     }
 }
 .add-music-input{
@@ -38,16 +45,15 @@
 .file-select{
     display: flex;
     gap:10px;
-    background-color: white;
+    background-color: var(--cards-background);
     padding: 10px 20px;
+    cursor: pointer;
     border-radius: 10px;
 }
 .file-select:hover{
-    background-color: rgb(221, 243, 255);
+    background-color: var(--cards-background-hovered);
 }
-.file-select:prese{
-    background-color: rgb(221, 243, 255);
-}
+
 
 .addMusicNav{
     display: flex;

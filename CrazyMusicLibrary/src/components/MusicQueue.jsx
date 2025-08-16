@@ -4,15 +4,18 @@ import './MusicQueue.css';
 import MusicQueueEntry from './MusicQueueEntry';
 import { IconTrash } from '@tabler/icons-react';
 import { FixedSizeList as List } from 'react-window';
+import { useEventContext } from '../GlobalEventProvider';
 
 
 const TrackCacheContext = createContext();
-
+const itemHeight = 60; // Height of each item in pixels
+const height = 600; // Height of the list in pixels
 
 const MusicQueue = ({hideComponent}) => {
     const { playQueue, deleteQueue } = useAudioPlayer();
     const wrapperRef = useRef(null);
     const [cache, setCache] = useState(new Map());
+    const {subscribe} = useEventContext();
 
     const getTrack = useCallback((trackId) => cache.get(trackId), [cache]); 
     const setTrack = useCallback((trackId, trackData) => {
@@ -25,7 +28,7 @@ const MusicQueue = ({hideComponent}) => {
                 if(e.target.closest('svg')?.id === 'playlist-button' ){return;}
                 hideComponent();
             }}
-
+        subscribe("action-bar-open", () => {hideComponent()});
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
@@ -33,8 +36,7 @@ const MusicQueue = ({hideComponent}) => {
             document.removeEventListener("touchstart", handleClickedOutside);
         }
     },[]);
-    const itemHeight = 60; // Height of each item in pixels
-    const height = 600; // Height of the list in pixels
+
     return (
         <div className="music-queue" ref={wrapperRef}>
             <TrackCacheContext.Provider value={{ getTrack, setTrack }}>

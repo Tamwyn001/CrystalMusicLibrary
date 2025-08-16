@@ -1,8 +1,8 @@
 import { useEffect, useRef } from 'react';
-import { useAudioPlayer } from '../GlobalAudioProvider';
+import { useAudioPlayer } from '../GlobalAudioProvider.jsx';
 import './FFTVisualizer.css';
-import { lerp } from '../../lib';
-const FFTVisualizer = () => {
+import { remap } from '../../lib.js';
+const SmallFFTVisualizer = ({fps = 45}) => {
 	const animationRef = useRef();
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
@@ -17,13 +17,13 @@ const FFTVisualizer = () => {
 			return;
 		}
 		const ctx = canvasRef.current.getContext("2d");
-		if(ctx && FFTUserSetingsRef.current && colorOverride.current){
-			if(now - lastTime.current < (1000 / FFTUserSetingsRef.current.FPS)){
+		if(ctx && FFTUserSetingsRef.current){
+			if(now - lastTime.current < (1000 / fps)){
 				animationRef.current = requestAnimationFrame(animate);
 				return;
 			}
 			lastTime.current = now;
-			const barNumber = FFTUserSetingsRef.current.bars;
+			const barNumber = 5;
 			ctx.clearRect(0, 0, canvasRef.current.width, canvasRef.current.height);
 
 
@@ -32,38 +32,33 @@ const FFTVisualizer = () => {
 				animationRef.current = requestAnimationFrame(animate);
 				return;
 			};
-			const deltaFrequency = fftConfigRef.current.sampleRate / FFTdata.length;
-			// FFTdata = FFTdata.slice(0, Math.floor(22000/deltaFrequency));
-			const barSummation = Math.max(1,FFTdata.length / barNumber);
+			// cut the upper 60% of the spectrum
+			let FFTdataView = FFTdata.subarray(Math.floor(FFTdata.length * 0.3), Math.floor(FFTdata.length * 0.6));
+			const barSummation = Math.max(1,FFTdataView.length / barNumber);
 			const display = new Array(barNumber);
 			display.fill(0);
-			for (let i = 0; i < FFTdata.length; i++) {
+			for (let i = 0; i < FFTdataView.length; i++) {
 				// todo Math.floor leaves some artefect for bar > fftsise/2 
 				display[Math.floor(i/barSummation)] += Number(FFTdata[i]);
 
 			}
-			let barWidth = (canvasRef.current.width / barNumber - 1);
+			let barWidth = (canvasRef.current.width / barNumber - 5);
 			// console.log(barWidth, canvasRef.current.width , barNumber)
 			let x = 0;
+			ctx.strokeStyle = `#ffffff`;
+			ctx.fillStyle = "#ffffff";
 			for (let i = 0; i < display.length; i++) {
-				const barHeight = FFTUserSetingsRef.current.scale * 
-						 Math.log2(display[i])
-					* (barNumber / 5) * globalAudioRef.current?.volume;
-				if(colorOverride.current?.length > 0) {
-					const alpha = Math.min(1, Math.max(0,barHeight/FFTUserSetingsRef.current.scale / FFTUserSetingsRef.current.contrast / 300));
-					ctx.fillStyle = `rgb(
-						${lerp(colorOverride.current[0][0], colorOverride.current[1][0], alpha)} 
-						${lerp(colorOverride.current[0][1], colorOverride.current[1][1],alpha)}
-						${lerp(colorOverride.current[0][2], colorOverride.current[1][2], alpha)}
-						)`;
-
-				}
-				else{
-					ctx.fillStyle = `rgb(${barHeight/FFTUserSetingsRef.current.scale / FFTUserSetingsRef.current.contrast} 137 255)`;
-				}
-				ctx.fillRect(x, canvasRef.current.height - barHeight, barWidth, barHeight);
-
-				x += barWidth + 1;
+				const remaped = remap(Math.log2(display[i])
+				* (barNumber / 5), 5,25, 0, 1);
+				const barHeight = Math.max(10, Math.min(80 * 
+						remaped * globalAudioRef.current?.volume,
+						 canvasRef.current.height - 10));
+				
+				ctx.beginPath(); 
+				ctx.roundRect(2 + x, (canvasRef.current.height - barHeight)/2, barWidth, barHeight, 7);
+				ctx.fill();
+				ctx.stroke();
+				x += barWidth + 5;
 			  }
 		}
 		animationRef.current = requestAnimationFrame(animate);
@@ -85,7 +80,7 @@ const FFTVisualizer = () => {
 		return () => cancelAnimationFrame(animationRef.current); // cleanup on unmount
 	}, []);
 
-	return <canvas ref={canvasRef} id="fft-canvas" width={1900} height={1000}></canvas>;
+	return <canvas ref={canvasRef} id="fft-canvas-small" width={60} height={50}></canvas>;
 }
 
-export default FFTVisualizer;
+export default SmallFFTVisualizer;

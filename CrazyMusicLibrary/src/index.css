@@ -42,7 +42,7 @@ h1 {
   font-size: 1em;
   font-weight: 500;
   font-family: inherit;
-  background-color: #ffffff;
+  background-color: var(--cards-background);
   cursor: pointer;
   transition: border-color 0.25s;
   border: none;
@@ -50,7 +50,7 @@ h1 {
   transition: all 0.2s;
 } 
 button:hover {
-  background-color: var(--button-hover);
+  background-color: var(--cards-background-hovered)
 }
 button:focus,
 button:focus-visible {
@@ -71,10 +71,12 @@ button:focus-visible {
 } */
 
 ::-moz-selection { /* Code for Firefox */
-  background: #febe8f;
+  background: var(--selection);
+  color: var(--selection-text);
 }
 
 ::selection {
 
-  background: #febe8f;
+  background: var(--selection);
+  color: var(--selection-text);
 }

@@ -1,11 +1,11 @@
 import { IconArrowBackUp, IconPrismLight } from "@tabler/icons-react";
-import Header from "../components/Header";
+import Header from "../components/Header.jsx";
 import './Account.css';
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import apiBase from "../../APIbase";
-import UserSettingEntry from "./UserSettingEntry";
-import { asVerified, verifyToken } from "../../lib";
+import apiBase from "../../APIbase.js";
+import UserSettingEntry from "./UserSettingEntry.jsx";
+import { asVerified, verifyToken } from "../../lib.js";
 
 
 const Settings = () => {

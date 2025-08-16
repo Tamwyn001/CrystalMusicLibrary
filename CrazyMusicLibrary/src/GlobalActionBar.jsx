@@ -1,5 +1,5 @@
 import { createContext, use, useContext, useEffect, useRef, useState, memo, useCallback } from "react";
-import { IconArrowsShuffle, IconCheck, IconChevronRight, IconInfoCircle, IconPlayerPlay, IconSearch, IconSettingsHeart, IconX } from "@tabler/icons-react";
+import { IconArrowsShuffle, IconBrightness, IconCheck, IconChevronRight, IconInfoCircle, IconPlayerPlay, IconSearch, IconSettingsHeart, IconX } from "@tabler/icons-react";
 import ActionBarEntry from "./components/ActionBarEntry";
 import apiBase  from "../APIbase.js";
 import { useAudioPlayer } from "./GlobalAudioProvider.jsx";
@@ -9,6 +9,7 @@ import { useNavigate } from "react-router-dom";
 import { FixedSizeList as List } from "react-window";
 import CML_logo from "./components/CML_logo.jsx";
 import { useNotifications } from "./GlobalNotificationsProvider.jsx";
+import { useEventContext } from "./GlobalEventProvider.jsx";
 
 
 const commandCodes = {
@@ -88,9 +89,22 @@ const actions = [ //!! very important, keep order
         modifier: '',
         keywords: [],
         icon: () => {}
+    },
+    {
+        name: 'Toggle color theme',
+        code: commandCodes.TOGGLE_THEME,
+        description: 'Toggles the app dark or light theme.',
+        key:"t", //spacebar
+        modifier: 'ctrl',
+        keywords: ["dark", "light", "color", "theme", "color-theme", "toggle"],
+        icon: () => <IconBrightness className="action-bar-current-logo" />
     }
 ];
 
+const colorTheme = {
+    DARK : "dark",
+    LIGHT : "light"
+}
 export const GlobalActionBar = ({children}) => {
     const boundEvents = useRef([]); //{callback, code}
     const [showActionBar, setShowActionBar] = useState(false);
@@ -106,6 +120,8 @@ export const GlobalActionBar = ({children}) => {
     const wrapperRef = useRef(null);
     const actionLocation = useRef(null); //command/search bar, to know if we close. 
     const {addNotification, notifTypes} = useNotifications();
+    const colorThemeRef = useRef(colorTheme.LIGHT);
+    const {emit} = useEventContext();
     
     useEffect(() => {
         window.addEventListener("keydown", keyCallbackBinder)
@@ -114,7 +130,7 @@ export const GlobalActionBar = ({children}) => {
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
                closeActionBar();
             }}
-
+        
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
@@ -267,9 +283,7 @@ export const GlobalActionBar = ({children}) => {
     };
 
     const fetchSearchResults = async (input) => {
-        console.log("action bar seacrh")
         if (input === "" || input.trim().length === 0) {return;} //return if empty or only white spaces
-        console.log(`${apiBase}/read-write/search/${input}`);
         fetch(`${apiBase}/read-write/search/${input}`, {
             method: "GET"})
         .then((res) => {
@@ -343,8 +357,21 @@ export const GlobalActionBar = ({children}) => {
                 closeActionBar();
                 navigate('/settings');
                 break;
+            case commandCodes.TOGGLE_THEME:
+                toggleColorTheme();
+                closeActionBar();
             default:
                 break;
+        }
+    }
+    const toggleColorTheme = () =>{
+        colorThemeRef.current = 
+            colorThemeRef.current === colorTheme.DARK ? 
+            colorTheme.LIGHT : colorTheme.DARK;
+        if(colorThemeRef.current === colorTheme.DARK){
+            document.documentElement.classList.add("dark"); 
+        } else {
+            document.documentElement.classList.remove("dark"); 
         }
     }
     const closeActionBar = () => {
@@ -362,6 +389,9 @@ export const GlobalActionBar = ({children}) => {
         document.getElementById("actionbar-searchbar").focus();
         setProposedCommands([]);
     }
+    useEffect(()=>{
+        if(showActionBar) emit('action-bar-open');
+    },[showActionBar]);
 
     return (
         <GlobalActionBarContext.Provider

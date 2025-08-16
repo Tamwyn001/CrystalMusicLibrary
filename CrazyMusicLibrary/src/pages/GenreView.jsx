@@ -9,7 +9,7 @@ import { useAudioPlayer } from "../GlobalAudioProvider";
 const GenreView = () => {
     const [genre, setGenre] = useState(null);
     const {genreId} = useParams();
-    const {addContainerToQueue, playContainerSuffle, playContainer} = useAudioPlayer();
+    const {addContainerToQueue, playContainerSuffle, playContainer, navigateBack} = useAudioPlayer();
     useEffect(() => {
         
         fetch(`${apiBase}/read-write/genre/${genreId}`, {
@@ -38,7 +38,7 @@ const GenreView = () => {
 
     return(
         <div className="genre-view">
-            <button className="roundButton" onClick={() => window.history.back()}>
+            <button className="roundButton" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
             {(genre) ? (

@@ -1,11 +1,13 @@
 .account-content{
-    background-color: aliceblue;
+background:   var(--header-gradient-simple);
     height: calc(100% );
     max-width: 1200px;
     border-radius: 20px;
     width: calc(100% - 60px);
     margin-top: 20px;
     padding: 20px;
+    border: solid 2px var(--solid-border);
+    transition: var(--border-transition);
 }
 
 

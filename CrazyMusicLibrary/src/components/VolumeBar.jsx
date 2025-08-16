@@ -1,10 +1,12 @@
 import { useEffect, useRef } from "react";
 import { useAudioPlayer } from "../GlobalAudioProvider";
 import ProgressBar from "./ProgressBar"
+import { useEventContext } from "../GlobalEventProvider";
 
 const VolumeBar = ({ onClosed, hideComponent  }) => { 
     const{ setVolume, volume } = useAudioPlayer();
     const wrapperRef = useRef(null);
+    const {subscribe} = useEventContext();
 
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
@@ -12,7 +14,7 @@ const VolumeBar = ({ onClosed, hideComponent  }) => {
                 if(e.target.closest('svg')?.id === 'volume-button' ){return;}
                 hideComponent();
             }}
-
+        subscribe("action-bar-open", () => {hideComponent()});
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {

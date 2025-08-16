@@ -51,11 +51,15 @@
 }
 
 .content{
-    border: solid rgba(255, 255, 255, 0.836) 3px;
-    background: linear-gradient(90deg, rgb(204, 251, 230) -50%, rgb(198, 203, 253) 50%, rgb(248, 221, 255) 100%); 
+    border: solid  var(--solid-border) 3px;
+    background: linear-gradient(90deg, var(--header-1) -50%,  var(--header-2) 25%,  var(--header-3) 100%); 
     margin: 10px 10px 0px 10px;
     border-radius: 20px;
     padding: 5px;
+    transition: var(--border-transition);
+}
+.content:hover{
+    border: 3px solid var(--solid-border-hover);
 }
 @media screen and (min-width: 714px) {
     .genre-displayer{
@@ -73,4 +77,17 @@
         width: 100%;
         padding: 20px;
     }
+}
+
+.album-displayer[data-flat="true"]{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: left;
+    overflow-x: scroll;
+    padding-bottom: 20px;
+}
+
+.album-displayer[data-flat="true"] > .album-card{
+    width: 200px;
 }

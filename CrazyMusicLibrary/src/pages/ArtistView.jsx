@@ -15,7 +15,7 @@ const artistView = () => {
     const [artist, setArtist] = useState(null);
     const [albums, setAlbums] = useState([]);
     //the id for the REST API is the artistId in the URL
-    const { addArtistToQueue, shuffleArtistToQueue, editArtist, linkNewContainer } = useAudioPlayer();
+    const { addArtistToQueue, shuffleArtistToQueue, editArtist, linkNewContainer,navigateBack } = useAudioPlayer();
     const artistId = useParams().artistId;
     useEffect(() => {
         updateArtist();
@@ -44,7 +44,7 @@ const artistView = () => {
     }
     return (
         <div className="album-view">
-            <button className="roundButton" onClick={() => window.history.back()}>
+            <button className="roundButton" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
             {(artist && albums) ? (

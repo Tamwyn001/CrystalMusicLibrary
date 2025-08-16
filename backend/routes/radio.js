@@ -7,6 +7,7 @@ const { getMulterInstance } = require('../multerConfig');
 const { getUserKnownRadios, addUserKnowRadio, getRadioInfos } = require('../db-utils');
 const jwt = require("jsonwebtoken");
 const { Readable } = require('stream');
+const _ = require("lodash");
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
 const upload = getMulterInstance(uploadPath);
@@ -27,6 +28,7 @@ class RadioRouter{
     router;
     /** @type {Array<string>} */
     radioServers = [];
+    
     constructor() {
         this.router = Router();
         this.get_radiobrowser_base_urls().then(hosts => {
@@ -61,6 +63,13 @@ class RadioRouter{
     }
     
     registerRoutes () {
+        this.router.get("/stations", async (req, res) =>{
+            const stations = await this.getRandomRecusrive(0).catch((err) => {
+                console.log(err);
+                return res.status(500).send("Error while fetching radios");
+            });
+            res.json(JSON.stringify(stations));
+        })
         // Route to get the radio name and image, works with icy
         this.router.get("/metadata/:url", async (req,res) => {
            const metadata = await this.getMetadataRecursive(0, req.params.url);
@@ -88,7 +97,6 @@ class RadioRouter{
                 const reqStream = icy.get(streamURL, (icyRes) => {
                     icyRes.on("metadata", (metadata) => {
                         const parsed = icy.parse(metadata);
-                        console.log(parsed);
                         const data = JSON.stringify({ metadata: parsed });
                         res.write(`data: ${data}\n\n`);
                     });
@@ -115,6 +123,26 @@ class RadioRouter{
             }
         });
         
+        this.router.get("/favicon-proxy", async (req, res) => {
+            const url = req.query.url;
+            
+            // Basic whitelist check — make sure it's a valid URL
+            try {
+              new URL(url);
+            } catch {
+              return res.status(400).send("Invalid URL");
+            }
+          
+            try {
+              const response = await fetch(url);
+              if (!response.ok) throw new Error("Failed to fetch image");
+              const buffer = Buffer.from(await response.arrayBuffer());
+              res.set("Content-Type", response.headers.get("content-type") || "image/png");
+              res.send(buffer);
+            } catch (err) {
+              res.status(500).send("Error fetching image");
+            }
+          });
 
 
         // Route to get the user's known radios
@@ -164,6 +192,30 @@ class RadioRouter{
           });
     }
 
+    async getRandomRecusrive(id){
+        if(!this.radioServers[id]) return null;
+        try {
+            const response = await fetch(`${this.radioServers[id]}/json/stations`,
+                {
+                    headers: { 'User-Agent': 'Crystal Music Library/3.0.0' },
+                    method : "POST",
+                    body : new URLSearchParams({ offset: `${Math.floor(Math.random()*10000)}`, limit: "50" })
+                }
+            );
+            const json = await response.json();
+
+            if (json && json.length > 0) {
+                const total = _.shuffle(json);
+                return total.slice(0,6);
+            } else {
+                return this.getRandomRecusrive(id + 1); // ✅ Return the recursive call
+            }
+        } catch (e) {
+            console.log(e);
+            // If fetch fails (network, etc.), try next server
+            return this.getRandomRecusrive(id + 1);
+        }
+    }
 
         
     /**

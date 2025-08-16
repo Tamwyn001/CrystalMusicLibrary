@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from "react";
-import FFTSettingsUser from "../components/UserSettings/FFTSettingsUser";
+import FFTSettingsUser from "../components/UserSettings/FFTSettingsUser.jsx";
 
 const settingComponents = {
     FFT: FFTSettingsUser,

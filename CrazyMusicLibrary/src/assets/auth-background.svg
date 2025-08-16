@@ -1,0 +1,27 @@
+<svg id="login-back-svg" viewBox="0 0 1920 1080" xmlns='http://www.w3.org/2000/svg'>
+    <defs>
+        <linearGradient id="grad" x1="0%" y1="0%" x2="0%" y2="100%"> 
+            <stop offset="0%" stop-color="" /> 
+            <stop offset="100%" stop-color=""/> 
+        </linearGradient>
+        <filter id="noiseFilter" x="0%" y="0%" width="100%" height="100%">
+            <feTurbulence 
+                type="turbulence" 
+                baseFrequency="0.02" 
+                numOctaves="2"
+                result="turb" />
+
+            <feDisplacementMap 
+                in="SourceGraphic" 
+                in2="turb"
+                scale="10000"                
+                xChannelSelector="R"      
+                yChannelSelector="R" />   
+
+        </filter>
+        <mask id="mask-login">
+            <rect width='100%' height='100%' fill="white" filter="url(#noiseFilter)"/>
+        </mask>
+    </defs>
+    <rect width='100%' height='100%' fill="white" mask="url(#mask-login)"/>
+</svg>

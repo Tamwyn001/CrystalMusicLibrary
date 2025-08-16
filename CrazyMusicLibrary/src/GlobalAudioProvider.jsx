@@ -23,6 +23,31 @@ const trackActionTypes = {
     REMOVE_FROM_FAVORITES : "remove_from_favs",
     NONE : "none"
 }
+const useRoutingHistory = () => {
+    const location = useLocation();
+    const historyRef = useRef({pointer : 0, history : new Array(6).fill(null)});
+  
+
+    useEffect(() => {
+        const { pointer, history } = historyRef.current;
+    
+        // Calculate previous index safely (wrap around circular buffer)
+        const prevIndex = (pointer - 1 + history.length) % history.length;
+    
+        // Avoid adding duplicate if same as previous
+        if (history[prevIndex] === location.pathname) return;
+    
+        // Store current location
+        history[pointer] = location.pathname;
+    
+        // Move pointer forward (wrap around)
+        historyRef.current.pointer = (pointer + 1) % history.length;
+    
+      }, [location]);
+  
+    return historyRef.current;
+  }
+  
 
 
 
@@ -71,6 +96,12 @@ export const AudioPlayerProvider = ({ children }) => {
     const volumeTransitionInterval = useRef(null);
     const volumeRef = useRef(0);
 
+    /** For radios that are not stored, we need to pass the metadata on the fly.
+    * There are not stored in the queue so we set them externaly from LibRadioCard
+    * and gets invalid when a valid radio/song from the database get palyed.
+    */
+    const externalRadioInfos = useRef(null);
+
     //== Audio analysis
     const fftConfigRef = useRef(null);
     const writeIndexRef = useRef(0);
@@ -94,6 +125,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const locationBeforeFullScreen = useRef("");
     const colorOverride = useRef([]);
     const fullScreenImage = useRef(null);
+    const history = useRoutingHistory();
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -323,18 +355,30 @@ export const AudioPlayerProvider = ({ children }) => {
             audioRefA.current : audioRefB.current; 
 
         
-        if(playQueue[newQueuePointer].startsWith("url:")){
+        if(playQueue[newQueuePointer].startsWith("radio-")){
             // Radios are passed as an object instead of a string (song uuid).
             console.log(playQueue[newQueuePointer]);
-            const radioUuid = playQueue[newQueuePointer].slice(4);
-            // We expect newQueuePointer to always be 0.
-            const radioDetails = await fetch(`${apiBase}/radio/${radioUuid}`)
-                .then(res=>res.json());
-            console.log(radioDetails);
+            let radioDetails = {};
+            if(playQueue[newQueuePointer].startsWith("radio-id")){
+                const radioUuid = playQueue[newQueuePointer].split("radio-id:")[1];
+                // We expect newQueuePointer to always be 0.
+                radioDetails = await fetch(`${apiBase}/radio/${radioUuid}`)
+                    .then(res=>res.json());
+                console.log(radioDetails);
+                externalRadioInfos.current = null; 
+                setCurrentTrackData({type : 'radio', artist : radioDetails.name,
+                    ...radioDetails, duration : "0-"});
+   
+            } else {
+                radioDetails.url = playQueue[newQueuePointer].split("radio-url:")[1];
+                console.log(externalRadioInfos.current);
+                const {name : artist, ...rest} = externalRadioInfos.current;
+                const infos = {artist, ...rest};
+                setCurrentTrackData({type : 'radio', ...infos, duration : "0-"});
+   
+            }
             globalAudioRef.current.src = radioDetails.url;
-            setCurrentTrackData({type : 'radio', artist : radioDetails.name,
-                 ...radioDetails, duration : "0-"});
-
+            
             const source = new EventSource(`${apiBase}/radio/trackStream/${encodeURIComponent(radioDetails.url)}`);
             
             source.onmessage = (event) => {
@@ -357,6 +401,7 @@ export const AudioPlayerProvider = ({ children }) => {
             return;
             
         }
+        externalRadioInfos.current = null;
         const splittedTrackName = playQueue[newQueuePointer].split('.');
         const trackId = splittedTrackName.length != 0? splittedTrackName[0] : playQueue[newQueuePointer];
         await fetch(`${apiBase}/read-write/trackInfos/${trackId}`, {
@@ -617,7 +662,11 @@ export const AudioPlayerProvider = ({ children }) => {
     },[playQueue])
 
     const toggleTrackPaused = () => {
-        console.log(queuePointer);
+        if(!globalAudioRef.current && playQueueRef.current.length > 0){
+            setQueuePointer(0);
+            setShouldInitPlay(true);
+            return;
+        }
         if (isPlaying) {
             globalAudioRef.current.pause();
             setIsPlaying(false);
@@ -1014,9 +1063,8 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const playRadio = (URL) => {
         setQueuePointer(0);
-        setPlayQueue([`url:${URL}`]);
+        setPlayQueue([URL]);
         setShouldInitPlay(true);
-
     }
 
     const closeNewPlaylistWindow = () =>{
@@ -1165,9 +1213,37 @@ export const AudioPlayerProvider = ({ children }) => {
         });
             
     }
+
+    const navigateBack = () => {
+        const { history: histArray, pointer } = history;
+        if (histArray.every(entry => entry === null)) {
+            navigate("/home");
+            return;
+        }
+
+        // Step back from the current pointer
+        let backIndex = (pointer - 2 + histArray.length) % histArray.length;
+        let destination = histArray[backIndex];
+
+        // Skip invalid entries
+        let attempts = 0;
+        while ((!destination || destination === "/full-screen") && attempts < histArray.length
+                || destination === location.pathname) {
+            backIndex = (backIndex - 1 + histArray.length) % histArray.length;
+            destination = histArray[backIndex];
+            attempts++;
+        }
+        history.pointer = backIndex;
+        navigate(destination || "/home");
+
+    }
     return (
         <AudioPlayerContext.Provider 
         value={{
+            externalRadioInfos,
+            playRadio,
+            navigateBack,
+            history,
             colorOverride,
             requestNewFullScreenImage,
             fullScreenImage : fullScreenImage.current,
@@ -1178,7 +1254,6 @@ export const AudioPlayerProvider = ({ children }) => {
             getFFTAtCurrentTime,
             deleteAlbum,
             editArtist,
-            playRadio,
             playContainer,
             closeTagWindow,
             openTagWindow, 

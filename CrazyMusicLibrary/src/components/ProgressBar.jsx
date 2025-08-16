@@ -13,8 +13,8 @@ const ProgressBar = ({percent, text=null, showPercent=false, isMarquee = false, 
         {(initialising)?
             <div className="progressFill" init="init" style={{ backgroundColor : initialisingColor, opacity : '0.5', ...style}}/>
         :null}
-           {showPercent && (<span className="progressPercent" style={{color : `black`}}>{percent + "%"}</span>)}
-           {text && (<span className="progressPercent" style={{color : `black`, margin:"auto"}}>{text}</span>)}
+           {showPercent && (<span className="progressPercent">{percent + "%"}</span>)}
+           {text && (<span className="progressPercent" style={{ margin:"auto"}}>{text}</span>)}
         </div>
     )
 }

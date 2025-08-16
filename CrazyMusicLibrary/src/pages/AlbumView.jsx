@@ -22,7 +22,8 @@ const AlbumView = ({isPlaylist = false}) => {
     const [artists, setArtists] = useState([]);
     const [currentPlayIcon, setCurrentPlayIcon] = useState(0);
     //the id for the REST API is the albumId in the URL
-    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist, linkNewContainer, getNextSongsFromAlbum } = useAudioPlayer();
+    const { addContainerToQueue, playContainerSuffle, editAlbum, editPlaylist,
+         linkNewContainer, getNextSongsFromAlbum, navigateBack } = useAudioPlayer();
     const wrapperRef = useRef(null) ;
     const navigate = useNavigate();
     const [ proposedEntryToAdd, setProposedEntryToAdd ] = useState([]);
@@ -209,9 +210,10 @@ const AlbumView = ({isPlaylist = false}) => {
     }
     return (
         <div className="album-view">
-            <button className="roundButton" onClick={() => window.history.back()}>
+            <button className="roundButton" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
+
             {(album?.cover) && <img src={`${apiBase}/covers/${album.cover}`} className="background-image" alt="background" />}
             {(album && tracks) ? (
                 <div className="album-details">

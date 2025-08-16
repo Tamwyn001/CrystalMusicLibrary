@@ -12,10 +12,11 @@ img{
     align-items: center;
     max-width: 400px;
     width: calc(100% - 70px);
-    background-color: aliceblue;
+    background-color: var(--auth-pannel);
     border-radius: 20px;
     padding: 10px 20px;
     height: calc(100% - 60px);
+    border: solid 3px white;
 }
 .authDiv > svg{
     max-width: 200px;
@@ -34,6 +35,9 @@ img{
     }
 }
 
+.authDiv label{
+    font-weight: bold;
+}
 
 
 input, textarea, select{
@@ -62,10 +66,10 @@ input[type="submit"]:hover{
 }
 
 .loginFeedback[sucess="true"]{
-    color: green;
+    color: var(--login-success);
 }
 .loginFeedback[sucess="false"]{
-    color: red;
+    color: var(--login-fail);
 }
 
 .loginFeedback path{

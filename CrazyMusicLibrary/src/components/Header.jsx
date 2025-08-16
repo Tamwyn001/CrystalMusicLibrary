@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight } from '@tabler/icons-react'
+import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight, IconFrame, IconBoxAlignBottomFilled } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useState } from 'react'
 import AddMusic from './AddMusic'
@@ -13,6 +13,7 @@ import { useGlobalActionBar } from '../GlobalActionBar.jsx'
 import VolumeBar from './VolumeBar.jsx'
 import RadialProgressBar from './RadialProgressBar.jsx'
 import {useEventContext} from '../GlobalEventProvider.jsx'
+import SmallFFTVisualizer from '../pages/SmallFFTVisualizer.jsx'
 
 
 
@@ -66,26 +67,6 @@ const Header = () => {
         setVolumeShown(!volumeShown);
     }
 
-    const TrackOverlay = () =>{
-        if (!currentTrackData || Object.keys(currentTrackData).length === 0){
-            return null; // or some fallback UI
-        }
-        return(
-        <div className='trackinfos-parent'>
-            <div className='trackinfo-desktop'>
-                <span id="songTitle">{currentTrackData.title}</span>
-                <span id="songArtist" className="artist-name" style={{fontSize: '13px'}}
-                 onClick={()=>{ if(currentTrackData?.type != "radio"){
-                    navigate(`/artists/${currentTrackData.artistId}`)}}}>
-                    {currentTrackData.artist}</span>
-                <SongProgress />
-            </div>
-            <div className='trackinfo-mobile'>
-                <span id="songTitle">{currentTrackData.title}</span>
-                <AudioControls context={{mobile : true}}/>
-            </div>
-        </div>)
-    }
     useEffect(() => {
         const colors = [{
             col1: "#ffa585",
@@ -124,7 +105,7 @@ const Header = () => {
     <header className="header">
         <div className="header__logo" onClick={() => navigate('/home')}>
             <CML_logo col1={logoColors.col1} col2={logoColors.col2}/>
-            <h1>CML</h1>
+            <h1>CML</h1>    
         </div>
         <AudioControls context={{mobile : false}}/>
         <div className="musicPlayer">
@@ -139,10 +120,28 @@ const Header = () => {
                   <img src={trackCoverUrl} className="trackImage" />}
                
                 <div className="playPauseButtons" onClick={toggleFullScreenView}>
-                    <IconPrismLight style={{padding: "0px"}}/>
+                    <IconBoxAlignBottomFilled style={{padding: "0px"}}/>
                 </div>
             </div>
-            <TrackOverlay />
+            {
+                (!currentTrackData || Object.keys(currentTrackData).length === 0) ? null :
+                <div className='trackinfos-parent'>
+                    <div className='trackinfo-desktop'>
+                        <span id="songTitle">{currentTrackData.title}</span>
+                        <span id="songArtist" className="artist-name" style={{fontSize: '13px'}}
+                        onClick={()=>{ if(currentTrackData?.type != "radio"){
+                            navigate(`/artists/${currentTrackData.artistId}`)}}}>
+                            {currentTrackData.artist}</span>
+                        <SongProgress />
+                    </div>
+                    <SmallFFTVisualizer/>
+                    <div className='trackinfo-mobile'>
+                        <span id="songTitle">{currentTrackData.title}</span>
+                        <AudioControls context={{mobile : true}}/>
+                    </div>
+                </div>
+
+            }
         </div>
         <div className='mobile-gost'>
             <IconListDetails id="playlist-button" className="buttonRound" onClick={() => toggleQueueShown(true)}/>

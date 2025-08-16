@@ -1,0 +1,1 @@
+inkscape  .\auth-background.svg --export-type=png --export-filename=background-baked.png
