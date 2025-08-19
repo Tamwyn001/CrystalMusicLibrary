@@ -1,9 +1,9 @@
 import { IconArrowsShuffle, IconDatabaseSearch, IconHeartSearch } from "@tabler/icons-react";
 import { useEffect, useState } from "react"
-import ButtonWithCallback from "../components/ButtonWithCallback";
-import apiBase from "../../APIbase";
-import LibRadioCard from "../components/LibRadioCard";
-import { asVerified, verifyToken } from "../../lib";
+import ButtonWithCallback from "../components/ButtonWithCallback.jsx";
+import apiBase from "../../APIbase.js";
+import LibRadioCard from "../components/LibRadioCard.jsx";
+import { asVerified, verifyToken } from "../../lib.js";
 
 const Radio = () => {
     const [ radioFetched, setRadioFetched ] = useState(false);

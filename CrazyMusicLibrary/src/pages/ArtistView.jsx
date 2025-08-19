@@ -1,15 +1,14 @@
 import { useEffect, useState } from "react";
-import Loading from "../components/Loading";
-import TrackView from "../components/TrackView";
+import Loading from "../components/Loading.jsx";
 import { useParams } from "react-router-dom";
 import {IconArrowBackUp, IconArrowsShuffle, IconCodePlus, IconEdit} from "@tabler/icons-react";
 import "./AlbumView.css";
 
-import apiBase from "../../APIbase";
+import apiBase from "../../APIbase.js";
 import CML_logo from "../components/CML_logo";
-import ButtonWithCallback from "../components/ButtonWithCallback";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import LibAlbumCard from "../components/LibAlbumCard";
+import ButtonWithCallback from "../components/ButtonWithCallback.jsx";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import LibAlbumCard from "../components/LibAlbumCard.jsx";
 const artistView = () => {
     //the actual artist data
     const [artist, setArtist] = useState(null);

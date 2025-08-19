@@ -5,8 +5,8 @@ const dotenv = require("dotenv");
 const path = require("path");
 const isPkg = typeof process.pkg !== "undefined";
 const readline = require("readline")
-const { existsSync, mkdirSync, writeFile } = require("fs");
-const APP_VERSION = "2.0.0";
+const { existsSync, mkdirSync } = require("fs");
+const APP_VERSION = "3.0.0";
 
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
@@ -27,11 +27,11 @@ const resolvedDataPath = path.isAbsolute(rawPathData)
       ? path.join(path.dirname(process.execPath), rawPathData)
       : path.resolve(__dirname, rawPathData));
 
-console.log("Data path: ", resolvedDataPath);
+console.log("Data path: \x1b[2m", resolvedDataPath,"\x1b[0m");
 try{
   for(const uploadDir of ["music", "covers", "covers\\artists","ffts"]){
       if (!existsSync(path.join(resolvedDataPath, uploadDir))){
-          console.log(`Creating directory ${path.join(resolvedDataPath, uploadDir)}`);
+          console.log(`Creating directory  \x1b[2m${path.join(resolvedDataPath, uploadDir)}\x1b[0m`);
           mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
       }
   }
@@ -61,7 +61,7 @@ const resolvedDatabasePath =path.isAbsolute(rawPathDatabase)
     ? path.join(path.dirname(process.execPath), rawPathDatabase)
     : path.resolve(__dirname, rawPathDatabase));
 
-  console.log("Database path: ", resolvedDatabasePath);
+  console.log("Database path: \x1b[2m", resolvedDatabasePath,"\x1b[0m");
 try{
   if (!existsSync(resolvedDatabasePath)){
     console.log(`Creating directory ${resolvedDatabasePath}`);
@@ -235,10 +235,24 @@ try {
 
 runServerStats()
 app.listen(PORT, () => {
-  console.log(`==========================================\n
-\x1b[92m. 🚀     Crystal Music Library Server online\x1b[0m v${APP_VERSION}\n
-✅ The library can be accesed at \x1b[96m ${localDomains.join(" , ")}\x1b[0m\n
-==========================================`);
+  console.log(`==========================================\n\x1b[1m\x1b[38;2;255;182;193m
+          _____  __   __   __      
+         / ___/\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/  \\\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/  /\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/ /\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m
+        / /\x1b[38;2;138;0;211m\\\x1b[38;2;196;95;231m__\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/ /\\ // / / / \x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m
+       / /_\x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m_ / /\x1b[38;2;138;0;211m / \x1b[38;2;255;182;193m/ / / /_\x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m_ 
+       \\____//_/\x1b[38;2;138;0;211m / \x1b[38;2;255;182;193m/_/ /_____/\x1b[38;2;196;95;231m\x1b[38;2;138;0;211m\\
+        \x1b[38;2;196;95;231m\\___\\\\_\\\x1b[38;2;138;0;211m/ \x1b[38;2;196;95;231m \\_\\\x1b[38;2;138;0;211m/\x1b[38;2;196;95;231m\\_____\\\x1b[38;2;138;0;211m/
+
+\x1b[92m     Crystal Music Library Server
+            \x1b[5m◈ \x1b[0monline v${APP_VERSION}\x1b[0m \n
+            
+Open it in your browser! 
+\n\x1b[96m${
+    localDomains.map(name => `  ➜  ${name.includes("localhost") ? "Local:   " : "Network: "} ${name}\n`)
+      .join("")
+  
+  }\x1b[0m\n
+`);
 });
 const writeNewStorageEnv = async () => {
   const {free, size} = await checkDiskSpace(resolvedDataPath);
@@ -246,7 +260,7 @@ const writeNewStorageEnv = async () => {
   process.env.CML_TOTAL_STORAGE = size;
   //@ts-ignore
   process.env.CML_FREE_STORAGE = free;
-  console.log(`  . 💾     Storage space: ${process.env.CML_TOTAL_STORAGE} bytes`);
+  // console.log(`  . 💾     Storage space: ${process.env.CML_TOTAL_STORAGE} bytes`);
 }
 writeNewStorageEnv();
 

@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import apiBase from "../../APIbase";
-import PlaylistCard from "../components/PlaylistCard";
+import apiBase from "../../APIbase.js";
+import PlaylistCard from "../components/PlaylistCard.jsx";
 import { IconCategoryPlus } from "@tabler/icons-react";
-import ButtonWithCallback from "../components/ButtonWithCallback";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import { asVerified, verifyToken } from "../../lib";
+import ButtonWithCallback from "../components/ButtonWithCallback.jsx";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import { asVerified, verifyToken } from "../../lib.js";
 
 const PlaylistsView = () => {
     const [playlists, setPlaylists] = useState([]);

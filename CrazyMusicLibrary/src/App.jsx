@@ -1,30 +1,30 @@
 import {Routes, Route} from 'react-router-dom';
-import Layout from './pages/Layout';
-import Home from './pages/Home';    
-import Albums from './pages/Albums';
-import Authentification from './pages/Authentification';
-import AlbumView from './pages/AlbumView';
-import ArtistsView from './pages/ArtistsView';
-import ArtistView from './pages/ArtistView';
+import Layout from './pages/Layout.jsx';
+import Home from './pages/Home.jsx';    
+import Albums from './pages/Albums.jsx';
+import Authentification from './pages/Authentification.jsx';
+import AlbumView from './pages/AlbumView.jsx';
+import ArtistsView from './pages/ArtistsView.jsx';
+import ArtistView from './pages/ArtistView.jsx';
 import './App.css';
 import './assets/palette.svg'
-import { AudioPlayerProvider } from './GlobalAudioProvider';
-import NotFound from './pages/NotFound';
-import Account from './pages/Account';
-import Settings from './pages/Settings';
-import AdminPannel from './pages/AdminPannel';
-import Register from './components/Register';
-import {GlobalActionBar as GlobalActionBarProvider} from './GlobalActionBar';
-import GenreView from './pages/GenreView';
-import GenresView from './pages/GenresView';
-import PlaylistsView from './pages/PlaylistsView';
-import { NotificationsProvider } from './GlobalNotificationsProvider';
-import Cooking from './pages/Cooking';
-import { EventProvider } from './GlobalEventProvider';
-import Radio from './pages/Radio';
+import { AudioPlayerProvider } from './GlobalAudioProvider.jsx';
+import NotFound from './pages/NotFound.jsx';
+import Account from './pages/Account.jsx';
+import Settings from './pages/Settings.jsx';
+import AdminPannel from './pages/AdminPannel.jsx';
+import Register from './components/Register.jsx';
+import {GlobalActionBar as GlobalActionBarProvider} from './GlobalActionBar.jsx';
+import GenreView from './pages/GenreView.jsx';
+import GenresView from './pages/GenresView.jsx';
+import PlaylistsView from './pages/PlaylistsView.jsx';
+import { NotificationsProvider } from './GlobalNotificationsProvider.jsx';
+import Cooking from './pages/Cooking.jsx';
+import { EventProvider } from './GlobalEventProvider.jsx';
+import Radio from './pages/Radio.jsx';
 import './components/UIControls.css';
-import RouteWithFFT from './pages/RouteWithFFT';
-import FullScreenSong from './pages/FullScreenSong';
+import RouteWithFFT from './pages/RouteWithFFT.jsx';
+import FullScreenSong from './pages/FullScreenSong.jsx';
 function App() {
 
 

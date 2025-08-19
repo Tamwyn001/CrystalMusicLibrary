@@ -5,7 +5,6 @@ import { useNavigate } from 'react-router-dom';
 import Login from '../components/Login.jsx';
 import apiBase from '../../APIbase.js';
 import CMLLogoAnimated from '../components/CMLLogoAnimated.jsx';
-// import authBackground from "../assets/auth-background.svg"
 
 const stauts = Object.freeze({
     LOGIN : "login",

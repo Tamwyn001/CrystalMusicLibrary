@@ -1,7 +1,7 @@
-import { useAudioPlayer } from '../GlobalAudioProvider';
+import { useAudioPlayer } from '../GlobalAudioProvider.jsx';
 import './SongProgress.css';
 import { parseAudioDuration } from "../../lib.js";
-import ProgressBar from './ProgressBar';
+import ProgressBar from './ProgressBar.jsx';
 const SongProgress = () => {
     const { currentTrackData, currentTime, jumpToPercent } = useAudioPlayer();
     if (!currentTrackData || Object.keys(currentTrackData).length === 0) {

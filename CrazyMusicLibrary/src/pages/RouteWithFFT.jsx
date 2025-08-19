@@ -1,6 +1,6 @@
 import { Outlet } from "react-router-dom";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import FFTVisualizer from "./FFTVisualizer";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import FFTVisualizer from "./FFTVisualizer.jsx";
 
 const RouteWithFFT = () =>{
     const {playingTrack} = useAudioPlayer();

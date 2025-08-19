@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import './UserAccountInfosEntry.css';
-import apiBase from '../../APIbase';
-import ProgressBar from './ProgressBar';
+import apiBase from '../../APIbase.js';
+import ProgressBar from './ProgressBar.jsx';
 
 const UserAccountInfosEntry = ({user, totalStorage}) => {
     const [userStorage, setUserStorage] = useState(0);

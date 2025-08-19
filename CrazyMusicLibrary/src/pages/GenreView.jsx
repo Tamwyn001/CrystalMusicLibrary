@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import LibAlbumCard from "../components/LibAlbumCard";
-import { IconArrowBackUp, IconArrowsShuffle, IconCodePlus, IconPlayCard, IconPlayerPlay } from "@tabler/icons-react";
+import LibAlbumCard from "../components/LibAlbumCard.jsx";
+import { IconArrowBackUp, IconArrowsShuffle, IconCodePlus, IconPlayerPlay } from "@tabler/icons-react";
 import { useParams } from "react-router-dom";
-import apiBase from "../../APIbase";
-import ButtonWithCallback from '../components/ButtonWithCallback'
-import { useAudioPlayer } from "../GlobalAudioProvider";
+import apiBase from "../../APIbase.js";
+import ButtonWithCallback from '../components/ButtonWithCallback.jsx'
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 
 const GenreView = () => {
     const [genre, setGenre] = useState(null);

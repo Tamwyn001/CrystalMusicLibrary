@@ -1,6 +1,6 @@
-import AlbumAdd from "./AlbumAdd";
-import AlbumCard from "./AlbumCard";
-import RadioCard from "./RadioCard";
+import AlbumAdd from "./AlbumAdd.jsx";
+import AlbumCard from "./AlbumCard.jsx";
+import RadioCard from "./RadioCard.jsx";
 
 const AlbumsOverview = ({albums, radios, deleteRadio, addNewMusic, deleteAlbum, editAlbum, publish}) =>{
     const cardsAlbum = albums.map((album, index) => <AlbumCard album={album} key={`alb-${index}`} deleteAlbum={deleteAlbum} editAlbum={editAlbum}/>)
@@ -13,7 +13,7 @@ const AlbumsOverview = ({albums, radios, deleteRadio, addNewMusic, deleteAlbum, 
         <div className="albums-overview">
             <div className="album-overview-container">{cards.reverse()}</div>
             {/* <button className="roundButton" onClick={addNewMusic}>Add new music</button> */}
-            {(albums.length > 0 || radios.size > 0) && <button className="roundButton" onClick={publish}>Publish to library</button>}
+            {(albums.length > 0 || radios.size > 0) && <button className="roundButton" id="publish-to-library" onClick={publish}>Publish to library</button>}
 
         </div>
     )

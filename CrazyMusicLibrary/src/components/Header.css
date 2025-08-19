@@ -11,7 +11,14 @@
     margin: 0px 10px;
     border: 3px solid var(--solid-border);
     min-width: 75%;
+    gap: 10px;
     transition: var(--border-transition);
+}
+#songArtist{
+    margin: 0px;
+}
+.header h1{
+    font-size: 2.2em;
 }
 .header:hover{
     border: 3px solid var(--solid-border-hover);
@@ -66,6 +73,7 @@
     border-radius: 0px;
     bottom: 0;
     left: 0;
+    box-shadow: var(--box-shadow);
 }
 
 .trackinfos-parent{
@@ -112,9 +120,12 @@
     background-color: rgba(255, 255, 255, 0.771);
     border-radius: 20px;
     padding: 5px;
+    box-shadow: var(--box-shadow-small);
 
 }
-
+.userDropdown{
+    display: flex;
+}
 
 .serach-button-div .keyboard-key, .serach-button-div span{
     display: none;
@@ -163,7 +174,7 @@
         border-radius: 20px;
         padding: 3px 10px 3px 17px;
     }
-    .mobile-gost{display: flex; width: 140px; gap: 10px; margin-left: 20px;}
+    .mobile-gost{display: flex; width: 140px; gap: 10px}
     
     .serach-button-div .keyboard-key, .serach-button-div span{
         display: inline-block;
@@ -235,3 +246,12 @@
     background-color: var(--header-1);
   }
   
+
+#color-theme-svg{
+    rotate: 0deg;
+    transition: rotate 0.5s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+#color-theme-svg[data-color-theme="dark"]{
+    rotate: 180deg;
+}

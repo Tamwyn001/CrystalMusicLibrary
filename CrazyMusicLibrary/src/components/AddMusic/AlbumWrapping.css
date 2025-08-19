@@ -7,13 +7,25 @@
     overflow: hidden;
     padding: 20px 30px;
 }
-.albumWrapping-library-container{
+.page-overlay-blur{
     position: fixed;
     top: 0px;
+    left: 0px;
     z-index: 10;
     width: 100%;
     height: 100%;
     align-items: center;
+    backdrop-filter: blur(4px);
+    animation: openBlur 0.5s cubic-bezier(0.075, 0.82, 0.165, 1) ;
+}
+@keyframes openBlur {
+    from {
+        backdrop-filter: blur(0px);
+    }
+    to{
+        backdrop-filter: blur(4px);
+    }
+    
 }
 .albumWrapping-library{
     display: flex;
@@ -21,12 +33,14 @@
     position: relative;
     overflow-y: auto;
     padding: 20px 30px;
-    background-color: aliceblue;
+    background: var(--header-gradient-simple-3);
+    border: solid 2px var(--solid-border);
     margin: auto;
     top: 50px;
     height: calc(100% - 120px);
     width: calc(100% - 90px);
     border-radius: 20px;
+    
 }
 
 @media screen and (min-width: 714px) {

@@ -10,12 +10,16 @@
     height: 10px;
     border-radius: 10px;
     background-color: var(--thistle);
+    transition: all 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
 
-.index[active="active"]{
+.index[data-active="active"]{
     width: 30px;
     height: 10px;
     border-radius: 10px;
     background-color: var(--violet-web-color);
+}
 
+.index[data-clickable="true"]{
+    cursor: pointer;
 }

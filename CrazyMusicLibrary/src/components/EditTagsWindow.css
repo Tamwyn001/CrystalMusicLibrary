@@ -1,18 +1,22 @@
 .tag-edtior-container{
     width: 500px;
     height: 500px;
-    background-color: aliceblue;
+    background : var(--header-gradient-simple-3);
     margin: auto;
     top: calc(50% - 300px);
     position: relative;
     border-radius: 20px;
     padding: 30px 5px;
+    border: solid 2px var(--solid-border);
 }
 
 .edit-tags-content{
-    background-color: white;
+    background-color: #fff;
     position: relative;
     z-index: 1;
     padding: 20px 10px 10px 20px;
     border-radius: 0px 20px 20px 20px;
+}
+:root.dark .edit-tags-content{
+    background-color: var(--cards-background);
 }

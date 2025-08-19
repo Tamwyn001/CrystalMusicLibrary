@@ -1,16 +1,16 @@
 import { createContext, use, useContext, useEffect, useRef, useState } from 'react';
 import './AddMusic.css' 
 import {IconX} from '@tabler/icons-react';
-import ActiveIndex from './ActiveIndex';
-import MusicSource from './AddMusic/MusicSource';
-import Loading from './Loading';
+import ActiveIndex from './ActiveIndex.jsx';
+import MusicSource from './AddMusic/MusicSource.jsx';
+import Loading from './Loading.jsx';
 import {parseBlob, parseWebStream} from 'music-metadata';
-import AlbumsOverview from './AddMusic/AlbumsOverview';
+import AlbumsOverview from './AddMusic/AlbumsOverview.jsx';
 import { v4 as uuidv4 } from 'uuid';
-import AlbumWrapping from './AddMusic/AlbumWrapping';
+import AlbumWrapping from './AddMusic/AlbumWrapping.jsx';
 import axios from 'axios';
-import apiBase from '../../APIbase';
-import { useNotifications } from '../GlobalNotificationsProvider';
+import apiBase from '../../APIbase.js';
+import { useNotifications } from '../GlobalNotificationsProvider.jsx';
 
 
 
@@ -449,7 +449,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
                 return <MusicSource fromFile={fromFile} setFromFile={setFromFile} tracksSelected={handleTracksSelected}
                     initMetadataFetching={fetchMetadata} />;
             case 1:
-                return <Loading text={`Fetching metadata... ${(totalMeta) ? finishedMeta+'/'+totalMeta : "-/-"}`} />;
+                return <Loading text={`Fetching metadatas.. ${(totalMeta) ? finishedMeta+'/'+totalMeta : "-/-"}`} />;
             case 2:
                 return <AlbumsOverview albums={albums} 
                 addNewMusic={() => setActiveIndex(0)} deleteAlbum={deleteAlbum} 
@@ -469,6 +469,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
         }   
     }
     return(
+        <div className='addMusicRoot'>
         <div className="addMusicContainer" style={(isMinimize) ? {display : "none"} : {}}>
             <AddMusicContext.Provider value={{albums, moveTrackToNewAlbum, editingAlbum, moveTrackToAlbum, setEditingAlbum}}>
                 <IconX className="buttonRound closeOverlay" onClick={handleClose}/>
@@ -476,6 +477,7 @@ const AddMusic = ({closeOverlay, uploadPercent, uploadProgress, uploadFinished, 
                 <ActiveIndex context={{name: "AddMusic", length: 5}} active={activeIndex} setActive={null}/>
                 < MusicWindowState />
             </AddMusicContext.Provider>
+        </div>
         </div>
     )
 

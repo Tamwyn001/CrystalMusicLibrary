@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import LibArtistsCard from "../components/LibArtistsCard";
-import apiBase from "../../APIbase";
-import { AddMusicShortcut } from "../components/AddMusicShortcut";
+import LibArtistsCard from "../components/LibArtistsCard.jsx";
+import apiBase from "../../APIbase.js";
+import { AddMusicShortcut } from "../components/AddMusicShortcut.jsx";
 
 const ArtistsView = () => {
     const [artists, setArtists] = useState([]);

@@ -1,9 +1,8 @@
-import ProgressBar from "../components/ProgressBar";
+
 import LibAlbumCard from "../components/LibAlbumCard";
 import { useEffect, useState } from "react";
-import apiBase from "../../APIbase";
-import { IconSquarePlus } from "@tabler/icons-react";
-import { AddMusicShortcut } from "../components/AddMusicShortcut";
+import apiBase from "../../APIbase.js";
+import { AddMusicShortcut } from "../components/AddMusicShortcut.jsx";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
     const [albumFetched, setAlbumFetched] = useState(false);

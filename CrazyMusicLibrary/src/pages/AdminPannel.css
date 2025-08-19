@@ -13,6 +13,7 @@
     transition: background-color 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
     border: 2px solid transparent;
     cursor: pointer;
+    box-shadow: var(--box-shadow-tiny);
 }
 .cornered-button[data-active="true"]{
     background-color: var(--cards-background-hovered);
@@ -36,6 +37,7 @@
     border-radius: 20px;
     border: solid 2px var(--solid-border);
     transition: var(--border-transition);
+    box-shadow: var(--box-shadow-tiny);
 }
 :root.dark .admin-setting-entry{
     background: var(--header-gradient-simple-3);
@@ -77,6 +79,7 @@
 
 .admin-setting-entry-content{
     padding: 20px;
+    
 }
 .admin-setting-entry-line{
     display: flex;

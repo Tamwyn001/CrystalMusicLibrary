@@ -11,6 +11,7 @@
     border: solid 2px var(--solid-border);
     transition: var(--border-transition);
     transition: background-color 0.2s;
+    box-shadow: var(--box-shadow-tiny);
 }
 .user-account-infos-entry:hover{
     background-color: var(--cards-background-hovered);

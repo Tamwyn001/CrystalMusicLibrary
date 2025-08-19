@@ -1,26 +1,23 @@
-import { createContext, useCallback, useContext, useEffect, useRef, useState } from 'react';
-import { useAudioPlayer } from '../GlobalAudioProvider';
+import { createContext, forwardRef, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import { useAudioPlayer } from '../GlobalAudioProvider.jsx';
 import './MusicQueue.css';
-import MusicQueueEntry from './MusicQueueEntry';
+import MusicQueueEntry from './MusicQueueEntry.jsx';
 import { IconTrash } from '@tabler/icons-react';
-import { FixedSizeList as List } from 'react-window';
-import { useEventContext } from '../GlobalEventProvider';
+import { areEqual, FixedSizeList as List } from 'react-window';
+import { useEventContext } from '../GlobalEventProvider.jsx';
+import apiBase from '../../APIbase.js';
+import CML_logo from './CML_logo.jsx';
 
 
-const TrackCacheContext = createContext();
-const itemHeight = 60; // Height of each item in pixels
+const itemHeight = 50; // Height of each item in pixels
 const height = 600; // Height of the list in pixels
+// Memoized row that only renders once per index
 
 const MusicQueue = ({hideComponent}) => {
-    const { playQueue, deleteQueue } = useAudioPlayer();
+    const { playQueue, deleteQueue, jumpToQueueTrack, queuePointer } = useAudioPlayer();
     const wrapperRef = useRef(null);
-    const [cache, setCache] = useState(new Map());
     const {subscribe} = useEventContext();
-
-    const getTrack = useCallback((trackId) => cache.get(trackId), [cache]); 
-    const setTrack = useCallback((trackId, trackData) => {
-        setCache((prevCache) => new Map(prevCache).set(trackId, trackData));
-    }, []);
+    const cacheRef = useRef(new Map()); // store rendered rows
 
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
@@ -39,28 +36,25 @@ const MusicQueue = ({hideComponent}) => {
 
     return (
         <div className="music-queue" ref={wrapperRef}>
-            <TrackCacheContext.Provider value={{ getTrack, setTrack }}>
             <div className="queue-header">
                 <h2>Music Queue</h2> 
-                {playQueue.length > 0 && <IconTrash className="buttonRound" onClick={deleteQueue} style={{position: 'absolute',  right: '25px'}}/>}
+                {playQueue.length > 0 && <IconTrash className="buttonRound" id="queue-trash" onClick={deleteQueue} />}
             </div>
-            {playQueue.length > 0 ?                     
-                    <List
-                        height={height}
-                        itemCount={playQueue.length}
-                        itemSize={itemHeight}
-                        width={'100%'}
-                        >
-                        {({ index, style }) => (
-                            <MusicQueueEntry style={style} index={index} key={playQueue[index]} trackId={playQueue[index]} /> 
-                        )}
-                        </List>
-                    :
+           
+            {playQueue.length > 0 ?  
+                <List
+                height={height}
+                itemCount={playQueue.length}
+                itemSize={itemHeight}
+                width={'100%'}
+                itemData={{ playQueue, cacheRef, jumpToQueueTrack, queuePointer }}
+                >
+                    {MusicQueueEntry}
+                </List>:                                     
                 <p>No items in the queue</p>}
-            </TrackCacheContext.Provider>
+
         </div>
     )
 }
 
 export default MusicQueue;
-export const useTrackCache = () => useContext(TrackCacheContext);

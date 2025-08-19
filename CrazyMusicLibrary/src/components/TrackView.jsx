@@ -1,9 +1,9 @@
 import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSalad, IconSparkles, IconVinyl } from "@tabler/icons-react";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import { parseAudioDuration } from "../../lib";
-import SvgHoverToggle from "./SvgHoverToggle";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import { parseAudioDuration } from "../../lib.js";
+import SvgHoverToggle from "./SvgHoverToggle.jsx";
 import { useEffect, useState } from "react";
-import apiBase from "../../APIbase";
+import apiBase from "../../APIbase.js";
 
 const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCover = false }) => {
   const { title, track_number, rawDuration } = track;

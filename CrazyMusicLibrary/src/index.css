@@ -48,6 +48,7 @@ h1 {
   border: none;
   color: var(--font-color);            /* ensure text is visible */
   transition: all 0.2s;
+  box-shadow: var(--box-shadow-tiny);
 } 
 button:hover {
   background-color: var(--cards-background-hovered)

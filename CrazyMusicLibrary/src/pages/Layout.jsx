@@ -1,15 +1,12 @@
 import {Outlet, useLocation} from "react-router-dom";
-import Header from "../components/Header";
-import Sidebar from "../components/Sidebar";
+import Header from "../components/Header.jsx";
+import Sidebar from "../components/Sidebar.jsx";
 
 import './Layout.css'
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import Loading from "../components/Loading";
-import apiBase from "../../APIbase";
-import FFTVisualizer from "./FFTVisualizer";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-
+import Loading from "../components/Loading.jsx";
+import apiBase from "../../APIbase.js";
 
 const Layout = () => {
     const navigate = useNavigate();

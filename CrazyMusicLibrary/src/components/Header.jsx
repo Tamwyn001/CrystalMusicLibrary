@@ -1,9 +1,9 @@
 import './Header.css'
-import UserDropdown from './UserDropdown'
-import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight, IconFrame, IconBoxAlignBottomFilled } from '@tabler/icons-react'
+import UserDropdown from './UserDropdown.jsx'
+import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight, IconFrame, IconBoxAlignBottomFilled, IconContrast2, IconContrast, IconBrightness } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
-import { useEffect, useState } from 'react'
-import AddMusic from './AddMusic'
+import { useEffect, useRef, useState } from 'react'
+import AddMusic from './AddMusic.jsx'
 import { useAudioPlayer } from '../GlobalAudioProvider'
 import AudioControls from './AudioControls'
 import CML_logo from './CML_logo.jsx'
@@ -14,6 +14,7 @@ import VolumeBar from './VolumeBar.jsx'
 import RadialProgressBar from './RadialProgressBar.jsx'
 import {useEventContext} from '../GlobalEventProvider.jsx'
 import SmallFFTVisualizer from '../pages/SmallFFTVisualizer.jsx'
+import ColorThemeButton from './ColorThemeButton.jsx'
 
 
 
@@ -32,6 +33,7 @@ const Header = () => {
     const navigate = useNavigate();
     const { subscribe } = useEventContext();
 
+    const colorThemeRef = useRef(null);
     const [location, setLocation] = useState(useLocation().pathname === "/admin-pannel" );
 
     function playPauseVisibility(visible){
@@ -42,6 +44,7 @@ const Header = () => {
             document.querySelector('.trackImage').removeAttribute('hovered');
         }
     }
+
 
     const openNewMusic = () => {
         setNewMusicActive(true);
@@ -150,7 +153,8 @@ const Header = () => {
             {(volume <= 1e-5 ) ? <IconVolume3 className="buttonRound" onClick={() => toggleVolumeShown(true)}/> 
             :(volume < 0.5 ) ? <IconVolume2 className="buttonRound" onClick={() => toggleVolumeShown(true)}/>
             : <IconVolume id="volume-button" className="buttonRound" onClick={() => toggleVolumeShown(true)}/>}
-            { volumeShown && <VolumeBar hideComponent={() => setVolumeShown(false)}/>} 
+            { volumeShown && <VolumeBar hideComponent={() => setVolumeShown(false)}/>}
+            <ColorThemeButton/>
         </div>
         <div className="headerRight">
             {! location && (

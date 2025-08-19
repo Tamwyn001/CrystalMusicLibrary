@@ -1,11 +1,11 @@
 import { useEffect, useRef, useState } from "react";
-import { useAudioPlayer } from "../GlobalAudioProvider";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import './FullScreenSong.css';
-import { IconArrowBackUp, IconColorSwatch, IconPlayerPause, IconPlayerTrackPrev } from "@tabler/icons-react";
-import ColorThief from "../../node_modules/color-thief/dist/color-thief.mjs"
+import { IconArrowBackUp, IconColorSwatch } from "@tabler/icons-react";
+import ColorThief from "../../third_party_modules/color-thief/dist/color-thief.mjs"
 import _ from "lodash";
-import AudioControls from "../components/AudioControls";
-import { lerp } from "../../lib";
+import AudioControls from "../components/AudioControls.jsx";
+import { lerp } from "../../lib.js";
 const FullScreenSong = () => {
     const {fullScreenImage, requestNewFullScreenImage, playingTrack, toggleFullScreenView, colorOverride} = useAudioPlayer();
     const imgRef = useRef(null);

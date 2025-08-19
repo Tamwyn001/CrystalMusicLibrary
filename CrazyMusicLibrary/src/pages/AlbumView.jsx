@@ -1,17 +1,17 @@
 import { useEffect, useRef, useState } from "react";
-import Loading from "../components/Loading";
-import TrackView from "../components/TrackView";
+import Loading from "../components/Loading.jsx";
+import TrackView from "../components/TrackView.jsx";
 import { useNavigate, useParams } from "react-router-dom";
 import {IconAddressBook, IconArrowBackUp, IconArrowsShuffle, IconChartScatter3d, IconChevronRight, IconCodePlus, IconEdit, IconFilterStar, IconFlagPlus, IconFolderPlus, IconMusicPlus, IconPlaylistAdd, IconSearch} from "@tabler/icons-react";
 import "./AlbumView.css";
 
-import apiBase from "../../APIbase";
-import CML_logo from "../components/CML_logo";
-import ButtonWithCallback from "../components/ButtonWithCallback";
-import { useAudioPlayer } from "../GlobalAudioProvider";
+import apiBase from "../../APIbase.js";
+import CML_logo from "../components/CML_logo.jsx";
+import ButtonWithCallback from "../components/ButtonWithCallback.jsx";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import { FixedSizeList as List } from "react-window";
-import ActionBarEntry from "../components/ActionBarEntry";
-import { useNotifications } from "../GlobalNotificationsProvider";
+import ActionBarEntry from "../components/ActionBarEntry.jsx";
+import { useNotifications } from "../GlobalNotificationsProvider.jsx";
 
 
 const AlbumView = ({isPlaylist = false}) => {

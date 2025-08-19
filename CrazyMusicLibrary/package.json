@@ -12,6 +12,7 @@
   "dependencies": {
     "@tabler/icons-react": "^3.31.0",
     "axios": "^1.8.4",
+    "fuse.js": "^7.1.0",
     "lodash": "^4.17.21",
     "music-metadata": "^11.2.1",
     "react": "^19.0.0",

@@ -1,9 +1,8 @@
 import { useNavigate } from "react-router-dom";
 import './GenreCard.css'
 import { use, useEffect, useRef, useState } from "react";
-import apiBase from "../../APIbase";
+import apiBase from "../../APIbase.js";
 import _ from "lodash";
-import { IconPlayCard } from "@tabler/icons-react";
 const GenreCard = ({genre}) =>{
     const navigate = useNavigate();
     const [ images, setImages ] = useState([]);
@@ -11,7 +10,7 @@ const GenreCard = ({genre}) =>{
     const timeoutsRef = useRef([]);
     const nextImgRef = useRef(nextImages);
     const intervalRefs = useRef([]);
-
+    
     const change = (id) => {
         console.log("changed on", id);
         if(!nextImgRef.current?.length == 0){
@@ -66,8 +65,9 @@ const GenreCard = ({genre}) =>{
         setTimeout(refetchNextImg, 5500);
     }
 
+
     return(
-        <div className="genre-card" onClick={() => {navigate(`/genres/${genre.id}`)}}>
+        <div className={`genre-card ${genre?.puredName}`} onClick={() => {navigate(`/genres/${genre.id}`)}}>
             {/* <IconPlayCard style={{position:"absolute", top : "50px", backgroundRepeat :"repeat"}}/> */}
             {images.map((imgPath, id)  => (
             <div key={id} className="img-pivot" style={{"--start-delay" : `${3 * (2-id)}`, "--start-angle" : `${2-id}`, "--speed" : "0.7", "--scale": 0.4}}>

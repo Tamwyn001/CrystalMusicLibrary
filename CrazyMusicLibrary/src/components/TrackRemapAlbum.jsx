@@ -1,10 +1,10 @@
 import { IconFolderSearch, IconFolderSymlink } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react"
 import { FixedSizeList as List } from "react-window";
-import apiBase from "../../APIbase";
-import ActionBarEntry from "./ActionBarEntry";
-import { useNotifications } from "../GlobalNotificationsProvider";
-import CML_logo from "./CML_logo";
+import apiBase from "../../APIbase.js";
+import ActionBarEntry from "./ActionBarEntry.jsx";
+import { useNotifications } from "../GlobalNotificationsProvider.jsx";
+import CML_logo from "./CML_logo.jsx";
 const TrackRemapAlbum = ({onClose, track}) => {
     const [searchbarFocused, setSearchbarFocused ] = useState(false);
     const searchInputRef = useRef(null);

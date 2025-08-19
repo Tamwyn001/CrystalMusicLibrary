@@ -90,7 +90,7 @@ const EditTagsWindow = () => {
     }
 
     return(
-        <div className="albumWrapping-library-container">
+        <div className="page-overlay-blur">
             <div className="tag-edtior-container">
             <IconX className="buttonRound closeOverlay" onClick={closeTagWindow}/>
             <div className="cooking-selection" style={{marginTop : "40px"}}>

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { useAddMusicContext } from "../AddMusic";
+import { useAddMusicContext } from "../AddMusic.jsx";
 import './TrackRemapAlbum.css';
 const TrackRemapAlbumAddMusic = ({ track, onClose }) => {
     const {albums, moveTrackToNewAlbum, moveTrackToAlbum, editingAlbum, setEditingAlbum} = useAddMusicContext();

@@ -1,16 +1,18 @@
-import { createContext, use, useContext, useEffect, useRef, useState, memo, useCallback } from "react";
-import { IconArrowsShuffle, IconBrightness, IconCheck, IconChevronRight, IconInfoCircle, IconPlayerPlay, IconSearch, IconSettingsHeart, IconX } from "@tabler/icons-react";
-import ActionBarEntry from "./components/ActionBarEntry";
+import { createContext, useContext, useEffect, useRef, useState } from "react";
+import { IconArrowsShuffle, IconBrightness, IconChevronRight, IconPlayerPlay, IconSearch, IconSettingsHeart } from "@tabler/icons-react";
+import ActionBarEntry from "./components/ActionBarEntry.jsx";
 import apiBase  from "../APIbase.js";
 import { useAudioPlayer } from "./GlobalAudioProvider.jsx";
 const GlobalActionBarContext = createContext();
 
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { FixedSizeList as List } from "react-window";
 import CML_logo from "./components/CML_logo.jsx";
 import { useNotifications } from "./GlobalNotificationsProvider.jsx";
 import { useEventContext } from "./GlobalEventProvider.jsx";
-
+import { asVerified } from "../lib.js";
+import Fuse from "fuse.js";
+import {TutorialKeys} from "./pages/TutorialWraper.jsx"
 
 const commandCodes = {
     SEARCH : 'search',
@@ -60,7 +62,7 @@ const actions = [ //!! very important, keep order
         description: '',
         key:" ", //spacebar
         modifier: '',
-        keywords: ["pause", "play", "toggle", "play/pause", "play pause"],
+        // keywords: ["pause", "play", "toggle", "play/pause", "play pause"],
         icon: () => {return <IconArrowsShuffle className="action-bar-current-logo" />} 
     },
     {
@@ -100,8 +102,8 @@ const actions = [ //!! very important, keep order
         icon: () => <IconBrightness className="action-bar-current-logo" />
     }
 ];
-
-const colorTheme = {
+const fuseActions = new Fuse(actions, { keys: ["keywords"], threshold: 0.3 });
+const baseColorTheme = {
     DARK : "dark",
     LIGHT : "light"
 }
@@ -117,11 +119,26 @@ export const GlobalActionBar = ({children}) => {
     const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused, setVolume, volume} = useAudioPlayer();
     const volumeRef = useRef(volume); // when mounted, it will always use the default value if we dont use ref
     const navigate = useNavigate();
+    const location = useLocation();
     const wrapperRef = useRef(null);
     const actionLocation = useRef(null); //command/search bar, to know if we close. 
     const {addNotification, notifTypes} = useNotifications();
-    const colorThemeRef = useRef(colorTheme.LIGHT);
-    const {emit} = useEventContext();
+    const [colorTheme, setColorTheme] = useState(() => {
+        const inStorage = localStorage.getItem("CML_theme");
+        if(inStorage){
+            if(inStorage === baseColorTheme.LIGHT){
+                document.documentElement.classList.remove("dark");
+                return baseColorTheme.LIGHT;
+            }else{
+                document.documentElement.classList.add("dark");
+                return baseColorTheme.DARK;
+            }
+        }
+        localStorage.setItem("CML_theme", baseColorTheme.LIGHT);
+        return baseColorTheme.LIGHT;
+    });
+
+    const {emit, subscribe} = useEventContext();
     
     useEffect(() => {
         window.addEventListener("keydown", keyCallbackBinder)
@@ -141,17 +158,27 @@ export const GlobalActionBar = ({children}) => {
         }
     },[]);
 
-
-
+    /**
+     * 
+     * @param {TutorialKeys} tutorialKey
+     */
+    const onTutoialFinished = (tutorialKey) => {
+        const tuto = localStorage.getItem("CML_FinishedTutorials");
+        const data = tuto ? JSON.parse(tuto) : {state : {}};
+        data.state[tutorialKey] =  true;
+        localStorage.setItem("CML_FinishedTutorials", JSON.stringify(data));
+        emit(`safe-finished-tutorial-${tutorialKey}`);
+    }
     
-
     const keyCallbackBinder = (e) => {
         // console.log("Key pressed", e);
         // if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
         if(e.key == "Control" || currentCommand) {return}
-        if(!(e.ctrlKey || e.altKey || e.metaKey) && (document.activeElement.nodeName === "INPUT" || document.activeElement.nodeName === "TEXTAREA")) {return} //to avoid closing the action bar when pressing space in the search bar
-        const actionToCall = actions.find( (action) => {
+        if(!(e.ctrlKey || e.altKey || e.metaKey) && 
+            (document.activeElement.nodeName === "INPUT" || document.activeElement.nodeName === "TEXTAREA"))
+             {return;} //to avoid closing the action bar when pressing space in the search bar
+        const actionToCall = actions.find((action) => {
             const keyMatch = e.key === action.key;
             
             if (!keyMatch) return false;
@@ -189,8 +216,16 @@ export const GlobalActionBar = ({children}) => {
     toggleTrackPauseRef.current = toggleTrackPaused; 
 
     const openCommandBar = () => {
-        setShowActionBar(true); setActionBarCommand(null); setProposedCommands(getMostUsedCommands()); actionLocation.current = "command";
-         setCurrentCommand(actions[1]);
+        //Opens only when the token is valid
+        const openAfterVerify = asVerified(()=>{
+            setShowActionBar(true); 
+            setActionBarCommand(null); 
+            setProposedCommands(getMostUsedCommands()); 
+            actionLocation.current = "command";
+            setCurrentCommand(actions[1]);
+        }, location.pathname);
+        openAfterVerify();
+        
     }
 
     useEffect(() => {
@@ -236,7 +271,9 @@ export const GlobalActionBar = ({children}) => {
         switch (actionBarCommand) {
         case commandCodes.SEARCH:
           setShowingActionLogo(true);
-          setCurrentActionLogo(() => <div className="action-bar-logo-container"><IconSearch className="action-bar-current-logo" /> </div>);
+          setCurrentActionLogo(() => <div className="action-bar-logo-container">
+                <IconSearch className="action-bar-current-logo" /> 
+            </div>);
           break;
         default:
             setShowingActionLogo(true);
@@ -259,9 +296,17 @@ export const GlobalActionBar = ({children}) => {
             fetchSearchResults(input);
             return;
         }
-        const possibleActions = actions.filter((action) => {
-            return (action.keywords?.length > 0 && action.keywords.some((keyword) => keyword.includes(input)))
-        });
+
+        /** Fuse search of matching action that have more than one keyword.
+         * Some might just be shortcuts
+
+        */       
+        const possibleActions = fuseActions.search(input)?.map(fuseResult => fuseResult.item)
+            .filter(action => action.keywords?.length > 0 );
+        // console.log(possibleActions);
+        // console.log(actions.filter((action) => {
+        //     return (action.keywords?.length > 0 && action.keywords.some((keyword) => keyword.includes(input)))
+        // }));
 
         setProposedCommands(possibleActions);
 
@@ -365,14 +410,19 @@ export const GlobalActionBar = ({children}) => {
         }
     }
     const toggleColorTheme = () =>{
-        colorThemeRef.current = 
-            colorThemeRef.current === colorTheme.DARK ? 
-            colorTheme.LIGHT : colorTheme.DARK;
-        if(colorThemeRef.current === colorTheme.DARK){
-            document.documentElement.classList.add("dark"); 
+        if(colorTheme === baseColorTheme.DARK){
+            document.documentElement.classList.remove("dark");
+            localStorage.setItem("CML_theme", baseColorTheme.LIGHT);
+ 
         } else {
-            document.documentElement.classList.remove("dark"); 
+            document.documentElement.classList.add("dark"); 
+            localStorage.setItem("CML_theme", baseColorTheme.DARK);
+
         }
+        setColorTheme( 
+            colorTheme === baseColorTheme.DARK ? 
+            baseColorTheme.LIGHT : baseColorTheme.DARK);
+        
     }
     const closeActionBar = () => {
         setShowActionBar(false);
@@ -397,7 +447,10 @@ export const GlobalActionBar = ({children}) => {
         <GlobalActionBarContext.Provider
             value={{commandCodes,
                 openCommandBar,
-             openSearchBar}}>
+             openSearchBar,
+             colorTheme,
+             toggleColorTheme,
+             onTutoialFinished}}>
             <div className="action-bar-app-parent">
                 
                 {children}

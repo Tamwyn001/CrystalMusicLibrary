@@ -39,20 +39,28 @@
   --album-cards-background-hovered: #e9fafe7d ;
   --track-entry:#f0f0f0c4;
   --track-entry-hover : #cdebeec4;
+  --genre-cards-background : #ffffff53;
+  --tutorial-target : #53ff9e;
+
   --header-gradient : linear-gradient(90deg, var(--header-1) 0%,
     var(--header-2) 50%,  var(--header-3) 100%);
   --header-gradient-simple-2 :linear-gradient(90deg, var(--header-2)
     -40%, var(--header-1) 140%);
   --header-gradient-simple :linear-gradient(90deg, var(--header-1)
     -40%, var(--header-2) 140%);
-    --header-gradient-simple-3 :linear-gradient(180deg, var(--header-1)
+    --header-gradient-simple-3 :linear-gradient(180deg, color-mix(in srgb, var(--header-1) 70%, white)
     -40%, var(--header-2) 140%);
   --white-gradient-simple : linear-gradient(180deg, #ffffff
   -40%, #a9a9a9 140%);
+  --color-gradient-simple : linear-gradient(180deg, var(--header-3)-40%, var(--header-2) 140%);
   --progress-background :#dfdfdf;
   --job-status-min-opacity : 0.35;
   --svg-icon-back : #ffffff;
   --border-transition : border 0.2s cubic-bezier(0.075, 0.82, 0.165, 1);
+  --box-shadow : 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  --box-shadow-small : 0 4px 4px 0 rgba(0, 0, 0, 0.15), 0 6px 20px 0 rgba(0, 0, 0, 0.15);
+  --box-shadow-tiny : 0 4px 3px 0 rgba(0, 0, 0, 0.07), 0 6px 15px 0 rgba(0, 0, 0, 0.07);
+
 }
 
 :root.dark{
@@ -91,7 +99,10 @@
   --progress-background :#34434a;
   --job-status-min-opacity : 0.4;
   --svg-icon-back : #414242;
-
+  --genre-cards-background : #4c5a7780;
+  --tutorial-target : var(--green);
+  --header-gradient-simple-3 :linear-gradient(180deg, var(--header-1)
+  -40%, var(--header-2) 140%);
 }
 
 .buttonRound{
@@ -99,6 +110,7 @@
   background-color: var(--cards-background);
   border-radius: 20px;
   cursor: pointer;
+  box-shadow: var(--box-shadow-small);
 }
 .buttonRound:hover{
   background-color: var(--cards-background-hovered);
@@ -182,7 +194,18 @@
     width: 45%;
   }
 }
-
+.info-line{
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  align-items: end;
+}
+.info-button{
+  cursor: pointer;
+  background-color: var(--cards-background);
+  border-radius: 20px;
+  padding: 3px;
+}
 .action-bar[is-playlist-add="true"]{
   width: 100%;
   max-width: 700px;
@@ -190,7 +213,7 @@
 
 .action-bar-results{
   background: var(--white-gradient-simple);
-  width:calc(100% - 50px);
+  width:calc(100% - 60px);
   height: fit-content;
   border-radius: 0px 0px 20px 20px;
   display: flex;
@@ -201,6 +224,7 @@
   position: absolute;
   top : 70px;
   height: fit-content;
+  left: 20px;
 }
 :root.dark .action-bar-results{
   background: var(--header-gradient-simple-3);
@@ -295,7 +319,7 @@
 }
 .notification{
   margin: 0px auto 30px auto;
-  background-color: rgb(255, 255, 255);
+  background-color: var(--cards-background);
   border-radius: 20px;
   width: fit-content;
   display: flex;
@@ -327,11 +351,13 @@
   display: flex;
   flex-direction: column;
   gap: 5px;
-  background-color: #f1f1f1f3;
-
+  background-color: #eeeeee;
   border-radius: 15px;
   z-index: 10;
   right: 150px;
+}
+:root.dark .track-actions-div{
+  background-color: var(--cards-background);
 }
 .track-action-entry{
   display: flex;
@@ -345,7 +371,7 @@
   flex: 1;
 }
 .track-action-entry:hover{
-  background-color: #c9f0ff;
+  background-color: var(--cards-background-hovered);;
 
 }
 

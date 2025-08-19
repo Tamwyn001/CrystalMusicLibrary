@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
-import CML_logo from "./CML_logo";
-import apiBase from "../../APIbase";
+import CML_logo from "./CML_logo.jsx";
+import apiBase from "../../APIbase.js";
 
 const PlaylistCard = ({playlist}) => {
     const navigate = useNavigate();

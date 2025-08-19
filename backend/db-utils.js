@@ -3,7 +3,6 @@ const { currentDate, interpolateQuery } = require("./lib.js");
 const path = require("path")
 const { unlinkSync } = require("fs");
 const { v4 : uuidv4} = require("uuid");
-const { param } = require("./routes/auth.js");
 const _ = require("lodash");
 const db = getDatabase();
 // inserting array of arrays
@@ -625,7 +624,11 @@ const setFavorite = (id, usermail, favorite) => {
     }
 }
 
-const getGenres = () => db.prepare("SELECT name, id FROM genres;").all();
+const getGenres = () => {
+    const trackNum = db.prepare("SELECT COUNT(id) as num FROM tracks;").get()?.num;
+    const genres = db.prepare("SELECT name, id FROM genres ORDER BY name ASC;").all();
+    return {trackNum, genres};
+}
 
 const getPlaylists = () => db.prepare("SELECT name, id, description, cover FROM playlists_descs").all();
 

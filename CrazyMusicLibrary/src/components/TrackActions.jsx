@@ -1,6 +1,6 @@
 import { IconFolderPin, IconHeart, IconHeartBroken, IconLabel, IconMusicX, IconRowInsertBottom, IconRowInsertTop } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
-import { useAudioPlayer } from "../GlobalAudioProvider";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import { useLocation } from "react-router-dom";
 
 

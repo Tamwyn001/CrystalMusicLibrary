@@ -10,6 +10,7 @@
     position: relative;
     border: 2px solid var(--solid-border);
     background: white;
+    box-shadow: var(--box-shadow-tiny);
 }
 :root.dark .backend-job{
     background: var(--header-gradient-simple-3);

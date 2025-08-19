@@ -151,12 +151,15 @@ export const trimString = (string, max ) => {
   return stringNorm;
 }
 
-export const verifyToken = () => { 
+export const verifyToken = (location = "") => { 
+  const avoidRedirect = ["/", "/register"]
 	return new Promise (async (resolve) => {
 		const ok = await fetch(`${apiBase}/auth/verifyToken`,  
 				{method: 'POST', credentials: 'include'})
 			.then(async res => {
 				if(!res.ok){
+          //No redirection if already in auth/register page.
+          if(avoidRedirect.includes(location)){return false;}
 					await fetch(`${apiBase}/auth/logout`, {method: 'POST', credentials: 'include'})
 					.then((response) => {
 						if (response.ok) {
@@ -174,10 +177,22 @@ export const verifyToken = () => {
 	});
 }
 
-export const asVerified = (fn) => {
+/**
+ * Checks the token validity and runs the callback function if valid.
+ * Optionaly you can pass a path. If this match the register or auth route,
+ * no redirect to login page will be done.
+ * @param {(any) => any} fn The callback to execute if valid token.
+ * @param {string} location
+ * @returns A promise that resolves after the check.
+ */
+export const asVerified = (fn, location = "") => {
 	return async function verify() { 
-		if(!  verifyToken()) return;
-		fn()
+    const valid = await verifyToken(location);
+		if(! valid) return;
+		fn();
 	};
-
+}
+// http://stackoverflow.com/questions/1026069/ddg#1026087
+export const capitalizeFirstLetter = (string) => {
+  return string.charAt(0).toUpperCase() + string.slice(1);
 }

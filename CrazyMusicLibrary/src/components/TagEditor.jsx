@@ -1,11 +1,11 @@
 import { IconCheck, IconLabel, IconSearch, IconTagFilled, IconTagPlus, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
-import ActionBarEntry from "../components/ActionBarEntry";
-import apiBase from "../../APIbase";
+import ActionBarEntry from "../components/ActionBarEntry.jsx";
+import apiBase from "../../APIbase.js";
 import './TagEditor.css';
 import { HexColorPicker } from "react-colorful";
-import { HSLToHex } from "../../lib";
+import { HSLToHex } from "../../lib.js";
 import {v4 as uuidv4} from 'uuid'
 
 const defaultTagEntry = {name: "Create a new tag", icon : () => <IconTagPlus/>, isAction : true};
@@ -112,7 +112,7 @@ const TagEditor = ({track, apply}) => {
     }
 
     return(
-        <div className="albumWrapping-library-container">
+        <div className="page-overlay-blur">
             <div className="albumWrapping-library" style={{height : "400px", flexDirection : "column"}}>
                 <IconX className="buttonRound closeOverlay" onClick={() => {apply(null);}} />
 

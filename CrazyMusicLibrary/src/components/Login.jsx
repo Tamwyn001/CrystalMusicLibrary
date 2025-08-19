@@ -6,6 +6,7 @@ import ThreePointsLoader from "./ThreePointsLoader";
 import { IconCheck, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useEventContext } from "../GlobalEventProvider";
+import ColorThemeButton from "./ColorThemeButton";
 const LoginStatus = {
     FETCHING : "fetching",
     SUCCESS : "success",
@@ -72,8 +73,9 @@ const Register = () => {
 
     return (
         <div className="authDiv">
+        <ColorThemeButton useText={true} style={{position : "absolute", left: "10px"}}/>
         <CML_logo />
-        <h1>Login</h1>
+        <h2>Login</h2>
         <p>We were not able to connect you, please login.</p>
         <form onSubmit={handleLogin}>
             <label htmlFor="email">Email</label>

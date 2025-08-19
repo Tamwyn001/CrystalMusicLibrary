@@ -142,8 +142,10 @@ const startFFTAnalysis = (data) => {
     if(threadState.killed) return;
     threadState.fftRunning = true;
     const { pow2Len, pcmBuffer, sampleRate, interval } = data;
-    threadState.FFTchunkSize = pow2Len;
-	const f = new FFT(pow2Len);
+    const truePow2 = Math.pow(2, Math.round(Math.log( pow2Len || 512)/Math.log(2)));
+   
+    threadState.FFTchunkSize = truePow2;
+	const f = new FFT(truePow2);
     const chunks = chunkPCM(pcmBuffer, sampleRate, interval); 
     let id = 0;
     try{

@@ -1,58 +1,60 @@
-import {  useEffect, useRef, useState } from "react";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import CML_logo from "./CML_logo";
-import apiBase from "../../APIbase";
-import { useInView } from 'react-intersection-observer';
-import { useTrackCache } from "./MusicQueue";
+import {  memo, useEffect, useState } from "react";
 
-const MusicQueueEntry = ({index, trackId,style}) => {
-    const { getTrack, setTrack } = useTrackCache();
-    const [trackInfo, setTrackInfo] = useState(getTrack(trackId) || null);
-    const { jumpToQueueTrack, queuePointer } = useAudioPlayer(); 
-    const trackNameRef = useRef("");
-    const coverURLRef = useRef(null);
-    const { ref, inView } = useInView({
-        threshold: 0.1, // 10% of the component is visible
-        triggerOnce: true
-    });
+import CML_logo from "./CML_logo.jsx";
+import apiBase from "../../APIbase.js";
 
 
-    useEffect(() => {
-        if(inView && !trackInfo){
-            fetch(`${apiBase}/read-write/shortTrackInfos/${trackId}`, {
-                method: "GET",
-                credentials: "include"
-            })
-            .then(res => {
-                if (!res.ok) {throw new Error("Network response was not ok");}
-                return res.json();
-            })
-            .then(data => {
-                setTrackInfo(data);
-                setTrack(trackId, data); //cache the values
-            });
+/**
+ * This queue row memo render everytime the linked song changes.
+ * An internal useEffect takes care of rerendering when the song  
+ * cover is fetched. It uses a shared cache to avoid refetching 
+ * the cover.
+ */
+const MusicQueueEntry = memo(
+    ({ index, style, data }) => {
+        const { playQueue, cacheRef, jumpToQueueTrack, queuePointer } = data;
+        const trackId = playQueue[index];
+        const [loaded, setLoaded] = useState(!!cacheRef.current[trackId]);
+        let trackInfo = cacheRef.current[trackId];
+        if (!trackInfo) {
+            // lazy fetch when needed
+            trackInfo = { title: "Loading...", cover: "loading" };
         }
-        trackNameRef.current = trackInfo?.title ?? null;
-        coverURLRef.current = trackInfo?.cover ?? null;
-    }, [ inView, trackId, trackInfo]);
-   
+        useEffect(() => {
+            if(!loaded){
+                cacheRef.current[trackId] = trackInfo;
+                fetch(`${apiBase}/read-write/shortTrackInfos/${trackId}`, {
+                credentials: "include"
+                })
+                .then(res => res.json())
+                .then(data => {
+                    cacheRef.current[trackId] = data;
+                    setLoaded(true); // triggers re-render with loaded = true
+                });
+            }
+        }, [loaded, trackId]);
+        // Apply style modification
+        const rowStyle = { ...style, width: "calc(100% - 15px)", height: "47.5px" };
 
-    return (
-        <div
+        return (
+          <div
             className="music-queue-entry"
-            style={{...style, overflow: 'hidden'}}
+            style={rowStyle}
             is-passed={`${index < queuePointer}`}
             is-selected={`${index === queuePointer}`}
-            ref={ref}
             onClick={() => jumpToQueueTrack(index)}
-        >
-            {coverURLRef.current ? (
-                <img src={`${apiBase}/covers/${coverURLRef.current}`} alt={"cover"} className="track-image-small" />
+          >
+            {trackInfo.cover ? (
+              <img src={`${apiBase}/covers/${trackInfo.cover}`} className="track-image-small" />
             ) : (
-                <CML_logo className="track-image-small" />
+              <CML_logo className="track-image-small" />
             )}
-            <p className="track-title" style={{whiteSpace : 'nowrap'}}>{index} {trackNameRef.current}</p>
-        </div>
+            <p className="track-title">{trackInfo.title}</p>
+          </div>
+        );
+      }, (prev,next) => 
+            prev.data.playQueue[prev.data.queuePointer] 
+            === next.data.playQueue[next.data.queuePointer]
     );
-}
+
 export default MusicQueueEntry;

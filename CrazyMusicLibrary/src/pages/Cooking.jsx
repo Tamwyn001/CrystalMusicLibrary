@@ -1,18 +1,19 @@
-import { IconCheck, IconLabel, IconMusicCode, IconSalad, IconSaladFilled, IconSearch, IconTags, IconTagStarred, IconX } from "@tabler/icons-react";
+import { IconCheck, IconInfoCircle, IconLabel, IconMusicCode, IconSalad, IconSaladFilled, IconSearch, IconTags, IconTagStarred, IconX } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { FixedSizeList as List } from "react-window";
-import ActionBarEntry from "../components/ActionBarEntry";
-import apiBase from "../../APIbase";
-import CookingTagEntry from "../components/CookingTagEntry";
+import ActionBarEntry from "../components/ActionBarEntry.jsx";
+import apiBase from "../../APIbase.js";
 import '../components/TagEditor.css';
 import './Cooking.css';
 import _ from 'lodash'
-import ButtonWithCallback from "../components/ButtonWithCallback";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import { useNotifications } from "../GlobalNotificationsProvider";
-import TrackView from "../components/TrackView";
+import ButtonWithCallback from "../components/ButtonWithCallback.jsx";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import { useNotifications } from "../GlobalNotificationsProvider.jsx";
+import TrackView from "../components/TrackView.jsx";
 import { HexColorPicker } from "react-colorful";
-import { asVerified, HSLToHex, verifyToken } from "../../lib";
+import { asVerified, HSLToHex } from "../../lib.js";
+import { TutorialKeys, TutorialWraper } from "./TutorialWraper.jsx";
+import { useEventContext } from "../GlobalEventProvider.jsx";
 const Cooking = () => {
     const wrapperRef = useRef(null);
     const searchInputRef = useRef(null);
@@ -29,6 +30,15 @@ const Cooking = () => {
     const saladNameInputRef = useRef(null);
     const [ color, setColor ] = useState('#aabbcc');
     const [ allowsSave, setAllowSave ] = useState(true);
+    const {subscribe} = useEventContext();
+    const [tutoCookingFinished, setTutoCookingFinished] = useState(() => {
+        const tuto = localStorage.getItem("CML_FinishedTutorials");
+        if (!tuto) return false;
+        const data = JSON.parse(tuto);
+        return data.state[TutorialKeys.COOKING] || false;   
+
+    });
+    
     useEffect(() => {
         const verify = asVerified(() => {
     
@@ -53,7 +63,7 @@ const Cooking = () => {
                 setMostUsedTags(proposed);
                 setProposedEntryToAdd(proposed)
             });
-
+            subscribe( `safe-finished-tutorial-${TutorialKeys.COOKING}`, () => {setTutoCookingFinished(true);})
             document.addEventListener("mousedown", handleClickedOutside);
             document.addEventListener("touchstart", handleClickedOutside);
             return () => {
@@ -175,7 +185,11 @@ const Cooking = () => {
   
         
     }
-    return(
+    
+    return(<>
+    <IconInfoCircle className="info-button" id="cooking-info" onClick={()=>{setTutoCookingFinished(false)}}/>
+    {tutoCookingFinished ? 
+
         <div className="cooking-div" >
             <h2>Here select some tags and play the music!</h2>
             <div className="cooking-header">
@@ -246,7 +260,9 @@ const Cooking = () => {
                 <IconCheck onClick={sendNewSalad} style={{cursor: "pointer"}}/>
             </div> : null}
         </div>
-    )
+
+    : <TutorialWraper tutorialKey={TutorialKeys.COOKING}/>    }
+    </>)
 }
 
 export default Cooking;

@@ -1,7 +1,6 @@
 
 import ProgressBar from './ProgressBar';
 import './Loading.css';
-import CML_logo from './CML_logo';
 const Loading = ({text, progressBar = {useProgressBar: false}}) => {
 
     return (

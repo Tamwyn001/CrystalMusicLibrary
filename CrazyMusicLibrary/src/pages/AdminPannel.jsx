@@ -1,14 +1,14 @@
 import { useEffect, useRef, useState } from "react";
-import apiBase from "../../APIbase";
-import Header from "../components/Header";
+import apiBase from "../../APIbase.js";
+import Header from "../components/Header.jsx";
 import { IconArrowBackUp ,IconDatabaseHeart,IconMacro, IconPrismLight, IconSettingsCode } from "@tabler/icons-react";
-import UserAccountInfosEntry from "../components/UserAccountInfosEntry";
+import UserAccountInfosEntry from "../components/UserAccountInfosEntry.jsx";
 import { useNavigate } from "react-router-dom";
 import './AdminPannel.css';
-import BackendJob from "../components/BackendJob";
-import AdminSettingEntry from "./AdminSettingEntry";
-import TwoOptionSwitch from "../components/TwoOptionSwitch";
-import { asVerified, verifyToken } from "../../lib";
+import BackendJob from "../components/BackendJob.jsx";
+import AdminSettingEntry from "./AdminSettingEntry.jsx";
+import TwoOptionSwitch from "../components/TwoOptionSwitch.jsx";
+import { asVerified } from "../../lib.js";
 
 
 const AdminPannel = () => {

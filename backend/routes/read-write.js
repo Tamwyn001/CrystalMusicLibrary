@@ -118,6 +118,7 @@ router.get("/artist-all-tracks/:id",  (req, res) => {
 
 router.get("/music/:id", async (req, res) => {
     const filePath = getTrackPath(req.params.id).path;
+    if(!existsSync(filePath)) res.sendStatus(404);
     const fileStats = statSync(filePath);
     const range = req.headers.range;
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -222,7 +223,7 @@ const runServerStats = () => {
   ]).then( ( [  musicSize, coversSize ] ) => {
     insertNewServerState( musicSize, coversSize );
     runningServerStats = false; // Reset the flag after execution
-    console.log(`  . 📊     Server stats updated`, { coversSize, musicSize });
+    // console.log(`  . 📊     Server stats updated`, { coversSize, musicSize });
   } ).catch( error => {
     console.error( 'Error calculating directory size:', error );
     runningServerStats = false;

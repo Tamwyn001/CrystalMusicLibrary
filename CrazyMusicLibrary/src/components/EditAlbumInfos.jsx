@@ -78,7 +78,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
 
     
     return(
-        <div className="albumWrapping-library-container">
+        <div className="page-overlay-blur">
             <div className="albumWrapping-library">
                 <div className="albumCover"  edit="true">
                     <div className="albumCoverImageEdit">

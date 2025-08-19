@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import {parseAudioDuration, parseDataSize} from "../../lib.js";
+import { parseDataSize} from "../../lib.js";
 import apiBase from "../../APIbase.js";
 import ProgressBar from "./ProgressBar.jsx";
-import { data } from "react-router-dom";
 const StatShort = () => {
     const [stats, setStats] = useState(null);
     const [serverStats, setServerStats] = useState(null);

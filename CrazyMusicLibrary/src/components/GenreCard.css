@@ -3,13 +3,13 @@
 .genre-card{
     height: 200px;
     width: 350px;
-    background-color: aliceblue;
     border-radius: 20px;
     text-align: center;
     cursor: pointer;
     overflow: hidden;
     position: relative;
-    background-color: #ffffff53;
+    background-color: var(--genre-cards-background);
+    box-shadow: var(--box-shadow);
 }
 
 .genre-card:hover .genre-name p{
@@ -61,11 +61,15 @@
     opacity: 0;
 
 }
-
+/* 
 .genre-card:hover{
-    background-color: #ffffff8b;
-
+    background: color-mix(in srgb, var(--genre-cards-background) 65%, white);
 }
+
+:root.dark .genre-card:hover{
+    background: color-mix(in srgb, var(--genre-cards-background) 90%, white);
+
+} */
 .genre-card:hover .img-pivot{
     rotate: calc(-38deg + 25deg + 15deg * var(--start-angle));
     opacity: 1;
@@ -77,3 +81,176 @@
 }
 
 
+/* 🎵 Genre Gradient Backgrounds */
+
+.genre-pop {
+    background: linear-gradient(135deg, #ff9a9e, #fad0c4);
+  }
+  
+  .genre-rock {
+    background: linear-gradient(135deg, #ef745c, #34073d);
+  }
+  
+  .genre-art-rock {
+    background: linear-gradient(135deg, #5caaef, #34073d);
+  }
+  .genre-pop-rock {
+    background: linear-gradient(135deg, #ee88d4, #34073d);
+  }
+  .genre-hard-rock {
+    background: linear-gradient(135deg, #000000, #690053);
+  }
+  .genre-indie-rock {
+    background: linear-gradient(135deg, #f40766, #34073d);
+  }
+
+  .genre-shoegaze {
+    background: linear-gradient(135deg,#33a8a8,#07083d);
+  }
+  .genre-hiphop {
+    background: linear-gradient(135deg, #3bcfd4, #fc9305,#f20094);
+  }
+  .genre-breakcore {
+    background: linear-gradient(135deg, #050304,#43124d);
+  }
+
+  .genre-rnb,
+  .genre-soul,
+  .genre-rnb-soul {
+    background: linear-gradient(135deg, #432371, #faae7b);
+  }
+  
+  .genre-jazz {
+    background: linear-gradient(135deg, #145277, #83d0cb);
+  }
+  
+  .genre-blues {
+    background: linear-gradient(135deg, #9bafd9, #0a1647);
+  }
+  
+  .genre-funk {
+    background: linear-gradient(135deg, #fc466b, #3f5efb);
+  }
+  
+  .genre-classical {
+    background: linear-gradient(135deg, #ebf4f5, #b5c6e0);
+  }
+  
+  .genre-opera {
+    background: linear-gradient(135deg, #20002c, #cbb4d4);
+  }
+  
+  .genre-metal {
+    background: linear-gradient(135deg, #211f2f, #918ca9);
+  }
+  
+  .genre-punk {
+    background: linear-gradient(135deg, #8e0e00, #1f1c18);
+  }
+  
+  .genre-alternative,
+  .genre-indie {
+    background: linear-gradient(135deg, #000000, #f40766);
+  }
+  
+  .genre-electronic {
+    background: linear-gradient(135deg, #00c6ff, #0072ff);
+  }
+  
+  .genre-edm {
+    background: linear-gradient(135deg, #fc00ff, #00dbde);
+  }
+  
+  .genre-house {
+    background: linear-gradient(135deg, #f7c0ec, #b9dcf2);
+  }
+  
+  .genre-techno {
+    background: linear-gradient(135deg, #000000, #434343);
+  }
+  
+  .genre-trance {
+    background: linear-gradient(135deg, #00ffe3, #ff00bf);
+  }
+
+  .genre-worldwide{
+    background: linear-gradient(135deg,#467bc0, #1ed7b5, #f0f9a7);
+  }
+  
+  .genre-dubstep {
+    background: linear-gradient(135deg, #8360c3, #2ebf91);
+  }
+  
+  .genre-reggae {
+    background: linear-gradient(135deg, #2a8d08, #f2e713,#f71e06);
+  }
+  
+  .genre-ska {
+    background: linear-gradient(135deg, #000000, #ffffff);
+  }
+  
+  .genre-country {
+    background: linear-gradient(135deg, #f7971e, #ffd200);
+  }
+  
+  .genre-folk {
+    background: linear-gradient(135deg, #56ab2f, #a8e063);
+  }
+  
+  .genre-acoustic,
+  .genre-singer-songwriter,
+  .genre-singer,
+  .genre-songwriter {
+    background: linear-gradient(135deg, #604740, #dfa579);
+  }
+
+  .genre-traditional {
+    background: linear-gradient(135deg,#e47e7e,#9e80e0);
+  }
+  
+  .genre-latin {
+    background: linear-gradient(135deg, #ffb62f, #dd2424);
+  }
+  
+  .genre-salsa {
+    background: linear-gradient(135deg, #ff6a00, #ee0979);
+  }
+  
+  .genre-reggaeton {
+    background: linear-gradient(135deg, #f953c6, #b91d73);
+  }
+  
+  .genre-afrobeat {
+    background: linear-gradient(135deg, #ff9a9e, #fecfef);
+  }
+  
+  .genre-jpop {
+    background: linear-gradient(135deg, #ffdde1, #ee9ca7);
+  }
+  
+  .genre-jpop {
+    background: linear-gradient(135deg, #89f7fe, #66a6ff);
+  }
+  
+  .genre-lofi,
+  .genre-chillhop {
+    background: linear-gradient(135deg, #654ea3, #eaafc8);
+  }
+
+  .genre-ambiant {
+    background: linear-gradient(135deg, #1c3e35, #99f2d1);
+  }
+
+  .genre-soundtrack {
+    background: linear-gradient(135deg, #2c6cbc, #71c3f7, #f6f6f6);
+  }
+
+  .genre-default {
+    background: linear-gradient(135deg, #8399a2, #eef2f3, #f6f6f6);
+  }
+
+  .genre-anime {
+    background: linear-gradient(135deg, #fffbaf, #ab2aed);
+  }
+  
+  

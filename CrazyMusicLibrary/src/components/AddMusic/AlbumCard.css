@@ -10,6 +10,7 @@
     background-color: var(--album-cards-background);
     border-radius: var( --card-border-radius);
     position: relative;
+    box-shadow: var(--box-shadow-small);
 }
 
 .album-card[context="add"]{
@@ -107,5 +108,5 @@
     right: 0px;
 }
 .album-artist, .album-name{
-    margin: 0px 5px;
+    margin: 0 5px 5px 7px;
 }

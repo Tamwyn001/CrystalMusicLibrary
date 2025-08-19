@@ -73,7 +73,7 @@ const CreatePlaylist = ({closeOverlay, applyCanges, editPlaylistClass}) => { //p
         setCollaborators(collaborators.filter((user) => {return user.id != id}));
     }
     return(
-        <div className="albumWrapping-library-container">
+        <div className="page-overlay-blur">
             <div className="albumWrapping-library">
             <IconX className="buttonRound closeOverlay" onClick={closeOverlay}/>
 

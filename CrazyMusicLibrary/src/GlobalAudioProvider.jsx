@@ -1,7 +1,6 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import apiBase from "../APIbase";
 import { lerp, parseAudioDuration } from "../lib.js";
-import _, { includes, method } from "lodash";
 import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
 import CreatePlaylist from "./components/CreatePlaylist.jsx";
 import TrackActions from "./components/TrackActions.jsx";
@@ -11,6 +10,7 @@ import TagEditor from "./components/TagEditor.jsx";
 import EditTagsWindow from "./components/EditTagsWindow.jsx";
 import EditArtistInfos from "./components/EditArtistInfos.jsx";
 import { useEventContext } from "./GlobalEventProvider.jsx";
+import _ from "lodash";
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -48,9 +48,6 @@ const useRoutingHistory = () => {
     return historyRef.current;
   }
   
-
-
-
 //this is only for the top level component
 export const AudioPlayerProvider = ({ children }) => {
     // all function logic
@@ -274,7 +271,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const snapIntervalCallback = () => {
         const audio = globalAudioRef.current;
         if (!audio || audio.paused) return;
-        
+        console.log(audio.currentTime , getAccurateTime(), Math.abs(audio.currentTime - getAccurateTime()))
         if (Math.abs(audio.currentTime - getAccurateTime()) > DRIFT_THRESHOLD) {
             resetTracking();
         }
@@ -668,7 +665,7 @@ export const AudioPlayerProvider = ({ children }) => {
             return;
         }
         if (isPlaying) {
-            globalAudioRef.current.pause();
+            globalAudioRef.current?.pause();
             setIsPlaying(false);
             clearTimeout(trackBlendTimeoutRef.current);
             clearInterval(trackBlendIntervalRef.current);
@@ -679,7 +676,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 setQueuePointer(0);
                 return;
             }
-            globalAudioRef.current.play();
+            globalAudioRef.current?.play();
             rescheduleAudioTransition();
         }
     }

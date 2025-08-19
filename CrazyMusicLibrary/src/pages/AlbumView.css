@@ -5,6 +5,10 @@
     flex: 1;
     width: calc(100% - 30px);
 }
+.artist-card{
+    box-shadow: var(--box-shadow-small);
+    border-radius: 10px;
+}
 .artist-card-cover{
     border-radius: 10px;
 }
@@ -16,16 +20,16 @@
     flex-grow: 1;
     justify-content: flex-end;
     margin-right: 10px;
-  }
+}
 .genre-album{
-    background-color: #f0f0f0;
+    background-color: var(--cards-background);
     padding: 5px 10px;
     border-radius: 10px;
     cursor: pointer;
     width: fit-content;
 }
 .genre-album:hover{
-    background-color:#c6ccfc5e;
+    background-color:var(--cards-background-hovered);
 }
 .album-cover-genres{
     display: inline-block;
@@ -38,7 +42,9 @@
 }
 
 .album-cover-wrapper{
-    display: inline-block;
+    display: flex;
+    gap:20px;
+    flex-direction: column;
 
 }
 .genres-album-div{
@@ -57,6 +63,7 @@
 }
 .artist-name{
     cursor: pointer;
+    margin: 7px 10px;
 }
 .artist-name:hover{
     color: #c6497d;
@@ -70,7 +77,7 @@
     padding: 10px;
     width: calc(100% - 20px);
     gap: 20px;
-    border: solid 2px #f0f0f0;
+    border: solid 2px var(--solid-border-hover);
     position: relative;
     align-items: center;
 }
@@ -83,7 +90,9 @@
     margin-bottom: 2px;
     font-size: 16px;
 }
-
+:root.dark .track-view p{
+    color: white;
+}
 .track-favorite{
     position: absolute;
     pointer-events: none;
@@ -122,6 +131,12 @@
 
 
     }
+
+@media screen and (min-width: 1100px) {  
+    .album-cover-genres{
+        max-width: 50%;
+    }
+}
 }
 .track-toggle-favorite{
     display: none;
@@ -321,3 +336,7 @@ to {
     }
 }
 
+
+#text-no-genre{
+    margin: auto;
+}

@@ -5,6 +5,7 @@ import apiBase from "../../APIbase.js";
 import CML_logo from "./CML_logo.jsx";
 import { useEffect, useState } from "react";
 import CMLLogoAnimated from "./CMLLogoAnimated.jsx";
+import ColorThemeButton from "./ColorThemeButton.jsx";
 const Register = () => {
     const [welcomeMessage, setWelcomeMessage] = useState(true);
     const navigate = useNavigate();
@@ -41,8 +42,10 @@ const Register = () => {
     }, [])
 
     const DisplayGotoLogin = () => {
-        return <div style={{marginBottom : "30px"}}>
-                    <p>Already an account?</p>
+        return <div style={{marginBottom : "30px",
+             display:"flex", flexDirection:"row",
+             alignItems:"center", margin:"auto", gap:"20px"}}>
+                    <p style={{textWrap:"nowrap"}}>Already an account?</p>
                     <button style={{width : "100%"}} onClick={(e)=> {
                         e.stopPropagation();
                         navigate('/')}}>Login</button>
@@ -51,16 +54,18 @@ const Register = () => {
 
     return (
         <div className="authDiv">
-            <CMLLogoAnimated/>
+        <ColorThemeButton useText={true} style={{position : "absolute", left: "10px"}}/>
+
+        <CMLLogoAnimated/>
         <CML_logo />
-        <h1>Register</h1>
+        <h2>Register</h2>
         <p>{(welcomeMessage) ? 
-            `Welcome to the crystal_Music Library! Since you are the first 
+            `Welcome to the Crystal Music Library! Since you are the first 
             to show up here, we would like you to create the admin account.`
             :'Please fill the form to register as a new user.'}</p>
-        
+         {(!welcomeMessage) && <DisplayGotoLogin/>}
         <form onSubmit={handleRegister}>
-            {(!welcomeMessage) && <DisplayGotoLogin/>}
+           
             <label htmlFor="email">Email</label>
             <input type="text" name="email" placeholder="Username" autoComplete="email"/>
             <label htmlFor="password">Password</label>

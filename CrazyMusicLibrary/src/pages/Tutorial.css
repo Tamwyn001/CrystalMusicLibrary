@@ -1,0 +1,294 @@
+.tutorial-page{
+    position: relative;
+    background: var(--header-gradient-simple-3);
+    margin: auto;
+    text-align: center;
+    width: fit-content;
+    padding: 20px 30px;
+    border-radius: 20px;
+    border: solid 2px var(--solid-border);
+    top: 150px;
+}
+
+.tutorial-page h3{
+    margin-top: 0px;
+}
+.placeholder-tuto-genre-btn{
+    height: 40px;
+    width: 100px;
+}
+
+
+.tutorial-content{
+    margin-top: 20px;
+}
+
+#tuto-genre-albums-container, #tuto-0-cooking-container{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    padding-top: 20px;
+}
+#tuto-tags .small-tag{
+    background-color: var(--cards-background);
+    color: var(--font-color);
+}
+
+:root.dark #tuto-tags .small-tag{
+    background-color: var(--cards-background);
+    color: white;
+}
+
+#tuto-tags .small-tag:hover svg{
+    opacity: 0.4;
+}
+
+
+.tuto-genre-0-album{
+    width: 110px;
+    height: 140px;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+.tuto-genre-0-album .tuto-genre-0-song-skeleton{
+    background-color: color-mix(in srgb, var(--font-color) 40%, transparent);
+   
+}
+.tuto-genre-0-album .tuto-genre-0-song-skeleton[data-type="artist"]{
+    background-color: color-mix(in srgb, var(--font-color) 30%, transparent);
+    height: 10px;
+}
+#tuto-genre-0-lib, #tuto-tags{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-top: 20px;
+}
+#tuto-genre-1-lib{
+    display: flex;
+    flex-direction: row;
+    gap: 40px;
+    margin-top: 20px;
+}
+
+#tuto-genre-0-header, .tuto-tags{
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+#tuto-genre-logo, .tuto-genre-logo{
+    width: 100px;
+    height: 100px;
+    margin: auto;
+}
+
+#tuto-genre-0-btn-song, #tuto-tags-1{
+    display: flex;
+    flex-direction: column;
+    gap:5px;
+}
+#tuto-tags-1{
+    margin-top: 20px;
+}
+
+.tuto-genre-0-song-skeleton{
+    width: 100%;
+    height: 20px;
+    background-color: color-mix(in srgb, var(--cards-background) 50%, transparent);
+    border-radius: 5px;
+    position: relative;
+}
+.tuto-tag-song-skeleton{
+    content:'Song';
+    width: calc(100% - 20px);
+    height: 30px;
+    background-color: color-mix(in srgb, var(--cards-background) 50%, transparent);
+    border-radius: 5px;
+    position: relative;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    justify-content: flex-end;
+    padding-right: 20px;
+
+}
+.tuto-target{
+    box-shadow: 5px 5px var(--tutorial-target);
+}
+
+.tuto-genre-1-input-skeleton{
+    height: 30px;
+    width: 300px;
+    background-color: color-mix(in srgb, var(--cards-background) 50%, transparent);
+    border-radius: 10px;
+}
+
+.tuto-genre-1-title-skeleton{
+    height: 15px;
+    border-radius: 5px;
+    width: 100px;
+    background-color: color-mix(in srgb, var(--cards-background) 30%, transparent);
+}
+
+.tuto-genre-1-title-skeleton[data-target="true"]{    
+    background-color: color-mix(in srgb, var(--cards-background) 70%, transparent);
+    height: 30px;
+    display: flex;
+}
+
+.tuto-genre-1-input-skeleton[data-target="true"]{
+    background-color: color-mix(in srgb, var(--cards-background) 90%, transparent);
+    padding-left: 10px;
+    display: flex;
+}
+.tuto-genre-1-title-skeleton[data-target="true"] > span{
+    margin: auto;
+}
+
+#animated-write-span{
+    animation: writeAnim 3s cubic-bezier(.29,.89,.55,.98) infinite;
+    text-align: left;
+    margin: auto 0px auto 5px;
+    overflow-x: hidden;
+    animation-delay: 1s;
+    text-wrap: nowrap;
+    width: 220px;
+}
+
+@keyframes writeAnim {
+    from{
+        width: 0px;
+    }
+    50%{
+        width: 220px;
+    }
+}
+
+#tuto-genre-1-logo-btn{
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.blinking-cursor{
+    height: 20px;
+    width: 3px;
+    background-color: var(--font-color);
+    border-radius: 2px;
+    margin: auto auto auto 0px;
+    animation: blink 1s infinite;
+}
+
+@keyframes blink {
+    0%, 100% { opacity: 0; }
+    50% { opacity: 1; }
+  }
+
+#tuto-0-cooking-container{
+    width: 350px;
+}
+
+#tuto-cooking-songs-container{
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+  }
+
+.tuto-cooking-0-song-skeleton{
+    width: 100%;
+    height: 30px;
+    background-color: color-mix(in srgb, var(--cards-background) 30%, transparent);
+    border-radius: 5px;
+  }
+.tuto-cooking-0-song-skeleton[data-target="true"]{
+    width: 100%;
+    height: 30px;
+    background-color: color-mix(in srgb, var(--cards-background) 70%, transparent);
+    border-radius: 5px;
+    display: flex;
+}
+#tuto-cooking-dots{
+    margin: auto 40px auto auto;
+    cursor: pointer;
+}
+
+#tuto-0-cooking-dropdown{
+    position: absolute;
+    height: 100px;
+    width: 150px;
+    background-color: #e2e2e2;
+    border-radius: 10px;
+    border: solid 2px var(--solid-border);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-right: 30px;
+    padding: 10px;
+}
+:root.dark #tuto-0-cooking-dropdown{
+    background-color: var(--cards-background);
+
+}
+#tuto-0-cooking-dropdown .tuto-cooking-0-action-skeleton{
+    background-color: color-mix(in srgb, var(--cards-background) 90%, white);
+    height: 30px;
+    border-radius: 5px;
+}
+#tuto-0-cooking-dropdown .tuto-cooking-0-action-skeleton:hover{
+    background-color: color-mix(in srgb, var(--cards-background) 80%, white);
+    transition: background-color 0.4s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+#tuto-0-cooking-dropdown .tuto-cooking-0-action-skeleton[data-target="true"]{
+    box-shadow: 5px 5px var(--tutorial-target);
+
+}
+
+.tuto-search-skeleton{
+    height: 35px;
+    background-color: color-mix(in srgb, var(--cards-background) 90%, white);
+    width: 100%;
+    display: flex;
+    align-items: center;
+    border-radius: 10px;
+    gap: 10px;
+}
+.tuto-search-skeleton span{
+    opacity: 0.6;
+}
+.tuto-search-skeleton svg{
+    margin-left: 10px;
+    opacity: 0.8;
+}
+
+.placeholder-tuto-tag{
+    background-color: var(--color);
+    width: 60px;
+    height: 30px;
+    border-radius: 5px;
+}
+.placeholder-tuto-tag-circle{
+    background-color: var(--color);
+    width: 10px;
+    height: 10px;
+    border-radius: 5px;
+    margin: auto 0px;
+}
+
+#tuto-tags-salad{
+    display: flex;
+    flex-direction: column;
+    gap:10px;
+}
+#tuto-song-list{
+    display: flex;
+    flex-direction: column;
+    gap:5px;
+    margin-top: 10px;
+    margin-bottom: 20px;
+}
+

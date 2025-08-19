@@ -1,9 +1,9 @@
 
 import {Link} from 'react-router-dom'
-import StatShort from './StatsShort'
+import StatShort from './StatsShort.jsx'
 import './Sidebar.css'
-import { IconPlaylist, IconAlbum, IconList, IconChefHat, IconSalad, IconCommand, IconTerminal2, IconRadioOff, IconRadio, IconSend, IconAntenna, IconTelescope, IconAntennaBars4 } from '@tabler/icons-react';
-import { useGlobalActionBar } from '../GlobalActionBar';
+import { IconPlaylist, IconAlbum, IconList, IconChefHat, IconSalad, IconTerminal2, IconTelescope } from '@tabler/icons-react';
+import { useGlobalActionBar } from '../GlobalActionBar.jsx';
 
 const Sidebar = () => {
     const { openCommandBar } = useGlobalActionBar();

@@ -1,8 +1,8 @@
 import { IconArrowBackUp } from "@tabler/icons-react";
-import Header from "../components/Header";
+import Header from "../components/Header.jsx";
 import './Account.css';
 import { useEffect, useState } from "react";
-import CML_logo from "../components/CML_logo";
+import CML_logo from "../components/CML_logo.jsx";
 import { useNavigate } from "react-router-dom";
 const Account = () => {
     const [userName, setUserName] = useState('');

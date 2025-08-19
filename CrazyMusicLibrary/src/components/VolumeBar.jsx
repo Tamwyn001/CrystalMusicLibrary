@@ -1,7 +1,7 @@
 import { useEffect, useRef } from "react";
-import { useAudioPlayer } from "../GlobalAudioProvider";
-import ProgressBar from "./ProgressBar"
-import { useEventContext } from "../GlobalEventProvider";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import ProgressBar from "./ProgressBar.jsx"
+import { useEventContext } from "../GlobalEventProvider.jsx";
 
 const VolumeBar = ({ onClosed, hideComponent  }) => { 
     const{ setVolume, volume } = useAudioPlayer();

@@ -2,8 +2,8 @@ import { useEffect, useRef, useState } from "react";
 import'./UserDropdown.css'
 import { IconUserScreen } from "@tabler/icons-react";
 import { useNavigate } from "react-router-dom";
-import apiBase from "../../APIbase";
-import { useEventContext } from "../GlobalEventProvider";
+import apiBase from "../../APIbase.js";
+import { useEventContext } from "../GlobalEventProvider.jsx";
 
 const userDropdown = () =>{
     const [isOpened, setIsOpened] = useState(false);

@@ -1,10 +1,10 @@
 {
+    "version": 2,
     "FFT": {
-        "bars": 256,
-        "contrast": 1.3,
+        "FPS": 60,
+        "bars": 255,
+        "contrast": 1,
         "cutoff": 0,
-        "scale": 1,
-        "FPS": 30
-    },
-    "version": 2
+        "scale": 1
+    }
 }

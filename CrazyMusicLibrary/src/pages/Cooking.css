@@ -1,5 +1,5 @@
 .cooking-selection{
-
+    
     border-radius: 20px;   
     height: fit-content;
     width:  100%;
@@ -28,11 +28,13 @@
     z-index: 2;
     position: relative;
     flex-wrap: wrap;
+    box-shadow: var(--box-shadow-tiny);
 }
 .open-tags-edit{
     position: absolute;
     top: 0;
     right: 120px;
+    box-shadow: var(--box-shadow-tiny);
 }
 
 .cooking-actions{
@@ -53,4 +55,8 @@
 .cooking-actions button:hover{
     transform: translateY(-5px);
     transition: transform 0.2s;    
+}
+#cooking-info{
+    position: absolute;
+    right: 30px;
 }
