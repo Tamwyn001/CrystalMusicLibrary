@@ -69,11 +69,12 @@ const GenreCard = ({genre}) =>{
     return(
         <div className={`genre-card ${genre?.puredName}`} onClick={() => {navigate(`/genres/${genre.id}`)}}>
             {/* <IconPlayCard style={{position:"absolute", top : "50px", backgroundRepeat :"repeat"}}/> */}
-            {images.map((imgPath, id)  => (
+            
+            <div className="card-pivot-origin">{images.map((imgPath, id)  => (
             <div key={id} className="img-pivot" style={{"--start-delay" : `${3 * (2-id)}`, "--start-angle" : `${2-id}`, "--speed" : "0.7", "--scale": 0.4}}>
-                
                 <img id={`genre-${genre.id}-img-${id}`} className="genre-img-cover" style={{"--scale": 0.7}} src={`${apiBase}/covers/${imgPath}`}/>
             </div>))} 
+        </div>
             <div className="genre-name">
                 <p >{genre.name}</p>
             </div>

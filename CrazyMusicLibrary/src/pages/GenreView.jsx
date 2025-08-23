@@ -38,13 +38,14 @@ const GenreView = () => {
 
     return(
         <div className="genre-view">
-            <button className="roundButton" onClick={navigateBack}>
+            <button className="roundButton go-back" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
             {(genre) ? (
                 <div className="genre-details">
-                    <div style={{display : "flex", flexDirection : "row", alignItems : "baseline", gap: "10px"}}>
-                        <h1 style={{marginRight : "20px"}}>{genre.name}</h1>
+                    <h1>{genre.name}</h1>
+                    <div className="track-list-header">
+                        
                         <ButtonWithCallback text={'Play'} icon={<IconPlayerPlay/>} onClick={handlePlayAll}/>
                         <ButtonWithCallback text={'Random'} icon={<IconArrowsShuffle />} onClick={handleShuffle}/>
                         <ButtonWithCallback text={'Add to queue'} icon={<IconCodePlus/>} onClick={handleAddToQueue}/>

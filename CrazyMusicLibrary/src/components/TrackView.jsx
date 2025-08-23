@@ -1,4 +1,4 @@
-import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSalad, IconSparkles, IconVinyl } from "@tabler/icons-react";
+import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconRadio, IconSalad, IconSparkles, IconStar, IconVinyl } from "@tabler/icons-react";
 import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import { parseAudioDuration } from "../../lib.js";
 import SvgHoverToggle from "./SvgHoverToggle.jsx";
@@ -78,7 +78,7 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
 
   return (
     <div className="track-view" action-bar={(actionsOpened) ? "open" : ''} onClick={handleClick}>
-      {trackFavorite && <IconSparkles className="track-favorite" />}
+      {trackFavorite && <IconStar className="track-favorite" />}
       <SvgHoverToggle className={"track-toggle-favorite" }
         iconHovered={(!trackFavorite) ? IconHeartFilled : IconHeartBroken } 
         iconDefault={(!trackFavorite) ? IconHeart :  IconHeartBroken } 
@@ -87,9 +87,9 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
       {showCover ?  ((trackCoverURL.split('/').pop() === 'null') ? null :
         <img src={trackCoverURL} className="track-mini-thumbnail" />) : null}
       {(playingTrack === trackName) ? GetRandomPlayIcon() : showCover ? null : <p className="track-number">{track_number}</p> }
-      <p style={{flexGrow : '1', marginLeft : showCover ? "45px" : "35px" }}>{title}</p>
+      <p className="track-name" style={{"--margin" : showCover ? "45px" : "35px" }}>{title}</p>
       <IconDots className={"track-actions-dots" } onClick={clickDots}/>
-      <p style={{paddingRight:'10px'}}>{parseAudioDuration(rawDuration).readable}</p>
+      <p className="track-length">{parseAudioDuration(rawDuration).readable}</p>
     </div>
   );
 }

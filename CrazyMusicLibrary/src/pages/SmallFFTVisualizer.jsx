@@ -7,17 +7,24 @@ const SmallFFTVisualizer = ({fps = 45}) => {
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
 	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef,
-		fetchFFTUserSettings, colorOverride} = useAudioPlayer();
+		fetchFFTUserSettings, colorOverride, currentTrackData} = useAudioPlayer();
 	const lastTime = useRef(0);
+	//In case of mobile display
+	const notShown = useRef(false);
   	const animate = (now) => {
 		// Do your animation logic here
 		// Example: update canvas or sync with audio time
+		if(currentTrackData?.type == "radio" || notShown.current){
+			cancelAnimationFrame(animationRef.current);
+			return;
+		}
 		if(!canvasRef.current) {
 			animationRef.current = requestAnimationFrame(animate);
 			return;
 		}
 		const ctx = canvasRef.current.getContext("2d");
 		if(ctx && FFTUserSetingsRef.current){
+
 			if(now - lastTime.current < (1000 / fps)){
 				animationRef.current = requestAnimationFrame(animate);
 				return;
@@ -75,12 +82,26 @@ const SmallFFTVisualizer = ({fps = 45}) => {
 	},[fftConfigRef.current]);
 
 	useEffect(() => {
-		animationRef.current = requestAnimationFrame(animate);
 
-		return () => cancelAnimationFrame(animationRef.current); // cleanup on unmount
+		const mq = window.matchMedia("(max-width: 714px)");
+
+		const update = (e) => {
+		  notShown.current = e.matches; // hidden when true
+		  animationRef.current = requestAnimationFrame(animate);	  
+		  console.log("Canvas hidden?", notShown.current);
+		};
+	  
+		// Initial check
+		update(mq);
+	  
+		// Subscribe
+		mq.addEventListener("change", update);
+		return () => {
+			mq.removeEventListener("change", update);
+		}// cleanup on unmount
 	}, []);
 
-	return <canvas ref={canvasRef} id="fft-canvas-small" width={60} height={50}></canvas>;
+	return <canvas ref={canvasRef} id="fft-canvas-small" className="in-song-header" width={50} height={50}></canvas>;
 }
 
 export default SmallFFTVisualizer;

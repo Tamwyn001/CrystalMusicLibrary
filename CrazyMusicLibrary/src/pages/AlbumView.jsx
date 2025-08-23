@@ -64,7 +64,7 @@ const AlbumView = ({isPlaylist = false}) => {
                 return;
             }
             setAlbum(data.albumInfos);
-
+            
 
             // We go trough the tracks and assign each disc from a song index.
             // This skips if tracks have no discs : 0
@@ -210,7 +210,7 @@ const AlbumView = ({isPlaylist = false}) => {
     }
     return (
         <div className="album-view">
-            <button className="roundButton" onClick={navigateBack}>
+            <button className="roundButton go-back" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
 

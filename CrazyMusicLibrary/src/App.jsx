@@ -25,8 +25,9 @@ import Radio from './pages/Radio.jsx';
 import './components/UIControls.css';
 import RouteWithFFT from './pages/RouteWithFFT.jsx';
 import FullScreenSong from './pages/FullScreenSong.jsx';
-function App() {
-
+import { useScrollToggle } from './PageUsesScroll.jsx';
+const App = () => {
+    useScrollToggle(["/", "/register","/settings","/admin-pannel"]);
 
     return (
         <EventProvider>

@@ -1,9 +1,10 @@
 #root {
-
   width: 100%;
 }
 
 :root{
+  --mobile-padding : 150px;
+
   /* CSS HEX */
   --yinmn-blue: #235690ff;
   --chill-purple: #c6ccfc;
@@ -183,15 +184,26 @@
 }
 
 .action-bar{
-  width:85%;
+  width:100%;
+  max-width: 500px;
 }
 .cooking-header{
   position: relative;
 
 }
+.go-back{
+  margin-left: 10px;
+}
 @media screen and (min-width: 714px) {
-  .action-bar{
-    width: 45%;
+  html, body {
+    overflow: hidden; /* default: no scroll */
+  }
+  
+  html.scroll-enabled, body.scroll-enabled {
+    overflow: auto; /* or scroll */
+  }
+  .go-back{
+    margin-left: 0px;
   }
 }
 .info-line{
@@ -232,16 +244,29 @@
 }
 
 .action-bar-logo-container{
-  padding: 5px;
-  height: 40px;
-  width: 60px;
-  padding: 5px;
-  border-radius: 15px 0px 0px 15px;
-  background-color: var(--cards-background-hovered);
-  position: absolute; 
-  left: -30px;
-  z-index: 8 ;
-  animation: showActionCurrent ease 0.4s forwards;
+  display: none;
+}
+.color-theme-btn{
+  display: flex;
+  flex-direction: row;
+  gap:10px;
+  align-items: center;
+}
+
+@media screen and (min-width: 714px) {
+  .action-bar-logo-container{
+    padding: 5px;
+    height: 40px;
+    width: 60px;
+    padding: 5px;
+    border-radius: 15px 0px 0px 15px;
+    background-color: var(--cards-background-hovered);
+    position: absolute; 
+    left: -30px;
+    z-index: 8 ;
+    animation: showActionCurrent ease 0.4s forwards;
+    display: inline;
+  }
 }
 
 .action-bar-current-logo{

@@ -5,7 +5,7 @@ import { useAudioPlayer } from "../GlobalAudioProvider";
 const AudioControls = ({context}) => {
     const { isPlaying, toggleTrackPaused,playNextSong,playPreviousSong,jumpTrackSeconds } = useAudioPlayer();
     return(
-        <div className="audio-controls" context={(context.mobile) ? 'mobile' : 'desktop'}>
+        <div className="audio-controls" context={context}>
             {(!context.mobile) ? <SvgHoverToggle iconHovered={IconPlayerTrackPrevFilled} iconDefault={IconPlayerTrackPrev} onClick={playPreviousSong}/> : null}
             <SvgHoverToggle iconHovered={ (isPlaying) ? IconPlayerPauseFilled : IconPlayerPlayFilled} 
                             iconDefault={(isPlaying) ? IconPlayerPause : IconPlayerPlay} 

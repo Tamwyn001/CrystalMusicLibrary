@@ -10,11 +10,11 @@
 .cooking-div{
     position: relative;
 }
-@media screen and (min-width: 714px) {
-    .cooking-selection{
-        width:  80%;
-    }
+.cooking-div h2{
+    margin: 0px 35px 20px 5px;
+    
 }
+
 .cooking-tags{
     display: flex;
     flex-direction: row;
@@ -33,9 +33,10 @@
 .open-tags-edit{
     position: absolute;
     top: 0;
-    right: 120px;
+    right: calc(10%);
     box-shadow: var(--box-shadow-tiny);
 }
+
 
 .cooking-actions{
     display: flex;
@@ -58,5 +59,15 @@
 }
 #cooking-info{
     position: absolute;
-    right: 30px;
+    right: 20px;
+    z-index: 2;
+}
+
+@media screen and (min-width: 714px) {
+    .cooking-selection{
+        width:  80%;
+    }
+    #cooking-info{
+        right: 30px;
+    }
 }

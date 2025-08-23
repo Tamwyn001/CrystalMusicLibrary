@@ -1,17 +1,21 @@
 .full-screen-image{
     position: relative;
     top: 0px;
-    height: 100%;
     width: auto;
     margin: auto;
+    max-width: 100%;
+    bottom: 0;
+    object-fit: cover;
 }
 .full-screen-image-back{
     position: fixed;
+    height: 100%;
     width: 100%;
     filter: blur(4px);
     left: 0;
     top: 0;
     z-index: 0;
+    object-fit: cover;
 }
 
 .full-screen-header{
@@ -31,7 +35,7 @@
     align-content: center;
 }
 .full-screen-back{
-    opacity: 0.4;
+    opacity: 0.7;
     display:initial;
     transition: opacity 0.3s cubic-bezier(0.075, 0.82, 0.165, 1);
 }
@@ -64,20 +68,34 @@
 }
 
 .full-screen-audio-ctrl > div {
-    background-color: rgba(255, 255, 255, 0.646);
+    background-color: var(--cards-background);
     padding: 2px 10px;
     border-radius: 20px;
     height: 26px;
     
 }
-
+.full-screen-page{
+    overflow: hidden;
+}
 .full-screen-audio-ctrl svg {
     width : 30px;
     aspect-ratio: 1;
 }
 .full-screen-fadable{
     opacity: 1;
-    transition: opacity 1s cubic-bezier(0.075, 0.82, 0.165, 1);
+    transition: all 0.75s cubic-bezier(0.075, 0.82, 0.165, 1);
+
+}
+
+.full-screen-fadable[data-inactive="true"]{
+    filter: brightness(1);
+}
+
+.full-screen-fadable[data-inactive="false"]{
+    filter: brightness(0.6);
+}
+.full-screen-image[data-inactive="false"]{
+    filter: brightness(0.8);
 }
 
 .full-screen-fadable[data-hidden="true"]{

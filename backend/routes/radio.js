@@ -4,10 +4,11 @@ const util = require('util');
 const resolveSrv = util.promisify(dns.resolveSrv);
 const icy = require('icy');
 const { getMulterInstance } = require('../multerConfig');
-const { getUserKnownRadios, addUserKnowRadio, getRadioInfos } = require('../db-utils');
+const { getUserKnownRadios, addUserKnowRadio, getRadioInfos, toogleUserLikesRadio } = require('../db-utils');
 const jwt = require("jsonwebtoken");
 const { Readable } = require('stream');
 const _ = require("lodash");
+const verify = require('./verify');
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
 const upload = getMulterInstance(uploadPath);
@@ -35,8 +36,7 @@ class RadioRouter{
             this.radioServers = hosts;
             }
         ).catch( (err) => {
-            console.log("Error while trying to resolve a radio-browser server. Is the terminal connected to the internet?");
-            console.log(err);
+            console.log("Error while trying to resolve a radio-browser server. Is the terminal connected to the internet? Code:", err.code);
         });
 
         this.registerRoutes();
@@ -102,11 +102,13 @@ class RadioRouter{
                     });
         
                     icyRes.on("error", (err) => {
+                        console.log(err);
                         res.write(`event: error\ndata: ${JSON.stringify({ error: err.message })}\n\n`);
                     });
                 });
         
                 reqStream.on("error", (err) => {
+                    console.log(err);
                     // Catches ENOTFOUND, ECONNREFUSED, etc.
                     res.write(`event: error\ndata: ${JSON.stringify({ error: err.message })}\n\n`);
                 });
@@ -119,28 +121,38 @@ class RadioRouter{
                 });
         
             } catch (err) {
+                console.log(err);
                 res.write(`event: error\ndata: ${JSON.stringify({ error: err.message })}\n\n`);
             }
         });
-        
+        this.router.post("/addToFavs/:uuid", verify.token, async (req,res)=>{
+            const metadata = await this.getMetadataRecursiveUUID(0, req.params.uuid);
+            if(!metadata) return res.status(404).json({message:"No radio found", added : false});
+            if(metadata?.length == 0) return res.status(404).json({message:"No radio found", added : false});
+            const added = toogleUserLikesRadio(req.decoded.email, 
+                {uuid : metadata[0].stationuuid , name: metadata[0].name,
+                url: metadata[0].url_resolved, favicon: metadata[0].favicon});
+            res.json({message: added ? "Radio added." : "Radio removed.", added });
+        });
         this.router.get("/favicon-proxy", async (req, res) => {
             const url = req.query.url;
             
             // Basic whitelist check — make sure it's a valid URL
             try {
               new URL(url);
-            } catch {
-              return res.status(400).send("Invalid URL");
+            } catch (err){
+                return res.status(400).send("Invalid URL");
             }
           
             try {
               const response = await fetch(url);
-              if (!response.ok) throw new Error("Failed to fetch image");
+              if (!response.ok) return res.status(500).send("Error fetching image");;
               const buffer = Buffer.from(await response.arrayBuffer());
               res.set("Content-Type", response.headers.get("content-type") || "image/png");
               res.send(buffer);
             } catch (err) {
-              res.status(500).send("Error fetching image");
+
+                res.status(500).send("Error fetching image");
             }
           });
 
@@ -159,12 +171,10 @@ class RadioRouter{
         });
 
         // Route to create new user's known radio.
-        this.router.post("/newRadio", upload.none(), (req, res) => {
+        this.router.post("/newRadio", verify.token, upload.none(), (req, res) => {
             const radioData = JSON.parse(req.body.radioData);
-            const token =req.cookies.token;
-            const decoded = jwt.verify(token, process.env.JWT_SECRET);  // Verify token
             // @ts-ignore
-            addUserKnowRadio(decoded.email, radioData);
+            addUserKnowRadio(req.decoded.email, radioData);
             res.json({message : "Radio successfly added."});
         });
 
@@ -172,23 +182,28 @@ class RadioRouter{
         // If the radios are not expected to be played in browser, we spoof with a custom
         // user agent.. hehe
         this.router.get('/spoof/:url', async (req, res) => {
-            const response = await fetch(`${decodeURIComponent(req.params.url)}`, {
-              headers: { 'User-Agent': 'VLC media player' }
-            });
-          
-            if (!response.ok) {
-              return res.sendStatus(response.status);
+            try{
+                const response = await fetch(`${decodeURIComponent(req.params.url)}`, {
+                headers: { 'User-Agent': 'VLC media player' }
+                });
+            
+                if (!response.ok) {
+                return res.sendStatus(response.status);
+                }
+            
+                res.set({
+                'Content-Type': response.headers.get('Content-Type') || 'audio/aac',
+                'Transfer-Encoding': 'chunked'
+                });
+            
+                // Convert Web stream to Node stream
+                // @ts-ignore
+                const nodeStream = Readable.fromWeb(response.body);
+                nodeStream.pipe(res);
             }
-          
-            res.set({
-              'Content-Type': response.headers.get('Content-Type') || 'audio/aac',
-              'Transfer-Encoding': 'chunked'
-            });
-          
-            // Convert Web stream to Node stream
-            // @ts-ignore
-            const nodeStream = Readable.fromWeb(response.body);
-            nodeStream.pipe(res);
+            catch (err){
+                console.log(err);
+            }
           });
     }
 
@@ -199,7 +214,11 @@ class RadioRouter{
                 {
                     headers: { 'User-Agent': 'Crystal Music Library/3.0.0' },
                     method : "POST",
-                    body : new URLSearchParams({ offset: `${Math.floor(Math.random()*10000)}`, limit: "50" })
+                    body : new URLSearchParams(
+                        { offset: `${Math.floor(Math.random()*100000)}`,
+                         limit: "50",
+                         order: "random",
+                         hidebroken : "true" })
                 }
             );
             const json = await response.json();
@@ -217,6 +236,36 @@ class RadioRouter{
         }
     }
 
+        
+
+
+    /**
+     * @param {number} id The current index of the radio server
+     * @param {string} UUID The station UUID to check, comma-separated list of UUIDs 
+     * @returns {Promise<Object|null>} The metadata JSON or null if not found
+     */
+    async getMetadataRecursiveUUID(id, UUID) {
+        if (this.radioServers.length <= id) return null;
+
+        try {
+            const response = await fetch(`${this.radioServers[id]}/json/stations/byuuid?uuids=${UUID}`,
+                {
+                    headers: { 'User-Agent': 'Crystal Music Library/3.0.0' }
+                }
+            );
+            const json = await response.json();
+
+            if (json && json.length > 0) {
+                return json;
+            } else {
+                return this.getMetadataRecursive(id + 1, UUID); // ✅ Return the recursive call
+            }
+        } catch (err) {
+            console.log(err);
+            // If fetch fails (network, etc.), try next server
+            return this.getMetadataRecursive(id + 1, UUID);
+        }
+    }
         
     /**
      * @param {number} id The current index of the radio server
@@ -239,7 +288,8 @@ class RadioRouter{
             } else {
                 return this.getMetadataRecursive(id + 1, URL); // ✅ Return the recursive call
             }
-        } catch (e) {
+        } catch (err) {
+            console.log(err);
             // If fetch fails (network, etc.), try next server
             return this.getMetadataRecursive(id + 1, URL);
         }

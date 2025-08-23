@@ -13,7 +13,12 @@ const AlbumsOverview = ({albums, radios, deleteRadio, addNewMusic, deleteAlbum, 
         <div className="albums-overview">
             <div className="album-overview-container">{cards.reverse()}</div>
             {/* <button className="roundButton" onClick={addNewMusic}>Add new music</button> */}
-            {(albums.length > 0 || radios.size > 0) && <button className="roundButton" id="publish-to-library" onClick={publish}>Publish to library</button>}
+            {(albums.length > 0 || radios.size > 0) && 
+                <button className="roundButton" 
+                    id="publish-to-library" onClick={publish}>
+                        Publish to library
+                </button>
+            }
 
         </div>
     )

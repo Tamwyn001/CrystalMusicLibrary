@@ -93,21 +93,19 @@ const GenresView = ({}) => {
         })
     }
     useEffect(() =>{
+        const unsubscribeTutorial = subscribe(`safe-finished-tutorial-${TutorialKeys.GENRES}`, () => {
+            setTutoGenreFinished(true);
+        })
+
+        const unsubscribeMusicUploaded = subscribe("musicUploaded", refetch);
         const verify = asVerified(() => {
             refetch();
-            const handleMusicUploaded = (e) => {
-                console.log("Music uploaded:", e.detail);
-                refetch(); // your data reload function
-            };
-            subscribe(`safe-finished-tutorial-${TutorialKeys.GENRES}`, () => {
-                setTutoGenreFinished(true);
-            })
-            window.addEventListener("musicUploaded", handleMusicUploaded);
-            return () => {
-                window.removeEventListener("musicUploaded", handleMusicUploaded);
-            };
         });
         verify();
+        return () => {
+            unsubscribeMusicUploaded();
+            unsubscribeTutorial()
+        }; 
     }
     ,[]);
 

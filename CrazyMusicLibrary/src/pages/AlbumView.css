@@ -3,14 +3,17 @@
     flex-direction: column;
     gap: 10px;
     flex: 1;
-    width: calc(100% - 30px);
+    width: calc(100% - 0px);
 }
 .artist-card{
     box-shadow: var(--box-shadow-small);
     border-radius: 10px;
+    cursor: pointer;
 }
 .artist-card-cover{
     border-radius: 10px;
+    width: 100%;
+    display: flex;
 }
 .lossless{
     display: flex;
@@ -60,13 +63,21 @@
     flex-direction: row;
     gap: 10px;
     margin-bottom: 10px;
+    flex-wrap: wrap;
+    margin: 0px 10px;
 }
+/* Margin for the player */
 .artist-name{
     cursor: pointer;
     margin: 7px 10px;
+
 }
 .artist-name:hover{
     color: #c6497d;
+}
+
+.album-artists .artist-name{
+    margin: 0px;
 }
 .track-view{
     display: flex;
@@ -75,11 +86,12 @@
     justify-content: flex-start;
     background-color: var(--track-entry);
     padding: 10px;
-    width: calc(100% - 20px);
+    width: calc(100% - 65px);
     gap: 20px;
     border: solid 2px var(--solid-border-hover);
     position: relative;
     align-items: center;
+    margin-left: 35px;
 }
 .track-view:hover, .track-view[action-bar="open"]{
     background-color:   var(--track-entry-hover);
@@ -90,6 +102,8 @@
     margin-bottom: 2px;
     font-size: 16px;
 }
+
+
 :root.dark .track-view p{
     color: white;
 }
@@ -97,7 +111,7 @@
     position: absolute;
     pointer-events: none;
     z-index: -1;
-    left: -35px;
+    left: -30px;
     fill: rgb(252, 161, 184);
     color: rgb(255, 94, 94);
 }
@@ -119,7 +133,18 @@
     display: inline-block;
 
 }
-
+.track-length{
+    display: none;
+}
+.track-name{
+    flex-grow : 1;
+    margin-left: calc(var(--margin) - 5px);
+}
+.track-number{
+    margin-left: 5px;
+    position: absolute;
+    
+}
 @media screen and (min-width: 714px) {  
     .track-view:hover .track-favorite, .track-view .track-actions-dots{
         display: none;
@@ -128,16 +153,32 @@
     .track-view:hover .track-toggle-favorite, .track-view:hover .track-actions-dots{
         display: inline-block;
         pointer-events: all;
-
+    }
+    .track-view{
+        margin-left: 0px;
+        width: calc(100% - 20px);
+    }
+    .track-favorite{
+        left: -35px;
+    }.track-length{
+        display: auto;
+        padding-right: 10px;
+    }
+    .track-number{
+        margin-left: 10px;
 
     }
-
+    .track-name{
+        flex-grow : 1;
+        margin-left: var(--margin);
+    }
+}
 @media screen and (min-width: 1100px) {  
     .album-cover-genres{
         max-width: 50%;
     }
 }
-}
+
 .track-toggle-favorite{
     display: none;
     position: absolute;
@@ -147,6 +188,7 @@
 }
 
 .track-actions-dots{
+    width: 30px;
     display: none;
     cursor: pointer;
 }
@@ -157,10 +199,7 @@
 }
   
   
-.track-number{
-    margin-left: 10px;
-    position: absolute;
-}
+
 :root{
     --dashArray: 60;
 }
@@ -168,7 +207,7 @@
     color: rgb(255, 255, 255);
 }
 .track-number[playing="piano"], .track-number[playing="vinyl"]{
-    margin-left: 4px;
+    margin-left: 0px;
 
 }
 .track-number[playing="piano"] path{
@@ -190,9 +229,14 @@
     display: flex;
     flex-direction: row;
     gap:10px;
+    margin-left: 10px;
     margin-bottom: 10px;
     flex-wrap: wrap;
-    
+    align-items: center;
+}
+
+.track-list-header h1{
+    margin: 0px 20px 0px 0px;
 }
 @keyframes dash {
 from {
@@ -209,20 +253,22 @@ to {
         stroke-dashoffset: 0;
     }}
 .album-content .cover-image{
-    padding: 5px;
+    padding: 2px;
     width: auto;
     height: 306px;
-    margin: 0;
+    max-width: calc(100% - 50px);
+    margin: auto;
     border-radius: 20px;
     animation: rotate 5s linear infinite;
     display: block;
+    box-shadow: 5px 3px 0px var(--font-color);
 }
 
 @media screen and (min-width: 1100px) {
     .album-content .cover-image{
+        max-width: 400px;
         padding: 5px;
-        width: auto;
-        height: 400px;
+        height: auto;
         margin: 0;
         border-radius: 20px;
         animation: rotate 5s linear infinite;
@@ -255,18 +301,34 @@ to {
     gap: 10px;
     width: 100%;
     align-items: center;
+    position: relative;
 }
 .album-details h1{
     font-size: 30px;
+    text-align: center;
+    line-height: 32px;
 }
 .album-details h2{
     margin: 5px;
 }
+#radio-page .track-list-header{
+    margin-left: 10px;
+}
 
+#new-playlist{
+    margin-bottom: 40px;
+    margin-left: 10px;
+}
 @media screen and (min-width: 714px) {
+    #new-playlist{
+        margin-bottom: 40px;
+        margin-left: 0px;
+    }
     .album-details h1{
         margin: 10px;
         font-size: 40px;
+        text-align: left;
+        line-height: 50px;
 
     }
     .album-details h2{
@@ -299,6 +361,17 @@ to {
     100% { opacity: 1; transform: translateX(25%); }
 }
 
+.alligned-title-logo{
+    margin-left: 10px;
+    display: flex;
+    flex-direction: row;
+    gap: 10px;
+    align-items: center;
+}
+
+#fav-radios .album-card{
+    max-width: 50%;
+}
 
 .album-content{
     display: flex;
@@ -309,8 +382,7 @@ to {
     border-radius: 20px;
     z-index: 1;
     gap: 60px;
-    /* Mobile scroll */
-    padding-bottom: 200px;
+
 }
 @media screen and (min-width: 1100px) {
     .album-content{

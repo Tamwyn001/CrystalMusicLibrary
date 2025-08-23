@@ -1,16 +1,17 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
 import apiBase from "../APIbase";
-import { lerp, parseAudioDuration } from "../lib.js";
+import { contrastRatio, lerp, parseAudioDuration } from "../lib.js";
 import EditAlbumInfos from "./components/EditAlbumInfos.jsx";
 import CreatePlaylist from "./components/CreatePlaylist.jsx";
 import TrackActions from "./components/TrackActions.jsx";
 import { useNotifications } from "./GlobalNotificationsProvider.jsx";
-import { useLocation, useNavigate } from "react-router-dom";
+import { renderMatches, useLocation, useNavigate } from "react-router-dom";
 import TagEditor from "./components/TagEditor.jsx";
 import EditTagsWindow from "./components/EditTagsWindow.jsx";
 import EditArtistInfos from "./components/EditArtistInfos.jsx";
 import { useEventContext } from "./GlobalEventProvider.jsx";
 import _ from "lodash";
+import ColorThief from "../third_party_modules/color-thief/dist/color-thief.mjs"
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -120,7 +121,10 @@ export const AudioPlayerProvider = ({ children }) => {
     const fullScreenMode = useRef(false);
         const location = useLocation();
     const locationBeforeFullScreen = useRef("");
+    /**The two colors displayed innto the full screen */
     const colorOverride = useRef([]);
+    /**The object containing all the colors to a song */
+    const paletteRef = useRef({track : "", pairs : []});
     const fullScreenImage = useRef(null);
     const history = useRoutingHistory();
     //call inside a mount
@@ -254,12 +258,6 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefB.current.removeEventListener("timeupdate", updateTime);
         audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
 
-        // audioRefA.current.addEventListener('timeupdate', debounce(() => {
-        //     maybeFetchFFT(FFTcurrentTrack.current, audioRefA.current.currentTime);
-        // }, 10)); // 200ms delay
-        // audioRefB.current.addEventListener('timeupdate', debounce(() => {
-        //     maybeFetchFFT(FFTcurrentTrack.current, audioRefB.current.currentTime);
-        // }, 10)); // 200ms delay
     };
 
     const onPlaying = () => {
@@ -271,7 +269,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const snapIntervalCallback = () => {
         const audio = globalAudioRef.current;
         if (!audio || audio.paused) return;
-        console.log(audio.currentTime , getAccurateTime(), Math.abs(audio.currentTime - getAccurateTime()))
+        // console.log(audioRefA.current.currentTime, audioRefB.current.currentTime, audio.currentTime , getAccurateTime(), Math.abs(audio.currentTime - getAccurateTime()))
         if (Math.abs(audio.currentTime - getAccurateTime()) > DRIFT_THRESHOLD) {
             resetTracking();
         }
@@ -301,12 +299,14 @@ export const AudioPlayerProvider = ({ children }) => {
     };
 
     const detectSeek = () => {
-        if(!fftConfigRef.current){return;}
+        if(!fftConfigRef.current || ! globalAudioRef.current){return;}
         const t = globalAudioRef.current.currentTime;
+        
         if (Math.abs(t - lastTimeRef.current) > 1.0) {
-            const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+            const CHUNKS_PER_SECOND = Math.round(1 / fftConfigRef.current.interval);
             const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
             const seekChunk = Math.floor(t * CHUNKS_PER_SECOND);
+            console.log("Seeking chunk", seekChunk, TOTAL_CHUNKS, CHUNKS_PER_SECOND, SECONDS_TO_BUFFER);
             writeIndexRef.current = 0;
 
              // This tells us: chunk 0 in buffer == chunk N in audio
@@ -354,7 +354,6 @@ export const AudioPlayerProvider = ({ children }) => {
         
         if(playQueue[newQueuePointer].startsWith("radio-")){
             // Radios are passed as an object instead of a string (song uuid).
-            console.log(playQueue[newQueuePointer]);
             let radioDetails = {};
             if(playQueue[newQueuePointer].startsWith("radio-id")){
                 const radioUuid = playQueue[newQueuePointer].split("radio-id:")[1];
@@ -364,7 +363,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 console.log(radioDetails);
                 externalRadioInfos.current = null; 
                 setCurrentTrackData({type : 'radio', artist : radioDetails.name,
-                    ...radioDetails, duration : "0-"});
+                    ...radioDetails, duration : "0-", uuid : radioUuid});
    
             } else {
                 radioDetails.url = playQueue[newQueuePointer].split("radio-url:")[1];
@@ -384,7 +383,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 console.log("Now playing:", data.metadata.StreamTitle);
                 setCurrentTrackData(old => {return {...old, title : data.metadata.StreamTitle}});
             };
-    
+            setPlayingTrack('');
             source.addEventListener("error", (e) => {
                 console.warn("Metadata stream error", e);
             });
@@ -399,18 +398,17 @@ export const AudioPlayerProvider = ({ children }) => {
             
         }
         externalRadioInfos.current = null;
-        const splittedTrackName = playQueue[newQueuePointer].split('.');
-        const trackId = splittedTrackName.length != 0? splittedTrackName[0] : playQueue[newQueuePointer];
+        const trackId = playQueue[newQueuePointer];
         await fetch(`${apiBase}/read-write/trackInfos/${trackId}`, {
             method: 'GET'
         })
-        .then(response => response.json())
+        .then(res => res.json())
         .then(data => {
             data.duration = parseAudioDuration(data.rawDuration);
             setCurrentTrackData(data);
         });
 
-        const trackName = playQueue[newQueuePointer]
+       
         globalAudioRef.current.currentTime = 0; // Reset the current time if the track is already loaded
 
         await fetch(`${apiBase}/read-write/fftConfig/${trackId}`, {
@@ -427,6 +425,7 @@ export const AudioPlayerProvider = ({ children }) => {
             }
             const data = await res.json()
             fftConfigRef.current = JSON.parse(data);
+            console.log(fftConfigRef.current);
             const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // one value on int16
             const TOTAL_CHUNKS = SECONDS_TO_BUFFER / fftConfigRef.current.interval; 
             circularBufferRef.current = new Int16Array(TOTAL_CHUNKS * CHUNK_SIZE);
@@ -434,8 +433,8 @@ export const AudioPlayerProvider = ({ children }) => {
         })
 
 
-        if (globalAudioRef.current.src !== resolveTrackURL(trackName)) {
-            globalAudioRef.current.src = resolveTrackURL(trackName); // Set the new track URL
+        if (globalAudioRef.current.src !== resolveTrackURL(trackId)) {
+            globalAudioRef.current.src = resolveTrackURL(trackId); // Set the new track URL
         }else{
             
             setCurrentTime(0);
@@ -443,11 +442,11 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         globalAudioRef.current.play();
         clearTimeout(trackBlendIntervalRef.current);
-        setPlayingTrack(trackName);
-        FFTcurrentTrack.current = trackName;
+        setPlayingTrack(trackId);
+        FFTcurrentTrack.current = trackId;
         setIsPlaying(true);
         
-        fetchTrackCover(trackName);
+        fetchTrackCover(trackId);
             
         console.log("Fading in", globalAudioRef.current)
 
@@ -479,12 +478,13 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const bufferFFTData = async (trackId, fromChunk, toChunk) => {
-        if(!fftConfigRef.current) return null;
+        if(!fftConfigRef.current) {
+            circularBufferRef.current = null;
+            return null};
         const CHUNK_BYTES = fftConfigRef.current.fftSize * 1 * 2; //int16 has 2 bytes, for one value
         const startByte = CHUNK_BYTES * fromChunk;
         const endByte = CHUNK_BYTES * toChunk;
         // const [startByte, endByte] = getByteRangeForTime(audioTime);
-        // console.log(`Range bytes=${startByte}-${endByte - 1}`);
 
         const res = await fetch(`${apiBase}/read-write/fft/${trackId}`, {
           headers: {
@@ -493,11 +493,13 @@ export const AudioPlayerProvider = ({ children }) => {
         });
       
         if (!res.ok && res.status !== 206) {
-          throw new Error("Failed to stream FFT data");
+          console.error("Failed to stream FFT data");
+          return;
         }
-        lastBufferedEndChunk.current = toChunk;
+        lastBufferedEndChunk.current = Math.floor(toChunk);
       
         const buffer = await res.arrayBuffer();
+
         const incoming = new Int16Array(buffer);
         const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; //One value
         const numChunks = incoming.length / CHUNK_SIZE;
@@ -515,7 +517,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 writeIndex * CHUNK_SIZE
             );
         }
-    
+        
         writeIndexRef.current = (writeIndexStart + numChunks) % TOTAL_CHUNKS;
     };
 
@@ -536,22 +538,21 @@ export const AudioPlayerProvider = ({ children }) => {
     };
     
     const maybeFetchFFT = (trackId, currentTime) => {
-        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+        const CHUNKS_PER_SECOND = Math.round(1 / fftConfigRef.current.interval);
         const currentChunk = Math.floor(currentTime * CHUNKS_PER_SECOND);
-        // console.log("currentChunk", currentChunk);
-        const remainingBufferedChunks = lastBufferedEndChunk.current - currentChunk;
+        const remainingBufferedChunks = Math.floor(lastBufferedEndChunk.current) - currentChunk;
         const TOTAL_CHUNK_TO_BUFFER = CHUNKS_PER_SECOND * SECONDS_TO_BUFFER;
         const missingChunks  =  TOTAL_CHUNK_TO_BUFFER - remainingBufferedChunks
         if (missingChunks < 1) return;
         
         bufferFFTData(trackId, 
-            lastBufferedEndChunk.current, 
+            Math.floor(lastBufferedEndChunk.current), 
             TOTAL_CHUNK_TO_BUFFER + currentChunk);
         
     };
 
     const getCurrentFFTChunkIndex = () => {
-        const CHUNKS_PER_SECOND = 1 / fftConfigRef.current.interval;
+        const CHUNKS_PER_SECOND = Math.round(1 / fftConfigRef.current.interval);
         const currentChunk = Math.floor(getAccurateTime() * CHUNKS_PER_SECOND);
 
         const relativeChunk = currentChunk - bufferStartChunkRef.current;
@@ -832,7 +833,6 @@ export const AudioPlayerProvider = ({ children }) => {
     useEffect(() => {
         setVolume(parseFloat(localStorage.getItem('volume')) || 0.5);
         setupAudioGraph();
-        console.log("mount",location.pathname);
         if(location.pathname === "/full-screen"){
             locationBeforeFullScreen.current = "";
             fullScreenMode.current = true;
@@ -840,10 +840,7 @@ export const AudioPlayerProvider = ({ children }) => {
         // In case mounts after logged in or already auto logged in;
         fetchFFTUserSettings();
         // In case mounts before login;
-        const unsubscribeOnLogin = subscribe("login", () => {
-            console.warn("login triggered!")
-            fetchFFTUserSettings();
-        });
+        const unsubscribeOnLogin = subscribe("login", fetchFFTUserSettings);
         return () => {
             destructAudioGraph();
             unsubscribeOnLogin();
@@ -1211,6 +1208,12 @@ export const AudioPlayerProvider = ({ children }) => {
             
     }
 
+    const skipAudioSeconds = (forward) => {
+        if(globalAudioRef.current){
+            globalAudioRef.current.currentTime += (forward ? 1 : -1 ) * 10;
+        }
+    }
+
     const navigateBack = () => {
         const { history: histArray, pointer } = history;
         if (histArray.every(entry => entry === null)) {
@@ -1234,9 +1237,59 @@ export const AudioPlayerProvider = ({ children }) => {
         navigate(destination || "/home");
 
     }
+
+    const toggleCurrentRadioToFavorites = () => {
+        if(currentTrackData?.type === "radio"){
+            fetch(`${apiBase}/radio/addToFavs/${currentTrackData.uuid}`,{method : "POST", 
+                credentials : "include"})
+            .then(async res => {
+                const json = await res.json();
+                 return {json , ok: res.ok}})
+            .then(data=>{
+                addNotification(data.json.message, notifTypes.INFO);
+                console.log(data);
+                if(!data.ok) return;
+                emit("refetch-known-radios");
+            }).catch(err => {
+                addNotification("An error occured, you may check server logs." + err.code, notifTypes.ERROR);
+            });
+        }
+    }
+
+    const recomputeColors = (imgRef, safeComputedCallback) => {
+        //Avoid useless recompute on reload;
+
+        if(paletteRef.current?.track === playingTrack && paletteRef.current?.pairs.length > 0){
+            safeComputedCallback();
+            return;
+        }
+        let colorThief = new ColorThief();
+        const palette = colorThief.getPalette(imgRef.current, 10);
+        generateContrastedPairs(palette);
+        console.log("recomputed");
+        console.log(paletteRef.current);
+        safeComputedCallback();
+    }
+
+    const generateContrastedPairs = (palette) => {
+        const pairs = [];
+        for (let i = 0; i < palette.length; i++) {
+          for (let j = i + 1; j < palette.length; j++) {
+            pairs.push({    
+                c1:palette[i], c2:palette[j],
+                contrast : contrastRatio(palette[i], palette[j])});
+          }
+        }
+        paletteRef.current = {track: playingTrack, pairs: pairs.sort((a,b) => a.contrast - b.contrast)}; 
+      };
+
     return (
         <AudioPlayerContext.Provider 
         value={{
+            recomputeColors,
+            songPalette : paletteRef,
+            skipAudioSeconds,
+            toggleCurrentRadioToFavorites,
             externalRadioInfos,
             playRadio,
             navigateBack,

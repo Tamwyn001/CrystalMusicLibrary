@@ -7,9 +7,12 @@ const FFTVisualizer = () => {
 	/** @type {React.RefObject<React.JSX.IntrinsicElements.canvas>} */
 	const canvasRef = useRef(null);
 	const {getFFTAtCurrentTime, fftConfigRef, globalAudioRef, FFTUserSetingsRef,
-		fetchFFTUserSettings, colorOverride} = useAudioPlayer();
+		fetchFFTUserSettings, colorOverride, currentTrackData} = useAudioPlayer();
 	const lastTime = useRef(0);
   	const animate = (now) => {
+		if(currentTrackData?.type == "radio"){
+			cancelAnimationFrame(animationRef.current);
+			return;}
 		// Do your animation logic here
 		// Example: update canvas or sync with audio time
 		if(!canvasRef.current) {
@@ -82,7 +85,7 @@ const FFTVisualizer = () => {
 	useEffect(() => {
 		animationRef.current = requestAnimationFrame(animate);
 
-		return () => cancelAnimationFrame(animationRef.current); // cleanup on unmount
+		return () => {cancelAnimationFrame(animationRef.current)}; // cleanup on unmount
 	}, []);
 
 	return <canvas ref={canvasRef} id="fft-canvas" width={1900} height={1000}></canvas>;

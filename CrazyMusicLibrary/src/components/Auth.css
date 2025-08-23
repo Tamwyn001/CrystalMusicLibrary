@@ -39,9 +39,15 @@ img{
     max-width: 300px;
 }
 
+input[type="number"]{
+    width: 75px;
+}
 @media screen and (min-width: 714px) {
     .authDiv{
         max-width: 400px;
+    }
+    input[type="number"]{
+        min-width: 100px;
     }
 }
 
@@ -49,9 +55,7 @@ img{
     font-weight: bold;
 }
 
-input[type="number"]{
-    min-width: 100px;
-}
+
 input, textarea, select{
     height: 30px;
     border-radius: 20px;

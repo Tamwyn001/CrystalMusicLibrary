@@ -2,12 +2,15 @@ import { useEffect, useRef, useState } from "react";
 import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import './FullScreenSong.css';
 import { IconArrowBackUp, IconColorSwatch } from "@tabler/icons-react";
-import ColorThief from "../../third_party_modules/color-thief/dist/color-thief.mjs"
 import _ from "lodash";
 import AudioControls from "../components/AudioControls.jsx";
-import { lerp } from "../../lib.js";
+import { contrastRatio, lerp } from "../../lib.js";
+import apiBase from "../../APIbase.js";
 const FullScreenSong = () => {
-    const {fullScreenImage, requestNewFullScreenImage, playingTrack, toggleFullScreenView, colorOverride} = useAudioPlayer();
+    const {fullScreenImage,currentTrackData, 
+        requestNewFullScreenImage, playingTrack,
+        toggleFullScreenView, colorOverride, recomputeColors,
+        songPalette } = useAudioPlayer();
     const imgRef = useRef(null);
     const imgRefBack = useRef(null);
     const imgRefB = useRef(null);
@@ -21,7 +24,7 @@ const FullScreenSong = () => {
     const paletteRef = useRef([]);
     const timeoutRef = useRef(0);
     const colorTimeoutRef = useRef(0);
-
+    const clicedNumRef = useRef(0);
     const assignBlobToNewImage = (blob) => {
         if (currentImg.current){
             imgRef.current.src = URL.createObjectURL(blob);
@@ -35,7 +38,23 @@ const FullScreenSong = () => {
         globalImgRef.current.addEventListener('load', requestRecomputAndFade);
     }
     useEffect(() => {
-        if(!playingTrack || !(imgRef.current && imgRefBack.current)) return;
+        if(!(imgRef.current && imgRefBack.current)) return;
+        if(currentTrackData?.type == "radio"){
+            if(currentTrackData.coverUrl){
+                const url = `${apiBase}/radio/favicon-proxy?url=${encodeURIComponent(currentTrackData.coverUrl)}`
+                if (currentImg.current){
+                    imgRef.current.src = url;
+                    imgRefBack.current.src =url;
+                    globalImgRef.current = imgRef.current;
+                }else{
+                    imgRefB.current.src = url;
+                    imgRefBackB.current.src = url;
+                    globalImgRef.current = imgRefB.current;
+                }
+            }
+            return;
+        } 
+        if(!playingTrack) return;
 
         if(fullScreenImage?.track !== playingTrack){
             currentImg.current = !currentImg.current;
@@ -47,7 +66,7 @@ const FullScreenSong = () => {
         }
         
 
-    },[playingTrack]);
+    },[currentTrackData,playingTrack]);
 
     const toggleVisibilityFromImageCouple = (isA, hidden) => {
         if(isA){
@@ -58,7 +77,13 @@ const FullScreenSong = () => {
             imgRefBackB.current.setAttribute("data-hidden", hidden);
         }
     }
+
+    const onColorComputed = () => {
+        imgRef.current.removeEventListener('load', requestRecomputAndFade);
+        suffleColors()
+    };
     const requestRecomputAndFade = () => {
+        if(!globalImgRef.current?.src) return;
         toggleVisibilityFromImageCouple(currentImg.current, false);
         toggleVisibilityFromImageCouple(!currentImg.current, true);
         clearTimeout(timeoutRef.current);
@@ -75,19 +100,21 @@ const FullScreenSong = () => {
                 }
             }
         },1100);
-        recomputeColors();
+        
+        recomputeColors(globalImgRef, onColorComputed);
+       
+
     }
-    const recomputeColors = () => {
-        globalImgRef.current.removeEventListener('load', requestRecomputAndFade);
-        let colorThief = new ColorThief();
-        paletteRef.current = colorThief.getPalette(globalImgRef.current, 10);
-        suffleColors();
-    }
+    
 
     const suffleColors = () => {
-        const choosed =  _.shuffle(paletteRef.current);
+        const pairsNum = songPalette.current.pairs.length || 0;
+        if(pairsNum === 0) return;
+       
+        const pickedColors = songPalette.current.pairs[pairsNum - 1 - clicedNumRef.current % pairsNum];
+        const colors =  [pickedColors.c1, pickedColors.c2];
+        clicedNumRef.current += 1;
         clearTimeout(colorTimeoutRef.current);
-        const colors = choosed.slice(0,2);
         if(colorOverride.current.length === 0) {
             colorOverride.current = colors;
         } else {
@@ -110,7 +137,7 @@ const FullScreenSong = () => {
 
         const resetInactivityTimer = () => {
             inactivityTime.current = 0;
-            if(userInactive) setUserInactive(false);
+            setUserInactive(false);
         }
         
         const checkInactivity = () => {
@@ -130,7 +157,7 @@ const FullScreenSong = () => {
         // Check inactivity every second
         inactivityTimer.current = setInterval(checkInactivity, 1000);
         if(globalImgRef.current?.complete && globalImgRef.current?.src){
-            recomputeColors();
+            recomputeColors(imgRef, onColorComputed);
         }
         
         return () => {
@@ -143,9 +170,9 @@ const FullScreenSong = () => {
     },[]);
 
     return (
-    <>
+    <div id="full-screen-page">
         <div className="full-screen-header">
-            <button className="roundButton full-screen-back" data-inactive={userInactive} onClick={toggleFullScreenView}>
+            <button className="roundButton full-screen-back go-back" data-inactive={userInactive} onClick={toggleFullScreenView}>
                 <IconArrowBackUp />
             </button>
             <button className="roundButton full-screen-back" data-inactive={userInactive} onClick={suffleColors}>
@@ -153,22 +180,22 @@ const FullScreenSong = () => {
             </button>
         </div>
         <div data-inactive={userInactive} className="full-screen-audio-ctrl">
-            <AudioControls context={{mobile:false}}/>
+            <AudioControls context={""}/>
         </div>
-        {playingTrack && <>
-            <img className="full-screen-image-back full-screen-fadable" ref={imgRefBack} crossOrigin={"anonymous"} alt="No tracks palying"/>
+        {(playingTrack || currentTrackData?.type == "radio") && <>
+            <img className="full-screen-image-back full-screen-fadable" ref={imgRefBack} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
             <div className="full-screen">
-                <img className="full-screen-image full-screen-fadable" ref={imgRef} crossOrigin={"anonymous"} alt="No tracks palying"/>
+                <img className="full-screen-image full-screen-fadable" ref={imgRef} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
                 
             </div>
-            <img className="full-screen-image-back full-screen-fadable" ref={imgRefBackB} crossOrigin={"anonymous"} alt="No tracks palying"/>
+            <img className="full-screen-image-back full-screen-fadable" ref={imgRefBackB} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
             <div className="full-screen">
-                <img className="full-screen-image full-screen-fadable" ref={imgRefB} crossOrigin={"anonymous"} alt="No tracks palying"/>
+                <img className="full-screen-image full-screen-fadable" ref={imgRefB} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
                 
             </div>
             </>
         }
-    </>
+    </div>
     )
 }
 

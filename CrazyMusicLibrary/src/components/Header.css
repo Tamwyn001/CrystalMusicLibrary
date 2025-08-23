@@ -8,7 +8,7 @@
     position: relative;
     z-index: 5;
     border-radius: 0px 0px 20px 20px;
-    margin: 0px 10px;
+    margin: 0px 10px 0px 5px;
     border: 3px solid var(--solid-border);
     min-width: 75%;
     gap: 10px;
@@ -75,12 +75,16 @@
     left: 0;
     box-shadow: var(--box-shadow);
 }
+.trackinfo-desktop {
+   translate: 0px -5px;
+}
 
 .trackinfos-parent{
     display: flex;
     flex-direction: column;
     gap: 5px;
     width: 100%;
+    height: 100%;
 }
 .trackinfo-desktop{
     display: none;
@@ -91,14 +95,21 @@
     gap: 10px;
     justify-content: space-between;
     align-items: center;
+    height: 100%;
 }
 .mobile-gost{
+    display: none;
+}
+.in-song-header{
     display: none;
 }
 .audio-controls{
     display: flex;
     flex-direction: row;
     gap: 10px;
+}
+.audio-controls > div {
+    height: 35px;
 }
 .header .audio-controls svg{
     width: 35px;
@@ -137,6 +148,10 @@
     display: flex;
     flex-direction: column;
     }
+    .in-song-header{
+        display: inline-block;
+    }
+    
     .trackinfo-mobile{display: none;}
     .musicPlayer{
         position: relative;
@@ -145,10 +160,11 @@
         align-items: center;
         height: 75%;
         width: 40%;
-        border-radius: 20px;
+        border-radius: 15px 20px 20px 15px;
         background: none;
         background-color: color-mix(in srgb, var(--cards-background) 40%, transparent);
         max-width: 600px;
+        padding: 4px 10px 4px 7px;
     }
 
     .audio-controls[context="desktop"]{
@@ -175,6 +191,10 @@
         padding: 3px 10px 3px 17px;
     }
     .mobile-gost{display: flex; width: 140px; gap: 10px}
+
+    .desktop-ghost{
+        display: none !important;   
+    }
     
     .serach-button-div .keyboard-key, .serach-button-div span{
         display: inline-block;
@@ -195,18 +215,33 @@
     gap: 20px;
 }
 #songTitle{
-    margin: 0px;
+    margin: auto 0px auto 0px;
+
 }
+.trackinfo-desktop #songTitle{
+        height: 20px;
+}
+#add-radio-fav{
+    position: absolute;
+    top: 20px;
+    right:20px;
+    cursor: pointer;
+}
+
 .playPauseButtons{
     top: 0px;
     left: 0px;
+    width: 100%;
+    height: 100%;
     opacity: 0;
     position: absolute;
     cursor: pointer;
+    display: flex;
 }
 .playPauseButtons svg{
-    width: 48px;
-    height: auto;
+    width: auto;
+    height: calc(100% - 10px);
+    margin: auto;
     padding:10px;
     animation: full-screen-button-anim cubic-bezier(.65,.05,.36,1) 1s alternate-reverse infinite;
     /* animation: ; */
@@ -225,6 +260,9 @@
     transition: opacity 0.1s;
 }
 
+.musicPlayer .progressFill{
+    transition: width 0.2s ease-out !important;
+}
 
 .trackImage[hovered="hovered"]{
     filter: blur(3px);

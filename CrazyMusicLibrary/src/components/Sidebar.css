@@ -3,8 +3,7 @@
     flex-direction: column;
     justify-content: space-between;
     background: linear-gradient(90deg, var(--header-1) -20px, var(--header-2) 190%);
-
-    margin: 10px;
+    margin: 10px 10px 10px 5px;
     border-radius: 20px;
     border: solid  var(--solid-border) 3px;
     transition: var(--border-transition)
@@ -49,6 +48,10 @@
 }
 .stat-short-category p{
     margin: 3px 0px;
+}
+
+.stat-short-category .progressFill{
+    transition: width 1s;
 }
 
 .sidebar > nav{

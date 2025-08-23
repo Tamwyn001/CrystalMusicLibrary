@@ -36,5 +36,9 @@ background:   var(--header-gradient-simple);
     .account-info{
         margin-bottom: 200px;
     }
+    .account-content{
+        padding: 10px;
+        width: calc(100% - 40px);
+    }
 
 }

@@ -1,11 +1,14 @@
 
-import LibAlbumCard from "../components/LibAlbumCard";
+import LibAlbumCard from "../components/LibAlbumCard.jsx";
 import { useEffect, useState } from "react";
 import apiBase from "../../APIbase.js";
 import { AddMusicShortcut } from "../components/AddMusicShortcut.jsx";
+import { asVerified } from "../../lib.js";
+import { useEventContext } from "../GlobalEventProvider.jsx";
 const Home = ({}) => {
     const [albums, setAlbums] = useState([]);
     const [albumFetched, setAlbumFetched] = useState(false);
+    const {subscribe } = useEventContext();
     const fetchAlbums = () => {
         fetch(`${apiBase}/read-write/albums`, {method: "GET", credentials: "include"})
         .then((response) => {
@@ -19,16 +22,15 @@ const Home = ({}) => {
             setAlbumFetched(true)});
     }
     useEffect(() => {
-        fetchAlbums(); // Trigger when Home is mounted
-        const handleMusicUploaded = (e) => {
-            console.log("Music uploaded:", e.detail);
-            fetchAlbums(); // your data reload function
-          };
+        const verify = asVerified( () => {
+            fetchAlbums(); // Trigger when Home is mounted
+        });
+        verify();
         
-          window.addEventListener("musicUploaded", handleMusicUploaded);
+          const unsubscribeMusicUploaded = subscribe("musicUploaded", fetchAlbums);
           return () => {
-            window.removeEventListener("musicUploaded", handleMusicUploaded);
-          };
+            unsubscribeMusicUploaded();
+          }
     }, []); // Empty dependency array = only on mount
 
     const SkeletonLoader = () => {

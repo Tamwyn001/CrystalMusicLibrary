@@ -48,10 +48,11 @@ const userDropdown = () =>{
                 if(e.target.closest('svg')?.id === 'user-button' ){return;}
                 setIsOpened(false);
             }}
-        subscribe("action-bar-open", () => {setIsOpened(false)});
+        const unsubscribeActionBar = subscribe("action-bar-open", () => {setIsOpened(false)});
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
+            unsubscribeActionBar();
             document.removeEventListener("mousedown", handleClickedOutside);
             document.removeEventListener("touchstart", handleClickedOutside);
         }

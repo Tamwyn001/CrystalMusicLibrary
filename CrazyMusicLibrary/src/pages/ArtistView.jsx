@@ -43,7 +43,7 @@ const artistView = () => {
     }
     return (
         <div className="album-view">
-            <button className="roundButton" onClick={navigateBack}>
+            <button className="roundButton go-back" onClick={navigateBack}>
                 <IconArrowBackUp />
             </button>
             {(artist && albums) ? (

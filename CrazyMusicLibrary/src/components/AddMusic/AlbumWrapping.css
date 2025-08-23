@@ -40,7 +40,15 @@
     height: calc(100% - 120px);
     width: calc(100% - 90px);
     border-radius: 20px;
+    gap: 20px;
+    align-items: center;
     
+}
+
+#bio{
+    height: 200px;
+    padding: 10px;
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
 @media screen and (min-width: 714px) {
@@ -58,7 +66,9 @@
         top: calc(50% - 300px);
         height: fit-content;
         width: 800px;
+        max-width: calc(100% - 90px);
         border-radius: 20px;
+        gap: 40px;
     }
 }
 
@@ -67,11 +77,11 @@
     flex-direction: column;
     width: 20%;
     height: auto;
-    aspect-ratio: 1;
     gap: 10px;
 }
 .albumCover[edit="true"]{
     width: 400px;
+    max-width: 100%;
 }
 .albumCoverImage{
     width: 100%;
@@ -84,7 +94,7 @@
     align-items: left;
     justify-content: left;
     overflow: none;
-    padding: 0px 20px;
+    width: 100%;
 }
 
 @media screen and (min-width: 714px) {
@@ -96,7 +106,7 @@
     overflow: auto;
     overflow-x: hidden;
     width: 80%;
-    padding: 0px 20px;
+    margin-top: 0px;
 }
 }
 

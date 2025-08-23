@@ -11,14 +11,14 @@
 
 
 const LAST_USER_CONFIG_VERSION = 2;
-const LAST_SERVER_CONFIG_VERSION = 1;
+const LAST_SERVER_CONFIG_VERSION = 2;
 
 const defaultConfig = {
     version : LAST_SERVER_CONFIG_VERSION,
     ServerFFT : {
         useServerFFT : true,
         samples : 512,
-        samplingInterval : 0.0166, //60fps
+        samplingInterval : 1/60, //60fps
         parallelCompute : 5
     }
 }
@@ -49,6 +49,10 @@ const migrateServerConfigIfNecessary = (loadedConfig) => {
     }
     if(version < 1){
         loadedConfig.version = 1;
+    }
+    if(version < 2){
+        loadedConfig.ServerFFT.samplingInterval = 1/60;
+        loadedConfig.version = 2;
     }
     return wasUpToDate;
 }

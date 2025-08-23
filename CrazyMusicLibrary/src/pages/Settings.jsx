@@ -28,7 +28,7 @@ const Settings = () => {
         <div className="account-page">
             < Header/>
             <div className="account-content">
-                <button className="roundButton" onClick={() => navigate('/home')}>
+                <button className="roundButton go-back" onClick={() => navigate('/home')}>
                     <IconArrowBackUp />
                 </button>
                 <div className="account-info">

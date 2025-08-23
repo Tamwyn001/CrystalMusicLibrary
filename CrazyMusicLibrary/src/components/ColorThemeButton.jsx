@@ -3,7 +3,7 @@ import { useGlobalActionBar } from "../GlobalActionBar.jsx";
 import { IconBrightness } from "@tabler/icons-react";
 import { capitalizeFirstLetter } from "../../lib.js";
 
-const ColorThemeButton = ({useText = false, style={}}) =>{
+const ColorThemeButton = ({useText = false, style={}, className=""}) =>{
     const colorThemeRef = useRef(null);
     const {colorTheme, toggleColorTheme} = useGlobalActionBar();
     useEffect(()=>{
@@ -11,7 +11,7 @@ const ColorThemeButton = ({useText = false, style={}}) =>{
     },[colorTheme]);
 
     return (
-    <div style={{display : "flex", flexDirection:"row", gap:"10px", alignItems:"center", ...style}}>
+    <div style={style} className={`color-theme-btn ${className}`}>
         <IconBrightness id="color-theme-svg" ref={colorThemeRef} className="buttonRound" onClick={toggleColorTheme}/>
         {useText && <span>{capitalizeFirstLetter(colorTheme.toString())}</span>}
     </div>)

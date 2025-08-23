@@ -2,7 +2,7 @@
 
 .genre-card{
     height: 200px;
-    width: 350px;
+    width: 100%;
     border-radius: 20px;
     text-align: center;
     cursor: pointer;
@@ -10,6 +10,22 @@
     position: relative;
     background-color: var(--genre-cards-background);
     box-shadow: var(--box-shadow);
+    max-width: 100%;
+  
+}
+
+.card-pivot-origin{
+  margin: auto;
+  width: 1px;
+  height: 1px;
+  translate: 0px 600px ;
+}
+
+@media screen and (min-width: 660px) {
+  .genre-card{
+    width: 350px;
+
+  }
 }
 
 .genre-card:hover .genre-name p{
@@ -31,7 +47,7 @@
     position: absolute;
     bottom: -4px;
     right: 0;
-    width: 330px;
+    width: 100%;
     padding: 4px 10px;
 }
 
@@ -56,10 +72,10 @@
     rotate: calc(-38deg + 20deg + 10deg * var(--start-angle));
     transition: all 0.2s;
     position: absolute;
-    bottom: -500px;
-    right: 100px;
+    /* bottom: -500px; */
+    /* right: 100px; */
     opacity: 0;
-
+    translate: -120px -100px;
 }
 /* 
 .genre-card:hover{

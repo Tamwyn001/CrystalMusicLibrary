@@ -2,9 +2,12 @@ import { useEffect, useState } from "react";
 import LibArtistsCard from "../components/LibArtistsCard.jsx";
 import apiBase from "../../APIbase.js";
 import { AddMusicShortcut } from "../components/AddMusicShortcut.jsx";
+import { asVerified } from "../../lib.js";
+import { useEventContext } from "../GlobalEventProvider.jsx";
 
 const ArtistsView = () => {
     const [artists, setArtists] = useState([]);
+    const {subscribe} = useEventContext();
     const fetchArtists = () => {
         fetch(`${apiBase}/read-write/artists`, {method: "GET", credentials: "include"})
         .then((response) => {
@@ -16,22 +19,21 @@ const ArtistsView = () => {
         }).then((data) => {setArtists(data)});
     }
     useEffect(() => {
-        fetchArtists(); // Trigger when Home is mounted
-        const handleMusicUploaded = (e) => {
-            console.log("Music uploaded:", e.detail);
-            fetchArtists(); // your data reload function
-          };
+        const verify = asVerified(()=>{
+            fetchArtists(); // Trigger when Home is mounted
+        });
+        verify();
         
-          window.addEventListener("musicUploaded", handleMusicUploaded);
-          return () => {
-            window.removeEventListener("musicUploaded", handleMusicUploaded);
+        const unsubscribeMusicUploaded = subscribe("musicUploaded", fetchArtists);
+        return () => {
+            unsubscribeMusicUploaded();
           };
     }, []); // Empty dependency array = only on mount
 
 
     return(
-        <div className="home album-displayer">
-           {artists?.length !== 0 ? artists.map((artist) => (
+        <div className={`home ${ artists?.length !== 0 ? "album-displayer" : ""}`}>
+           { artists?.length !== 0 ? artists.map((artist) => (
             <LibArtistsCard key={artist.id} artist={artist}/>
         )) 
         : <AddMusicShortcut/> }

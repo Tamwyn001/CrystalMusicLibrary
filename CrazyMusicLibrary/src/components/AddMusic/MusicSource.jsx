@@ -11,7 +11,7 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
         if (e.target.files) {
             console.log('New tracks')
             tracksSelected(Array.from(e.target.files));
-            e.target.files = null; // Reset the input value
+            e.target.files = null; // Reset the input value, needs to be of type object
         }
     };
     const handleURLChanged = (e) =>{
@@ -27,7 +27,7 @@ const MusicSource= ({fromFile, setFromFile, tracksSelected, initMetadataFetching
                 <>
                 <p>Select files from a local storage.</p>
                 <div className="add-music-input">
-                    <label for="files" className="file-select">
+                    <label htmlFor="files" className="file-select">
                         <IconFilePlus/>
                         <span>Select file</span>
                         </label>

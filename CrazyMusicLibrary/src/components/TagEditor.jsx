@@ -113,7 +113,7 @@ const TagEditor = ({track, apply}) => {
 
     return(
         <div className="page-overlay-blur">
-            <div className="albumWrapping-library" style={{height : "400px", flexDirection : "column"}}>
+            <div className="albumWrapping-library" style={{height : "500px", flexDirection : "column"}}>
                 <IconX className="buttonRound closeOverlay" onClick={() => {apply(null);}} />
 
                 <h3>Editing tags for track {track.title}</h3>

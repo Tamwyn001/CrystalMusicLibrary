@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useRef, useState } from "react";
-import { IconArrowsShuffle, IconBrightness, IconChevronRight, IconPlayerPlay, IconSearch, IconSettingsHeart } from "@tabler/icons-react";
+import { IconArrowsShuffle, IconBrightness, IconChevronRight, IconMaximize, IconPlayerPlay, IconSearch, IconSettingsHeart } from "@tabler/icons-react";
 import ActionBarEntry from "./components/ActionBarEntry.jsx";
 import apiBase  from "../APIbase.js";
 import { useAudioPlayer } from "./GlobalAudioProvider.jsx";
@@ -26,7 +26,10 @@ const commandCodes = {
     OPEN_SETTINGS : 'open_settings',
     VOLUME_UP : 'volume_up',
     VOLUME_DOWN : 'volume_down',
-    OPEN_GENRE : 'open_genre'
+    OPEN_GENRE : 'open_genre',
+    TOGGLE_FULL_SCREEN :"toggle_full_screen",
+    SKIP_PLUS : "skip_plus",
+    SKIP_MINUS :"skip_minus",
 }
 
 const actions = [ //!! very important, keep order
@@ -43,7 +46,7 @@ const actions = [ //!! very important, keep order
         name: 'open action bar',
         code: commandCodes.OPEN_ACTION_BAR,
         description: 'Give a command',
-        key:" ", //spacebar
+        key:" ", 
         modifier: 'ctrl',
         keywords: []
     },
@@ -51,7 +54,7 @@ const actions = [ //!! very important, keep order
         name: 'Play the library in shuffle',
         code: commandCodes.PLAY_LIBRARY_RANDOM,
         description: '',
-        key:"r", //spacebar
+        key:"r", 
         modifier: 'ctrl',
         keywords: ["play", "shuffle", "random", "library", "all", "all songs", "all albums", "all artists"],
         icon: () => {return <IconArrowsShuffle className="action-bar-current-logo" />} 
@@ -69,7 +72,7 @@ const actions = [ //!! very important, keep order
         name: 'Open settings',
         code: commandCodes.OPEN_SETTINGS,
         description: '',
-        key:"p", //spacebar
+        key:"p", 
         modifier: 'ctrl',
         keywords: ["settings", "configuration", "config", "preferences", "options"],
         icon: () => {return <IconSettingsHeart className="action-bar-current-logo" />}
@@ -78,7 +81,7 @@ const actions = [ //!! very important, keep order
         name: 'Volume up',
         code: commandCodes.VOLUME_UP,
         description: '',
-        key:"ArrowUp", //spacebar
+        key:"ArrowUp", 
         modifier: '',
         keywords: [],
         icon: () => {}
@@ -87,7 +90,25 @@ const actions = [ //!! very important, keep order
         name: 'Volume down',
         code: commandCodes.VOLUME_DOWN,
         description: '',
-        key:"ArrowDown", //spacebar
+        key:"ArrowDown", 
+        modifier: '',
+        keywords: [],
+        icon: () => {}
+    },
+    {
+        name: 'Skip positive',
+        code: commandCodes.SKIP_PLUS,
+        description: '',
+        key:"ArrowRight", 
+        modifier: '',
+        keywords: [],
+        icon: () => {}
+    },
+    {
+        name: 'Skip positive',
+        code: commandCodes.SKIP_MINUS,
+        description: '',
+        key:"ArrowLeft", 
         modifier: '',
         keywords: [],
         icon: () => {}
@@ -96,10 +117,19 @@ const actions = [ //!! very important, keep order
         name: 'Toggle color theme',
         code: commandCodes.TOGGLE_THEME,
         description: 'Toggles the app dark or light theme.',
-        key:"t", //spacebar
+        key:"t", 
         modifier: 'ctrl',
         keywords: ["dark", "light", "color", "theme", "color-theme", "toggle"],
         icon: () => <IconBrightness className="action-bar-current-logo" />
+    },
+    {
+        name: 'Toggle full screen',
+        code: commandCodes.TOGGLE_FULL_SCREEN,
+        description: 'Toggles the full screen mode.',
+        key:"", 
+        modifier: '',
+        keywords: ["bars", "wallpaper", "full-screen", "fft", "spectrum", "toggle"],
+        icon: () => <IconMaximize className="action-bar-current-logo" />
     }
 ];
 const fuseActions = new Fuse(actions, { keys: ["keywords"], threshold: 0.3 });
@@ -116,7 +146,8 @@ export const GlobalActionBar = ({children}) => {
     const [currentCommand, setCurrentCommand] = useState(null); //elem of actions
     const [proposedCommands, setProposedCommands] = useState([]); //elem of actions
     const [currentActionLogo, setCurrentActionLogo] = useState(null); //elem of actions
-    const {playTrackNoQueue, playLibraryShuffle, toggleTrackPaused, setVolume, volume} = useAudioPlayer();
+    const {playTrackNoQueue, playLibraryShuffle,
+         toggleTrackPaused, setVolume, volume, toggleFullScreenView, skipAudioSeconds} = useAudioPlayer();
     const volumeRef = useRef(volume); // when mounted, it will always use the default value if we dont use ref
     const navigate = useNavigate();
     const location = useLocation();
@@ -174,6 +205,7 @@ export const GlobalActionBar = ({children}) => {
         // console.log("Key pressed", e);
         // if(e.key === " " && e.ctrlKey ){setCurrentCommand(actions[1]); openCommandBar(); return} //open the action 
         if(e.key =="Escape" && showActionBarRef.current) {closeActionBar(); return}
+        if(e.key =="Escape" && location.pathname === "/full-screen") {toggleFullScreenView(); return}
         if(e.key == "Control" || currentCommand) {return}
         if(!(e.ctrlKey || e.altKey || e.metaKey) && 
             (document.activeElement.nodeName === "INPUT" || document.activeElement.nodeName === "TEXTAREA"))
@@ -256,6 +288,8 @@ export const GlobalActionBar = ({children}) => {
         registerNewEvent(() => {navigate('/settings');}, commandCodes.OPEN_SETTINGS);
         registerNewEvent(() => {setVolume(Math.min(Math.max(volumeRef.current + 0.1, 0), 1));}, commandCodes.VOLUME_UP);
         registerNewEvent(() => {setVolume(Math.min(Math.max(volumeRef.current - 0.1, 0), 1))}, commandCodes.VOLUME_DOWN);
+        registerNewEvent(() => {skipAudioSeconds(true)}, commandCodes.SKIP_PLUS);
+        registerNewEvent(() => {skipAudioSeconds(false)}, commandCodes.SKIP_MINUS);
     }
 
     useEffect(() => {
@@ -405,6 +439,11 @@ export const GlobalActionBar = ({children}) => {
             case commandCodes.TOGGLE_THEME:
                 toggleColorTheme();
                 closeActionBar();
+                break;
+            case commandCodes.TOGGLE_FULL_SCREEN:
+                toggleFullScreenView();
+                closeActionBar();
+                break;
             default:
                 break;
         }

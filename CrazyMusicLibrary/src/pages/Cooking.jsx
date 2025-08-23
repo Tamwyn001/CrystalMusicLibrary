@@ -40,13 +40,14 @@ const Cooking = () => {
     });
     
     useEffect(() => {
-        const verify = asVerified(() => {
-    
-            const handleClickedOutside = (e) =>{            
-                if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
-                    closeSearchBar();
-                }}
+        const handleClickedOutside = (e) =>{            
+            if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+                closeSearchBar();
+            }}
+        const callbackTutoFinished = () => {setTutoCookingFinished(true);}
+        let unsubscribeTutorial = subscribe( `safe-finished-tutorial-${TutorialKeys.COOKING}`, callbackTutoFinished);
 
+        const verify = asVerified(() => {
             if(currentCookingContent.length === 0 ){
                 setCurrentCookingContent(saladContext || [])
             }
@@ -56,22 +57,22 @@ const Cooking = () => {
             })
             .then(res => res.json())
             .then(data => {
-
                 const proposed = data.map(tag => {
                     return {...tag, type : tag.total, typeElem: "tag", icon : () => <IconLabel color={tag.color}/>, tooltip : (num) => <span>{num}</span>}
                 })
                 setMostUsedTags(proposed);
                 setProposedEntryToAdd(proposed)
             });
-            subscribe( `safe-finished-tutorial-${TutorialKeys.COOKING}`, () => {setTutoCookingFinished(true);})
             document.addEventListener("mousedown", handleClickedOutside);
             document.addEventListener("touchstart", handleClickedOutside);
-            return () => {
-                document.removeEventListener("mousedown", handleClickedOutside);
-                document.removeEventListener("touchstart", handleClickedOutside);
-            }
+
         });
         verify();
+        return () => {
+            unsubscribeTutorial();
+            document.removeEventListener("mousedown", handleClickedOutside);
+            document.removeEventListener("touchstart", handleClickedOutside);
+        }; 
     },[]);
 
     
@@ -230,9 +231,9 @@ const Cooking = () => {
             </div>
             <div className="cooking-selection">
                 <div className="cooking-actions">
-                <ButtonWithCallback text={'Play the salad'} icon={<IconMusicCode/>} onClick={playSalad}/>
+                <ButtonWithCallback text={'Play salad'} icon={<IconMusicCode/>} onClick={playSalad}/>
                 { allowsSave &&
-                    <ButtonWithCallback text={'Save this salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
+                    <ButtonWithCallback text={'Save salad'} icon={<IconTagStarred />} onClick={saveSalad}/>
                 }
                 </div>
                 <div className="cooking-tags" style={{marginBottom : "30px"}}>

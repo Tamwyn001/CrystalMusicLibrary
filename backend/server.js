@@ -7,6 +7,7 @@ const isPkg = typeof process.pkg !== "undefined";
 const readline = require("readline")
 const { existsSync, mkdirSync } = require("fs");
 const APP_VERSION = "3.0.0";
+const DEV_MODE = true;
 
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
@@ -136,15 +137,16 @@ function getLocalIPs() {
 
 const app = express();
 const PORT = process.env.PORT || 4590;
-const localDomains = getLocalIPs().map(ip => {return `http://${ip}:${PORT}`});
+let localDomains;
 
-const allowedDomains = [
-  "http://localhost:5173",
-  "http://localhost:5174",
-  'http://172.20.10.2:5174', //Vite mobile debug
+if(DEV_MODE){
+  console.log("Dev mode: adding vite to trusted routes");
+  localDomains = getLocalIPs().map(ip => {return [`http://${ip}:${PORT}`, `http://${ip}:5174`]}).flat(1);
+} else{
+  localDomains = getLocalIPs().map(ip => {return `http://${ip}:${PORT}`});
 
-];
-allowedDomains.push(...localDomains);
+}
+const allowedDomains = [...localDomains];
 console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
 
@@ -229,6 +231,19 @@ try {
   console.error('Failed to create fallback route:', err);
 }
 
+// Sync errors not caught
+process.on("uncaughtException", (err) => {
+  console.error("Uncaught Exception:", err);
+  // Maybe cleanup + shutdown
+  // process.exit(1); // recommended to exit
+});
+
+// Async errors (unhandled promises)
+process.on("unhandledRejection", (reason, promise) => {
+  console.error("Unhandled Rejection at:", promise, "reason:", reason);
+  // Optionally exit
+});
+
 // -----------------------------------
 // 🟢 Start server
 // -----------------------------------
@@ -236,7 +251,7 @@ try {
 runServerStats()
 app.listen(PORT, () => {
   console.log(`==========================================\n\x1b[1m\x1b[38;2;255;182;193m
-          _____  __   __   __      
+          _____  __   ___  __      
          / ___/\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/  \\\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/  /\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/ /\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m
         / /\x1b[38;2;138;0;211m\\\x1b[38;2;196;95;231m__\x1b[38;2;138;0;211m\\\x1b[38;2;255;182;193m/ /\\ // / / / \x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m
        / /_\x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m_ / /\x1b[38;2;138;0;211m / \x1b[38;2;255;182;193m/ / / /_\x1b[38;2;138;0;211m/\x1b[38;2;255;182;193m_ 

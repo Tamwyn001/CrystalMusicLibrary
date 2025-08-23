@@ -4,17 +4,20 @@
     width: 100%;
     height: 100%;
 }
+body{
+    overflow-y: hidden;
+}
 @media screen and (max-width: 713px) {
-    .app-container{
+    /* .app-container{
+        overflow-y: scroll;
+    } */
+    body{
         overflow-y: scroll;
     }
 }
 .content-container{
     display: flex;
     flex-direction: column;
-    height: calc(100vh - 90px);
- 
-
 }
 .home.album-displayer[data-no-tracks="true"] {
     display: block !important;
@@ -24,6 +27,8 @@
         flex-direction: row;
         overflow: hidden;
         gap: 5px;
+        /* MENDATORY for desktop view */
+        height: calc(100vh - 90px);
     }
 }
 @media screen and (max-width: 714px) {
@@ -40,30 +45,47 @@
     column-gap: 10px;
     row-gap: 20px;
     justify-content: center;
-    padding-bottom: 100px;
+    padding-bottom: 5px;
     
 }
+
 .genre-displayer{
-    display: grid;
+    display: flex;
     column-gap: 20px;
     row-gap: 20px;
-    grid-template-columns: repeat(auto-fill, 350px);
+    flex-direction: column;
+    margin-bottom: 200px;
+    max-width: 100%;
 }
 
 .content{
     border: solid  var(--solid-border) 3px;
     background: linear-gradient(90deg, var(--header-1) -50%,  var(--header-2) 25%,  var(--header-3) 100%); 
-    margin: 10px 10px 0px 10px;
+    margin: 10px 10px 0px 5px;
     border-radius: 20px;
-    padding: 5px;
+    padding: 10px 5px 15px 5px;
     transition: var(--border-transition);
+    margin-bottom: var(--mobile-padding);
 }
 .content:hover{
     border: 3px solid var(--solid-border-hover);
 }
+@media screen and (min-width: 660px) {
+    .genre-displayer{
+        display: grid;
+        column-gap: 20px;
+        row-gap: 20px;
+        grid-template-columns: repeat(auto-fill, 300px);
+        margin-bottom: 200px;
+        max-width: 100%;
+    }
+}
 @media screen and (min-width: 714px) {
     .genre-displayer{
         column-gap: 20px;
+        margin-bottom: 0;
+        grid-template-columns: repeat(auto-fill, 350px);
+
         row-gap: 20px;
     }
     .album-displayer{
@@ -76,7 +98,9 @@
         overflow: auto;
         width: 100%;
         padding: 20px;
+        margin-bottom: 0px;
     }
+    
 }
 
 .album-displayer[data-flat="true"]{
@@ -85,9 +109,10 @@
     gap: 10px;
     justify-content: left;
     overflow-x: scroll;
-    padding-bottom: 20px;
+    padding: 10px 25px 20px 25px;
 }
 
 .album-displayer[data-flat="true"] > .album-card{
     width: 200px;
+    flex-shrink: 0;
 }

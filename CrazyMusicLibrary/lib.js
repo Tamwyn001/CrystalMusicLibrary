@@ -196,3 +196,18 @@ export const asVerified = (fn, location = "") => {
 export const capitalizeFirstLetter = (string) => {
   return string.charAt(0).toUpperCase() + string.slice(1);
 }
+
+
+export const luminance = ([r, g, b]) => {
+  const srgb = [r, g, b].map(v => {
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * srgb[0] + 0.7152 * srgb[1] + 0.0722 * srgb[2];
+};
+
+export const contrastRatio = (c1, c2) => {
+  const l1 = luminance(c1);
+  const l2 = luminance(c2);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+};

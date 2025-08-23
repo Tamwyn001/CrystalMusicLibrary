@@ -8,14 +8,12 @@
     box-shadow: 2px 2px 3px rgba(0, 0, 0, 0.05) inset;
 
 }
-.progressBar .progressFill{
+.progressFill{
+    box-shadow: 0px 2px 3px rgba(255, 255, 255, 0.34) inset;
     height: 100%;
     border-radius: 5px;
     transition: width 0.2s;
-    width: 0%;
-}
-.progressFill{
-    box-shadow: 0px 2px 3px rgba(255, 255, 255, 0.34) inset;
+    width: var(--progress, 0%);
 }
 .progressBar span{
     color: black;

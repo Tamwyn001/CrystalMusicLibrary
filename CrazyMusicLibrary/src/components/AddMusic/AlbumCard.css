@@ -22,7 +22,7 @@
     transition: 0.1s;
 }
 .album-card-loader{
-
+    max-width: 200px;
     border-radius: 20px;
     animation: pulse 1s infinite ;
 }

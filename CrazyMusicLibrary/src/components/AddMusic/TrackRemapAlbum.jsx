@@ -14,7 +14,7 @@ const TrackRemapAlbumAddMusic = ({ track, onClose }) => {
         if (!newAlbumName && e.target.existingAlbum.value){
             moveTrackToAlbum(track, e.target.existingAlbum.value);
 
-        } else if(newAlbumName !== '' ){
+        } else if(newAlbumName !== ''){
             moveTrackToNewAlbum(track, newAlbumName);
         }
         if (lastTrack){

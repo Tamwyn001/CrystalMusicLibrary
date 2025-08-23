@@ -19,15 +19,16 @@ const batchInsert = (table, columns, params, ignore = false) => {
         tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path, localTime, track.no, track.duration, userAddingId || 1]));
 }
 
-
+/**
+ * Function to add albums to the database. These are empty albums with no tracks, then call addTracks and pass the id of the album
+ */
  const addAlbums = (albums) => {
-    // Function to add albums to the database. These are empty albums with no tracks, then call addTracks and pass the id of the album
-
-    let artists = [];
-    for(let i =0; i < albums.length; i++){
-        if(!albums[i].artist){artists.push([null]);continue;}
-        for(const artist of albums[i].artist){artists.push([artist]);} //need an array otherwise row.map is not a function
+    const artists = [];
+    for(let i = 0; i < albums.length; i++){
+        if(!albums[i].artists){artists.push([null]);continue;}
+        for(const artist of albums[i].artists){artists.push([artist]);} //need an array otherwise row.map is not a function
     }
+    
     const localTime = currentDate();
     batchInsert("artists_descs", "name", artists, true);
     batchInsert("albums", "id, title, release_date, cover, description, added_at", 
@@ -35,6 +36,7 @@ const batchInsert = (table, columns, params, ignore = false) => {
 
     //insert into albums_to_genres
     albums[0].genre?.forEach((genre) => {
+        if(!genre) return;
         const queryGenre = "INSERT OR IGNORE INTO genres (name) VALUES (?)";
         db.prepare(queryGenre).run(genre);
         const queryA2G = "INSERT OR IGNORE INTO albums_to_genres (album, genre) VALUES ((SELECT id from albums WHERE id = ?) , (SELECT id from genres WHERE name = ?))";
@@ -44,11 +46,11 @@ const batchInsert = (table, columns, params, ignore = false) => {
     const insertA2A = db.prepare(queryA2A);
 
     for(let i = 0; i < albums.length; i++){
-        albums[i].artist?.forEach((artist) => {
+        albums[i].artists?.forEach((artist) => {
             insertA2A.run(artist, albums[i].uuid);
         })
     }
-    console.log("Added album \x1b[1m\x1b[38;5;222m", albums[0].name, "\x1b[0m.");
+    console.log("Added album \x1b[1m\x1b[38;5;222m", albums[0].name, "\x1b[0m.", albums[0].uuid);
     return
 }
 
@@ -259,7 +261,7 @@ const getAlbumTracksPath = (id) => {
         JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE t.id = ?
     `;
-    return {type : 'track', ... db.prepare(query).get(id)};
+    return {type : 'track', ...db.prepare(query).get(id)};
 }
 
  const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {
@@ -889,11 +891,27 @@ const addUserKnowRadio = (email, radioData) => {
 
     const userId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
 
-    const queryRadio = `INSERT INTO radios (id, name, url, coverUrl) VALUES (?,?,?,?);`
-    db.prepare(queryRadio).run([radioData.uuid, radioData.name, radioData.url, radioData.favicon]);
-
+    // Registers to database only if not exisiting
+    if(db.prepare("SELECT id FROM radios WHERE id = ?").get(radioData.uuid) == undefined){
+        const queryRadio = `INSERT INTO radios (id, name, url, coverUrl) VALUES (?,?,?,?);`
+        db.prepare(queryRadio).run([radioData.uuid, radioData.name, radioData.url, radioData.favicon]);
+    }
     const queryUserBind = `INSERT INTO radios_to_users (radio, user) VALUES (?,?);`
     db.prepare(queryUserBind).run([radioData.uuid, userId]);
+}
+
+const toogleUserLikesRadio = (email, radioData) => {
+    const userId = db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
+    const added = db.prepare("SELECT id FROM radios_to_users WHERE radio = ?").get(radioData.uuid) != undefined;
+    if (added) {
+        db.prepare("DELETE FROM radios_to_users WHERE user = ? AND radio = ?").run([userId, radioData.uuid]);
+        console.log("Removed radio", radioData.name, "for user n°", userId);
+    } else {
+        addUserKnowRadio(email, radioData);
+    }
+
+    return !added;
+
 }
 
 const getUserId = (email) => {
@@ -901,6 +919,7 @@ const getUserId = (email) => {
 }
 
 module.exports = {
+    toogleUserLikesRadio,
     checkUserExistsEmailName,
     getUserId,
     getRadioInfos,

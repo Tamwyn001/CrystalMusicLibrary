@@ -1,6 +1,6 @@
 import './Header.css'
 import UserDropdown from './UserDropdown.jsx'
-import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight, IconFrame, IconBoxAlignBottomFilled, IconContrast2, IconContrast, IconBrightness } from '@tabler/icons-react'
+import { IconMusicPlus, IconPlayerPlay, IconPlayerPause, IconListDetails, IconSearch, IconVolume, IconVolume3, IconVolume2, IconPrismLight, IconFrame, IconBoxAlignBottomFilled, IconContrast2, IconContrast, IconBrightness, IconStar, IconStarFilled, IconMaximize } from '@tabler/icons-react'
 import SongProgress from './SongProgress'
 import { useEffect, useRef, useState } from 'react'
 import AddMusic from './AddMusic.jsx'
@@ -15,6 +15,7 @@ import RadialProgressBar from './RadialProgressBar.jsx'
 import {useEventContext} from '../GlobalEventProvider.jsx'
 import SmallFFTVisualizer from '../pages/SmallFFTVisualizer.jsx'
 import ColorThemeButton from './ColorThemeButton.jsx'
+import SvgHoverToggle from './SvgHoverToggle.jsx'
 
 
 
@@ -25,7 +26,8 @@ const Header = () => {
     const [queueShown, setQueueShown] = useState(false);
     const [volumeShown, setVolumeShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
-    const {currentTrackData, trackCoverUrl, volume, toggleFullScreenView} = useAudioPlayer();
+    const {currentTrackData, trackCoverUrl, volume, toggleFullScreenView,
+        toggleCurrentRadioToFavorites } = useAudioPlayer();
     const { openSearchBar } = useGlobalActionBar();
     const [isAddMusicMinimized, setIsAddMusicMinimized] = useState(false); 
     const [uploadProgress, setUploadProgress] = useState(null) //{done : Numver, total: Number}
@@ -110,7 +112,7 @@ const Header = () => {
             <CML_logo col1={logoColors.col1} col2={logoColors.col2}/>
             <h1>CML</h1>    
         </div>
-        <AudioControls context={{mobile : false}}/>
+        <AudioControls context={"desktop"}/>
         <div className="musicPlayer">
             <div className='playPauseContainer'>
                 {(currentTrackData?.type == "radio") ? 
@@ -123,7 +125,7 @@ const Header = () => {
                   <img src={trackCoverUrl} className="trackImage" />}
                
                 <div className="playPauseButtons" onClick={toggleFullScreenView}>
-                    <IconBoxAlignBottomFilled style={{padding: "0px"}}/>
+                    <IconMaximize style={{padding: "0px"}}/>
                 </div>
             </div>
             {
@@ -137,10 +139,13 @@ const Header = () => {
                             {currentTrackData.artist}</span>
                         <SongProgress />
                     </div>
-                    <SmallFFTVisualizer/>
+                    
+                    {currentTrackData?.type === "radio" ? 
+                    <SvgHoverToggle id="add-radio-fav" iconHovered={IconStarFilled} iconDefault={IconStar} onClick={toggleCurrentRadioToFavorites}/>
+                        : <SmallFFTVisualizer/>}
                     <div className='trackinfo-mobile'>
                         <span id="songTitle">{currentTrackData.title}</span>
-                        <AudioControls context={{mobile : true}}/>
+                        <AudioControls context={"mobile"}/>
                     </div>
                 </div>
 
@@ -156,7 +161,9 @@ const Header = () => {
             { volumeShown && <VolumeBar hideComponent={() => setVolumeShown(false)}/>}
             <ColorThemeButton/>
         </div>
+        
         <div className="headerRight">
+        <ColorThemeButton className='desktop-ghost'/>
             {! location && (
                 <div className="serach-button-div" onClick={openSearchBar}>
                 <div className='keyboard-key'>

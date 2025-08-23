@@ -1,18 +1,18 @@
 #fft-canvas{
     display: block;
     position: fixed;
-    bottom: 83px;
+    bottom: 0px;
     width: 100%;
     height: 25%;
     pointer-events: none;
 }
-
+/* 
 @media screen and (min-width: 714px) {
     #fft-canvas{
         bottom: 0px;
     }
 
-}
+} */
 
 #fft-canvas-small{
     position: absolute;

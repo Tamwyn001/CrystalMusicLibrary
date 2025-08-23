@@ -16,8 +16,6 @@ const verify = require("./verify.js");
 const { parseFile } = require("music-metadata");
 
 const router = express.Router();
-// @ts-ignore
-const isPkg = typeof process.pkg !== 'undefined';
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
 const upload = getMulterInstance(uploadPath);
@@ -31,9 +29,9 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
         return;
     }
     // Setted from the server.js
-
+    const meta = JSON.parse(req.body.trackMeta);
     const musicFileProcess = new Promise(async (resolve, reject) => {
-        const meta = JSON.parse(req.body.trackMeta);
+        
         // @ts-ignore
         let file = req.files.music[0];
         file.uuid = meta.id;
@@ -59,7 +57,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
         }
     });
     musicFileProcess.then((trackName) => {
-        console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m");
+        console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m at", meta.albumUuid);
         router.jobManager.registerNewJob("JOB_FFT", {tracks : [req.files.music[0].path]}, true);
     });
     res.json({ message: "Files uploaded successfully" });

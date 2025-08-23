@@ -1,12 +1,11 @@
-import { createContext, forwardRef, memo, useCallback, useContext, useEffect, useMemo, useRef, useState } from 'react';
+import {useEffect, useRef } from 'react';
 import { useAudioPlayer } from '../GlobalAudioProvider.jsx';
 import './MusicQueue.css';
 import MusicQueueEntry from './MusicQueueEntry.jsx';
 import { IconTrash } from '@tabler/icons-react';
-import { areEqual, FixedSizeList as List } from 'react-window';
+import { FixedSizeList as List } from 'react-window';
 import { useEventContext } from '../GlobalEventProvider.jsx';
-import apiBase from '../../APIbase.js';
-import CML_logo from './CML_logo.jsx';
+
 
 
 const itemHeight = 50; // Height of each item in pixels
@@ -25,10 +24,11 @@ const MusicQueue = ({hideComponent}) => {
                 if(e.target.closest('svg')?.id === 'playlist-button' ){return;}
                 hideComponent();
             }}
-        subscribe("action-bar-open", () => {hideComponent()});
+        const unsubscribeActionBar = subscribe("action-bar-open", () => {hideComponent()});
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
+            unsubscribeActionBar();
             document.removeEventListener("mousedown", handleClickedOutside);
             document.removeEventListener("touchstart", handleClickedOutside);
         }

@@ -14,10 +14,11 @@ const VolumeBar = ({ onClosed, hideComponent  }) => {
                 if(e.target.closest('svg')?.id === 'volume-button' ){return;}
                 hideComponent();
             }}
-        subscribe("action-bar-open", () => {hideComponent()});
+        const unsubscribeActionBar = subscribe("action-bar-open", () => {hideComponent()});
         document.addEventListener("mousedown", handleClickedOutside);
         document.addEventListener("touchstart", handleClickedOutside);
         return () => {
+            unsubscribeActionBar();
             document.removeEventListener("mousedown", handleClickedOutside);
             document.removeEventListener("touchstart", handleClickedOutside);
         }

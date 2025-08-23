@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CML_logo from '../CML_logo';
 import './AlbumWrapping.css'
 import { IconMountain, IconFolderPlus, IconDirections } from '@tabler/icons-react';
@@ -8,8 +8,9 @@ import { FixedSizeList as List } from 'react-window';
 
 
 const AlbumWrapping = ({setEditUid, albumClass}) => {
-    const [showTrackRemap, setShowTrackRemap] = useState({visible: false});
+    const [showTrackRemap, setShowTrackRemap] = useState({visible: false, track : null});
     const [coverURL, setCoverURL] = useState(null);
+    const formRef = useRef(null);
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -19,13 +20,13 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
         }
     }, [albumClass]);
     const handleApply = () => {
-        const form = document.getElementById("editAlbumInfos");
+        const form = formRef.current;
         albumClass.name = form.albumName.value;
-        albumClass.artist = form.artistName.value.split(",").map((g) => g.trim());
+        albumClass.artist = form.artistName.value.split(",").map(g => g.trim());
         albumClass.year = form.releaseDate.value;
-        albumClass.genre = form.genre.value.split(",").map((g) => g.trim()).map(g => g.charAt(0).toUpperCase() + g.slice(1));
+        const genres = form.genre.value.split(",").map((g) => g.trim()).map(g => g.charAt(0).toUpperCase() + g.slice(1));
+        albumClass.genre = genres.filter(g => g != "");
         albumClass.description = form.description.value;
-        console.log( albumClass.genre);
         //switch to the album overview
         setEditUid(null);
     }
@@ -37,7 +38,7 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
     }
 
     const openTrackRemap = (track) => {
-        setShowTrackRemap({visible: !showTrackRemap.visible, ...track});
+        setShowTrackRemap({visible: !showTrackRemap.visible, track});
     }
     return(
         <div className="albumWrapping">
@@ -50,9 +51,9 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
                     </label>
                     <input type="file" id="coverInput" style={{display: "none"}} accept="image/*" onChange={selectNewImage} />
                 </div>
-                <button className="roundButton" onClick={() => handleApply()}>Apply</button>
+                <button className="roundButton go-back" onClick={() => handleApply()}>Apply</button>
             </div>
-            <form className="albumDetails" id='editAlbumInfos' >
+            <form className="albumDetails" id='editAlbumInfos' ref={formRef} >
                 <label htmlFor="albumName">Album name</label>
                 <input type="text" id="albumName" placeholder="Enter album name" defaultValue={albumClass.name} />
                 <label htmlFor="artistName">Artists name</label>
@@ -86,14 +87,16 @@ const AlbumWrapping = ({setEditUid, albumClass}) => {
                     >
                         {({ index, style }) => (
                             <div key={index} style={style} className="album-wrapping-track">
-                             <span>{albumClass.tracks[index].name}</span>
+                             <span>{albumClass.tracks[index].title}</span>
                              <IconDirections className="trackIcon" onClick={() => {openTrackRemap(albumClass.tracks[index])}}/>
                          </div>
                         )}
                     </List>
                 </div>
             </form>
-            {showTrackRemap.visible && < TrackRemapAlbumAddMusic onClose={() => {setShowTrackRemap({visible: false})}} track={{id: showTrackRemap.id, name: showTrackRemap.name}} />}
+            {showTrackRemap.visible && 
+                <TrackRemapAlbumAddMusic onClose={() => {setShowTrackRemap({visible: false})}}
+                 track={showTrackRemap.track} />}
 
         </div>
     )

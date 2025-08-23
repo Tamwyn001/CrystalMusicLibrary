@@ -18,6 +18,7 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [fileOverwrite, setFileOverwrite] = useState(null);
     const [ remapedSomeTrack, setRemapedSomeTracks ] = useState(false)
     const {deleteAlbum } = useAudioPlayer();
+    const {notifTypes, addNotification} = useNotifications();
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -75,7 +76,15 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
         }
         setShowTrackRemap({visible: false})
     }
+    const deleteForMe = async() => {
+        addNotification("Comming soon :)", notifTypes.INFO);
+        return;
+        deleteAlbum(true, {name: albumClass.name, id: albumClass.id});
+    }
 
+    const deleteForAll = async() => {
+        deleteAlbum(false, {name: albumClass.name, id: albumClass.id});
+    }
     
     return(
         <div className="page-overlay-blur">
@@ -90,12 +99,10 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
                         <input type="file" id="coverInput" style={{display: "none"}} accept="image/*" onChange={selectNewImage} />
                     </div>
                     <button className="roundButton" onClick={() => handleApply()}>Apply</button>
-                    <ButtonWithCallback  onClick={async() => {
-                        deleteAlbum(true, {name: albumClass.name, id: albumClass.id});}}
+                    <ButtonWithCallback onClick={deleteForMe}
                          text={"Delete for me"} icon={<IconTrash/>}
                          style={{marginTop: "auto"}}/>
-                    <ButtonWithCallback  onClick={async() => {
-                        deleteAlbum(false, {name: albumClass.name, id: albumClass.id});}}
+                    <ButtonWithCallback  onClick={deleteForAll}
                          text={"Remove from library"} icon={<IconTrash/>}/>
 
                 </div>

@@ -62,7 +62,7 @@ const StatShort = () => {
             <div className="stat-short-category">
                 <p>Library size: {serverStats}</p>
                 <p>Free {serverUsage?.free} of {serverUsage?.total}</p>
-                <ProgressBar percent={serverUsage?.perent} total={serverUsage?.total}
+                <ProgressBar percent={serverUsage?.perent ||0} total={serverUsage?.total}
                 style={{height : '10px'}} fillColor={'var(--chill-purple)'} initialising={!(serverStats)} />
             </div>
             <div style={{display : 'flex', alignItems : 'baseline', gap : '5px'}}>
