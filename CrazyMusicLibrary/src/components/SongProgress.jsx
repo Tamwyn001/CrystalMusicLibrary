@@ -10,14 +10,15 @@ const SongProgress = ({}) => {
         return null; // or some fallback UI
     }
     return(
-        <div className="songProgress">
+    <div className="songProgress">
         <div>
-            <span>{parseAudioDuration(currentTime).readable}</span>
+            <span id="time-elapsed">{parseAudioDuration(currentTime).readable}</span>
             <ProgressBar percent={currentTime/ currentTrackData.rawDuration *100} 
             showPercent={false} fillColor = "var(--violet-web-color)" style={{height : '10px'}}
             onClickPercentage={jumpToPercent}/>
-            <span>{currentTrackData.duration.readable}</span></div>
+            <span id="time-remaining">{currentTrackData.duration.readable}</span>
         </div>
+    </div>
     )
 };
 

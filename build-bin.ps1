@@ -4,7 +4,7 @@
 $root = "C:\Users\Tamwyn\Documents\Projets Perso\CrystalMusicLibrary"
 $pkg_root = Join-Path $root "pkg-dist"
 $rootWSL = "/mnt/c/Users/Tamwyn/Documents/Projets Perso/CrystalMusicLibrary"
-$appVersion = "2.0.0"
+$appVersion = "3.0.0"
 
 
 # Create target directories

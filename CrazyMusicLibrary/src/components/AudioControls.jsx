@@ -3,14 +3,28 @@ import SvgHoverToggle from "./SvgHoverToggle"
 import { useAudioPlayer } from "../GlobalAudioProvider";
 
 const AudioControls = ({context}) => {
-    const { isPlaying, toggleTrackPaused,playNextSong,playPreviousSong,jumpTrackSeconds } = useAudioPlayer();
+    const { isPlaying, toggleTrackPaused,playNextSong,playPreviousSong } = useAudioPlayer();
+    const handleToggleTrackPaused = (e) =>{
+        e.stopPropagation();
+        toggleTrackPaused();
+    }
+    const handlePlayNextSong = (e) =>{
+        e.stopPropagation();
+        playNextSong();
+    }
+    const handlePreviousNextSong = (e) =>{
+        e.stopPropagation();
+        playPreviousSong();
+    }
     return(
-        <div className="audio-controls" context={context}>
-            {(!context.mobile) ? <SvgHoverToggle iconHovered={IconPlayerTrackPrevFilled} iconDefault={IconPlayerTrackPrev} onClick={playPreviousSong}/> : null}
+        <div className="audio-controls" data-mobile-context={context.mobile}>
+            {(!context.mobile || context.maximize) ? <SvgHoverToggle iconHovered={IconPlayerTrackPrevFilled} 
+                iconDefault={IconPlayerTrackPrev} onClick={handlePreviousNextSong}/> : null}
             <SvgHoverToggle iconHovered={ (isPlaying) ? IconPlayerPauseFilled : IconPlayerPlayFilled} 
                             iconDefault={(isPlaying) ? IconPlayerPause : IconPlayerPlay} 
-                            onClick={toggleTrackPaused}/>
-            <SvgHoverToggle iconHovered={IconPlayerTrackNextFilled} iconDefault={IconPlayerTrackNext} onClick={playNextSong}/>
+                            onClick={handleToggleTrackPaused}/>
+            <SvgHoverToggle iconHovered={IconPlayerTrackNextFilled} iconDefault={IconPlayerTrackNext}
+             onClick={handlePlayNextSong}/>
         </div>
     )
 }

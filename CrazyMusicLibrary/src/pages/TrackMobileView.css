@@ -1,0 +1,243 @@
+#track-mobile-down{
+    position: absolute;
+    /* padding 40 + (width = 30)/2 = 55px*/
+    left: calc(50% - 55px);
+    top: 5px;
+    padding: 20px 40px;
+}
+#track-mobile-down > div{
+    width: 30px;
+    height: 5px;
+    border-radius: 5px;
+    background-color: var(--cards-background);
+}
+@keyframes openMobileView {
+    0%{
+        opacity: 0;
+        translate: 0px 100px;
+    }
+    70%{
+        opacity: 1;
+    }
+    100%{
+       
+        translate: 0px 0px;
+    }
+}
+
+#track-mobile-view{
+    animation: openMobileView 0.3s ease-out;
+    position: fixed;
+    top: -10px;
+    left:0;
+    height: calc(100% + 20px);
+    border-radius: 10px 10px 0px 0px;
+    width: 100%;
+    z-index: 100;
+    opacity: 1;
+    overflow: hidden;
+    background: var(--header-gradient-simple-3);
+    touch-action: none;
+    -webkit-overflow-scrolling: auto; /* disables iOS elastic scroll bounce */
+}
+#track-mobile-view .grad{
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    top: 0;
+    z-index: -1;
+    transition: background 0.5s linear;
+    --strength-1 : 0%;
+    --strength-2 : 0%;
+    --strength-3 : 0%;
+    --strength-4 : 0%;
+    --strength-5 : 0%;
+}
+#track-mobile-view #grad1{
+    background: linear-gradient(to bottom, 
+        color-mix(in srgb, blue var(--strength-1), var(--cards-background)),
+        color-mix(in srgb, red var(--strength-2), var(--cards-background)));
+    mask: linear-gradient(to right, #fff, transparent);
+}
+#track-mobile-view #grad2{
+    background: linear-gradient(to bottom, 
+        color-mix(in srgb, green var(--strength-1), var(--cards-background)),
+        color-mix(in srgb, gold var(--strength-2), var(--cards-background)));
+    mask: linear-gradient(to left, #fff, transparent);
+}
+#track-mobile-view #grad3{
+    background: color-mix(in srgb, purple var(--strength-1), var(--cards-background));
+    mask: radial-gradient(circle at center, #fff, transparent 60%)
+}
+#track-mobile-view[data-fade-out="true"]{
+    opacity: 0;
+}
+#track-mobile-view[data-shift-back="true"]{
+    transition: all 0.3s ease-out;
+}
+
+#track-mobile-view-content{
+    margin-top: 40px;
+    height: calc(100% - 90px);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: flex-start;
+    width: calc(100% - 20px);
+    padding: 10px;   
+}
+
+#track-mobile-view .trackImage{
+    height: auto;
+    margin: auto;
+    transition: all 0.5s cubic-bezier(0.075, 0.82, 0.165, 1);
+}
+#track-mobile-view #songTitle{
+    margin: 0px auto;
+    font-weight: bold;
+}
+#track-mobile-view #songTitle[data-new="true"][data-from-minimal="true"]{
+    animation: newSong 0.4s ease-out;
+}
+/* Only animate the visible title */
+#track-mobile-view-content[data-minimize="false"] #songTitle[data-new="true"][data-from-minimal="true"]
+{
+    animation:none !important;
+}
+@keyframes newSong {
+    from{
+        transform: translateY(10px);
+        opacity: 0.7;
+    }
+    to{
+        transform: translateY(0px);
+        opacity: 1;
+    }
+}
+
+#track-mobile-view .songProgress{
+    margin: 0 0 30px 0;
+    width: 100%;
+    position: relative;
+}
+#track-mobile-view .songProgress #time-elapsed{
+    position: absolute;
+    top: 20px;
+}
+#track-mobile-view .songProgress #time-remaining{
+    position: absolute;
+    top: 20px;
+    right: 0;
+}
+#track-mobile-view .audio-controls svg{
+    height: 40px;
+    width : 40px
+}
+#track-mobile-view .audio-controls > div{
+    height: 60px;
+    width : 40px
+}
+#fixed-audio-state{
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    transition: gap 0.3s ease-out;
+    width: calc(100% - 30px);
+    align-items: center;
+}
+#floating-audio-state{
+    flex-grow: 1;
+    display: flex;
+    flex-direction: row;
+    height: calc(50%);
+    width: calc(100% - 40px);
+    transition: height 0.3s ease-out;
+}
+#floating-audio-state[data-minimize="true"]{
+    flex-grow: 0;
+    margin-bottom: 0px;
+    height: 70px;
+}
+.audio-controls{
+    margin-bottom: 10px; 
+    transition: margin 0.3s ease-out;
+}
+#track-mobile-view-content[data-minimize="true"] #fixed-audio-state{
+    gap:5px;
+}
+#fixed-audio-state #songTitle,#fixed-audio-state #songArtist{
+    opacity: 1;
+    height: initial;
+    transition: all 0.3s ease-out;
+}
+#track-mobile-view-content[data-minimize="true"] #fixed-audio-state #songTitle,
+#track-mobile-view-content[data-minimize="true"] #fixed-audio-state #songArtist{
+    opacity: 0;
+    height: 0;
+}
+
+#music-queue{
+    animation: openQueue 0.3s ease-out;
+    animation-delay: 0.3s;
+    animation-fill-mode: backwards;
+    animation-direction: reverse;
+}
+#track-mobile-view-content[data-minimize="true"] #music-queue{
+    animation: openQueue 0.3s ease-out;
+    animation-delay: 0.4s;
+    animation-fill-mode: forwards;
+    animation-direction: normal;
+    opacity: 0;
+}
+@keyframes openQueue{
+    0%{
+        opacity: 0;
+    }
+    100%{
+        opacity: 1;
+    }
+}
+
+#track-mobile-view-content[data-minimize="true"] .audio-controls{
+    margin-bottom: 0px;
+}
+#track-mobile-view .track-list-header{
+    margin: 0px auto 20px auto;
+}
+
+#music-queue{
+    width: calc(100% - 40px) !important;
+    margin: 20px auto !important;
+    flex-grow: 1;
+}
+.mobile-view-track-artist{
+    display: flex;
+    flex-direction: column;
+    align-items: var(--item-align);
+    height: fit-content;
+}
+#floating-audio-state[data-minimize="false"] .mobile-view-track-artist{
+    display: none;
+}
+#floating-audio-state[data-minimize="true"] .mobile-view-track-artist{
+    display: flex;
+}
+
+#floating-audio-state[data-minimize="false"] .trackImage[data-playing="false"]{
+    max-width: calc(100% - 60px);
+    filter: brightness(0.9);
+}
+#floating-audio-state[data-minimize="false"] .trackImage[data-playing="true"]{
+    max-width: calc(100% - 20px);
+    filter: brightness(1);
+}
+#floating-audio-state[data-minimize="true"] .trackImage{
+    height: fit-content;
+    aspect-ratio: 1;
+    width: 20%;
+    margin: 0px;
+    margin-right: 10px;
+}
+#no-items-in-queue{
+    flex-grow: 1;
+}

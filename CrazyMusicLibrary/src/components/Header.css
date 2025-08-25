@@ -115,7 +115,7 @@
     width: 35px;
     height: auto;
 }
-.audio-controls[context="desktop"]{
+.audio-controls[data-mobile-context="false"]{
     display: none;
 }
 
@@ -167,11 +167,11 @@
         padding: 4px 10px 4px 7px;
     }
 
-    .audio-controls[context="desktop"]{
+    .audio-controls[data-mobile-context="false"]{
         display: flex;
         margin: 0px 20px;
     }
-    .audio-controls[context="mobile"]{
+    .audio-controls[data-mobile-context="true"]{
         display: none;
     }
 

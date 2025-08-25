@@ -12,6 +12,7 @@ import EditArtistInfos from "./components/EditArtistInfos.jsx";
 import { useEventContext } from "./GlobalEventProvider.jsx";
 import _ from "lodash";
 import ColorThief from "../third_party_modules/color-thief/dist/color-thief.mjs"
+import TrackMobileView from "./pages/TrackMobileView.jsx";
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -127,6 +128,10 @@ export const AudioPlayerProvider = ({ children }) => {
     const paletteRef = useRef({track : "", pairs : []});
     const fullScreenImage = useRef(null);
     const history = useRoutingHistory();
+
+    const [trackMobileView, setTrackMobileView] = useState(false);
+    const mobileMusicPlayRef = useRef(null);
+    const currentDisplayedPage = useRef(null);
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -574,9 +579,9 @@ export const AudioPlayerProvider = ({ children }) => {
     
         const CHUNK_SIZE = fftConfigRef.current.fftSize * 1; // One value per bin
         const chunkIndex = getCurrentFFTChunkIndex();
-        
-        if (chunkIndex === null) return null;
     
+        if (chunkIndex === null) return null;
+        // console.log("From", chunkIndex);
         const TOTAL_CHUNKS = Math.floor(SECONDS_TO_BUFFER / fftConfigRef.current.interval);
         const totalBufferSize = TOTAL_CHUNKS * CHUNK_SIZE;
     
@@ -736,7 +741,8 @@ export const AudioPlayerProvider = ({ children }) => {
         })
         .then(res => res.json())
         .then(data => {
-            setPlayQueue((prevQueue) => [...prevQueue, ...data]);        
+            setPlayQueue((prevQueue) => [...prevQueue, ...data]);  
+            addNotification("Queued!", notifTypes.QUEUE);      
         });
     };
 
@@ -881,6 +887,7 @@ export const AudioPlayerProvider = ({ children }) => {
             setPlayQueue(_.shuffle(data));
             setShouldInitPlay(true);
             setQueuePointer(0);
+            addNotification("Playing the library in shuffle", notifTypes.INFO);
         });
     }
 
@@ -1100,25 +1107,10 @@ export const AudioPlayerProvider = ({ children }) => {
                 addNotification(`Avaliable soon :)`, notifTypes.INFO);
                 break;
             case trackActionTypes.ADD_TO_FAVORITES:
-                fetch(`${apiBase}/read-write/toggleFavorite/${track.id}/${true}`,{
-                    method : 'GET',
-                    credentials: "include"
-                  })
-                  .then(res => res.json())
-                  .then((data) =>{
-                    toggleTrackFavoriteWithActionBar.current(data);
-                  });
-              
+                toggleTrackFavorite(track.id, true, toggleTrackFavoriteWithActionBar.current);
                 break;
             case trackActionTypes.REMOVE_FROM_FAVORITES:
-                fetch(`${apiBase}/read-write/toggleFavorite/${track.id}/${false}`,{
-                    method : 'GET',
-                    credentials: "include"
-                  })
-                  .then(res => res.json())
-                  .then((data) => {
-                    toggleTrackFavoriteWithActionBar.current(data);
-                  });
+                toggleTrackFavorite(track.id, true, toggleTrackFavoriteWithActionBar.current);
                 break;
         }
     }
@@ -1282,10 +1274,43 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         paletteRef.current = {track: playingTrack, pairs: pairs.sort((a,b) => a.contrast - b.contrast)}; 
       };
+    
+      const openTrackMobileView = () => {
+        if(window.screen.width < 714){
+            // addNotification("Open mobile view");
+            setTrackMobileView(true);
+        }
+      }
+      useEffect(()=>{
+        if(mobileMusicPlayRef.current && currentDisplayedPage.current){
+            mobileMusicPlayRef.current.style.display= trackMobileView ? "none" : "flex";
+            currentDisplayedPage.current.style.display= trackMobileView ? "none" : "flex";
+        }
+      },[trackMobileView])
 
+    const toggleTrackFavorite = async (trackId, newFav, callBackSetState) => {        
+        fetch(`${apiBase}/read-write/toggleFavorite/${trackId}/${newFav}`,{
+          method : 'GET',
+          credentials: "include"
+        })
+        .then(res => res.json())
+        .then((newFavBool) =>{
+            callBackSetState(newFavBool);
+            console.log(currentTrackData.id , trackId)
+            if(currentTrackData.id === trackId){
+                currentTrackData.isFav = newFavBool;
+            }
+           
+        });
+      };
     return (
         <AudioPlayerContext.Provider 
         value={{
+            currentDisplayedPage,
+            mobileMusicPlayRef,
+            toggleTrackFavorite,
+            setTrackMobileView,
+            openTrackMobileView,
             recomputeColors,
             songPalette : paletteRef,
             skipAudioSeconds,
@@ -1358,6 +1383,7 @@ export const AudioPlayerProvider = ({ children }) => {
             {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
             {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}
             {(tagWindowOpen) && <EditTagsWindow/>}
+            {trackMobileView && <TrackMobileView />}
         </AudioPlayerContext.Provider>
     );
 }

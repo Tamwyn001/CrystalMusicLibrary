@@ -14,6 +14,7 @@
     border-radius: 10px;
     width: 100%;
     display: flex;
+    height: auto;
 }
 .lossless{
     display: flex;
@@ -86,15 +87,24 @@
     justify-content: flex-start;
     background-color: var(--track-entry);
     padding: 10px;
-    width: calc(100% - 65px);
+    width: calc(100% - 60px);
     gap: 20px;
     border: solid 2px var(--solid-border-hover);
     position: relative;
     align-items: center;
-    margin-left: 35px;
+    margin-left: 30px;
 }
 .track-view:hover, .track-view[action-bar="open"]{
-    background-color:   var(--track-entry-hover);
+    /* Because on mobile there is no proper hover,
+    the hover state will remain, making the div stands out
+    to much. We dim the color.
+     */
+    background-color:   color-mix(in srgb, var(--track-entry-hover)20%, var(--track-entry));
+}
+@media screen and (min-width: 714px) {  
+    .track-view:hover, .track-view[action-bar="open"]{
+        background-color:   var(--track-entry-hover);
+    }
 }
 
 .track-view p{
@@ -117,8 +127,18 @@
 }
 
 .track-view:hover .track-number{
-    opacity: 0;
+        /* On mobile we still show it. The goal is to show the <3 button,
+        which is not avaliable in mobile.*/
+    /* opacity: 0; */
+
     pointer-events: none;
+}
+@media screen and (min-width: 714px) {  
+    .track-view:hover .track-number{
+        /* On mobile we still show it. The goal is to show the <3 button,
+        which is not avaliable in mobile.*/
+    opacity: 0;
+}
 }
 
 .track-view:hover .track-favorite{
@@ -131,7 +151,7 @@
 }
 .track-view .track-actions-dots{
     display: inline-block;
-
+    flex-shrink: 0;
 }
 .track-length{
     display: none;
@@ -255,7 +275,8 @@ to {
 .album-content .cover-image{
     padding: 2px;
     width: auto;
-    height: 306px;
+    height: auto;
+    max-height: 306px;
     max-width: calc(100% - 50px);
     margin: auto;
     border-radius: 20px;

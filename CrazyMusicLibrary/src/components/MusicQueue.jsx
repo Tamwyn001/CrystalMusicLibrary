@@ -9,7 +9,7 @@ import { useEventContext } from '../GlobalEventProvider.jsx';
 
 
 const itemHeight = 50; // Height of each item in pixels
-const height = 600; // Height of the list in pixels
+const height = "100%"; // Height of the list in pixels
 // Memoized row that only renders once per index
 
 const MusicQueue = ({hideComponent}) => {
@@ -33,9 +33,16 @@ const MusicQueue = ({hideComponent}) => {
             document.removeEventListener("touchstart", handleClickedOutside);
         }
     },[]);
-
+    /**
+     * 
+     * @param {React.TouchEvent} e 
+     */
+    const stopMovePropagation = (e) =>{
+        e.stopPropagation();
+        e.preventDefault();
+    }
     return (
-        <div className="music-queue" ref={wrapperRef}>
+        <div className="music-queue" ref={wrapperRef} onTouchMove={stopMovePropagation}>
             <div className="queue-header">
                 <h2>Music Queue</h2> 
                 {playQueue.length > 0 && <IconTrash className="buttonRound" id="queue-trash" onClick={deleteQueue} />}
@@ -43,7 +50,7 @@ const MusicQueue = ({hideComponent}) => {
            
             {playQueue.length > 0 ?  
                 <List
-                height={height}
+                height={'auto'}
                 itemCount={playQueue.length}
                 itemSize={itemHeight}
                 width={'100%'}

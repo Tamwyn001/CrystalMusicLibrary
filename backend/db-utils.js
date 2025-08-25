@@ -261,7 +261,10 @@ const getAlbumTracksPath = (id) => {
         JOIN artists_descs AS ad ON A2A.artist = ad.id
         WHERE t.id = ?
     `;
-    return {type : 'track', ...db.prepare(query).get(id)};
+    const isFav = db.prepare(`
+        SELECT id from tracks t 
+        JOIN favorites f on t.id = f.entry_id WHERE t.id = ?`).get(id);
+    return {type : 'track', ...db.prepare(query).get(id), isFav : isFav != undefined, id:id};
 }
 
  const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {

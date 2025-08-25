@@ -16,6 +16,7 @@ import {useEventContext} from '../GlobalEventProvider.jsx'
 import SmallFFTVisualizer from '../pages/SmallFFTVisualizer.jsx'
 import ColorThemeButton from './ColorThemeButton.jsx'
 import SvgHoverToggle from './SvgHoverToggle.jsx'
+import { useNotifications } from '../GlobalNotificationsProvider.jsx'
 
 
 
@@ -27,14 +28,13 @@ const Header = () => {
     const [volumeShown, setVolumeShown] = useState(false);
     const [logoColors, setLogoColors] = useState({col1: '#000', col2: '#000'})
     const {currentTrackData, trackCoverUrl, volume, toggleFullScreenView,
-        toggleCurrentRadioToFavorites } = useAudioPlayer();
+        toggleCurrentRadioToFavorites, openTrackMobileView,mobileMusicPlayRef } = useAudioPlayer();
     const { openSearchBar } = useGlobalActionBar();
     const [isAddMusicMinimized, setIsAddMusicMinimized] = useState(false); 
     const [uploadProgress, setUploadProgress] = useState(null) //{done : Numver, total: Number}
     const [uploadPercent, setUploadPercent] = useState(null) // Number
     const navigate = useNavigate();
     const { subscribe } = useEventContext();
-
     const colorThemeRef = useRef(null);
     const [location, setLocation] = useState(useLocation().pathname === "/admin-pannel" );
 
@@ -104,6 +104,11 @@ const Header = () => {
         console.log("toggle")
     }
 
+    const handleToggleFullScreenView = (e) =>{
+        e.stopPropagation()
+        toggleFullScreenView();
+
+    }
 
     return(
 
@@ -112,8 +117,8 @@ const Header = () => {
             <CML_logo col1={logoColors.col1} col2={logoColors.col2}/>
             <h1>CML</h1>    
         </div>
-        <AudioControls context={"desktop"}/>
-        <div className="musicPlayer">
+        <AudioControls context={{mobile : false}}/>
+        <div className="musicPlayer" ref={mobileMusicPlayRef} onClick={openTrackMobileView}>
             <div className='playPauseContainer'>
                 {(currentTrackData?.type == "radio") ? 
                 ((currentTrackData.coverUrl == "") ? 
@@ -124,7 +129,7 @@ const Header = () => {
                  <CML_logo  className="trackImage" />:
                   <img src={trackCoverUrl} className="trackImage" />}
                
-                <div className="playPauseButtons" onClick={toggleFullScreenView}>
+                <div className="playPauseButtons" onClick={handleToggleFullScreenView}>
                     <IconMaximize style={{padding: "0px"}}/>
                 </div>
             </div>
@@ -145,7 +150,7 @@ const Header = () => {
                         : <SmallFFTVisualizer/>}
                     <div className='trackinfo-mobile'>
                         <span id="songTitle">{currentTrackData.title}</span>
-                        <AudioControls context={"mobile"}/>
+                        <AudioControls context={{mobile : true}}/>
                     </div>
                 </div>
 
@@ -188,12 +193,12 @@ const Header = () => {
             <UserDropdown />
         </div>
         {newMusicActive && (<AddMusic 
-        uploadPercent={setUploadPercent} 
-        uploadFinished={onUploadFished} 
-        uploadProgress={setUploadProgress}
-        isMinimize={isAddMusicMinimized}
-        setMinimized={ setIsAddMusicMinimized}
-        closeOverlay={closeNewMusic} />) }
+            uploadPercent={setUploadPercent} 
+            uploadFinished={onUploadFished} 
+            uploadProgress={setUploadProgress}
+            isMinimize={isAddMusicMinimized}
+            setMinimized={ setIsAddMusicMinimized}
+            closeOverlay={closeNewMusic} />) }
 
       </header>    
     )

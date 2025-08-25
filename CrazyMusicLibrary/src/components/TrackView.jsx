@@ -7,7 +7,7 @@ import apiBase from "../../APIbase.js";
 
 const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCover = false }) => {
   const { title, track_number, rawDuration } = track;
-  const { playingTrack, openTrackActions} = useAudioPlayer();
+  const { playingTrack, openTrackActions, toggleTrackFavorite} = useAudioPlayer();
   const trackName = track.id;
   const [ trackCoverURL, setTrackCoverUrl ] = useState('null');
   const [trackFavorite, setTrackFavorite] = useState(false);
@@ -47,16 +47,7 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
 
   const toggleFavorite = (e) => {
     e.stopPropagation();
-    
-    fetch(`${apiBase}/read-write/toggleFavorite/${track.id}/${!trackFavorite}`,{
-      method : 'GET',
-      credentials: "include"
-    })
-    .then(res => res.json())
-    .then((data) =>{
-      setTrackFavorite(data);
-    });
-
+    toggleTrackFavorite(track.id, !trackFavorite, setTrackFavorite);
   };
 
 

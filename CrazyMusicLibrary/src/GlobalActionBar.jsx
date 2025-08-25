@@ -428,7 +428,6 @@ export const GlobalActionBar = ({children}) => {
                 navigate(`/genres/${item.id}`);
                 break;
             case commandCodes.PLAY_LIBRARY_RANDOM:
-                addNotification("Playing the library in shuffle", notifTypes.INFO);
                 playLibraryShuffle();
                 closeActionBar();
                 break;

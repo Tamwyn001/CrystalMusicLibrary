@@ -7,10 +7,12 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Loading from "../components/Loading.jsx";
 import apiBase from "../../APIbase.js";
+import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 
 const Layout = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
+    const {currentDisplayedPage} = useAudioPlayer();
     useEffect(() => {  
         const checkLogin = async () => {
             const resToken = await fetch(`${apiBase}/auth/verifyToken`, {method: 'POST', credentials: 'include'});
@@ -34,7 +36,8 @@ const Layout = () => {
     return (
         <div className="app-container">
             <Header />
-            <div className="content-container" page={pageWithSidebarPhone.includes(currentPath) ? currentPath: 'inside' }>
+            <div className="content-container" ref={currentDisplayedPage}
+                page={pageWithSidebarPhone.includes(currentPath) ? currentPath: 'inside' }>
                 <Sidebar />
                 <div className="content">
                     <Outlet /> {/* Route content will render here */}
