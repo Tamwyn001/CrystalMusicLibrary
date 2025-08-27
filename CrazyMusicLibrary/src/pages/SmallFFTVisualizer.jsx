@@ -83,7 +83,7 @@ const SmallFFTVisualizer = ({fps = 45}) => {
 
 	useEffect(() => {
 
-		const mq = window.matchMedia("(max-width: 714px)");
+		const mq = window.matchMedia("(max-width: 820px)");
 
 		const update = (e) => {
 		  notShown.current = e.matches; // hidden when true

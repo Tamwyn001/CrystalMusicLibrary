@@ -24,7 +24,7 @@
     border: 3px solid var(--solid-border-hover);
     
 }
-@media screen and (min-width : 714px){
+@media screen and (min-width : 820px){
     .header{
         min-width: 75%;
     }
@@ -144,7 +144,7 @@
 .serach-button-div .keyboard-key, .serach-button-div span{
     display: none;
 }
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     
     .trackinfo-desktop{
     width: 100%;
@@ -161,7 +161,7 @@
         display: flex;
         flex-direction: row;
         align-items: center;
-        height: 75%;
+        height: 80%;
         width: 40%;
         border-radius: 15px 20px 20px 15px;
         background: none;
@@ -224,7 +224,8 @@
 
 }
 .trackinfo-desktop #songTitle{
-        height: 20px;
+    height: 25px;
+    overflow: hidden;
 }
 #add-radio-fav{
     position: absolute;

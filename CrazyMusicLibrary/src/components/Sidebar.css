@@ -25,7 +25,7 @@
 #nav-recent{
     display: none;
 }
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     #nav-recent{
         display: flex;
     }

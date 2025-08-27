@@ -1,11 +1,14 @@
 import { IconFrame, IconHome, IconMaximize, IconRadio, IconSearch } from '@tabler/icons-react'
 import './MobileShortcuts.css'
-import { useNavigate } from 'react-router-dom'
+import { useLocation, useNavigate } from 'react-router-dom'
 import { memo } from 'react';
     const Shortcut = memo(({path,display, Icon}) => {
         const navigate = useNavigate();
-        return <div className='mobile-shortcut-entry'>
-            <Icon onClick={()=>{navigate(path)}}/>
+        const location = useLocation();
+        return <div className='mobile-shortcut-entry'
+            data-active={location.pathname === path}
+            onClick={()=>{navigate(path)}}>
+            <Icon />
             <span>{display}</span>
         </div>
     })

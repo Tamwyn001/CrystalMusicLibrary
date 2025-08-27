@@ -5,7 +5,7 @@
 :root{
   --mobile-padding : 150px;
   --mobile-shortcut-hight : 75px;
-
+  --mobile-screen-width : 820px;
   /* CSS HEX */
   --yinmn-blue: #235690ff;
   --chill-purple: #c6ccfc;
@@ -43,6 +43,7 @@
   --track-entry-hover : #cdebeec4;
   --genre-cards-background : #ffffff53;
   --tutorial-target : #53ff9e;
+  --mobile-entry-in-view :#8f4ecf;
 
   --header-gradient : linear-gradient(90deg, var(--header-1) 0%,
     var(--header-2) 50%,  var(--header-3) 100%);
@@ -103,6 +104,8 @@
   --svg-icon-back : #414242;
   --genre-cards-background : #4c5a7780;
   --tutorial-target : var(--green);
+  --mobile-entry-in-view :#5586fa;
+
   --header-gradient-simple-3 :linear-gradient(180deg, var(--header-1)
   -40%, var(--header-2) 140%);
 }
@@ -195,7 +198,7 @@
 .go-back{
   margin-left: 10px;
 }
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
   html, body {
     overflow: hidden; /* default: no scroll */
   }
@@ -239,6 +242,7 @@
   height: fit-content;
   right: 20px;
   transition: width 0.2s ease-out;
+  overflow-x: hidden;
 }
 .action-bar[data-search-mode="true"] .action-bar-results{
   width:calc(100% - 30px);
@@ -258,7 +262,7 @@
   align-items: center;
 }
 
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
   .action-bar-logo-container{
     padding: 5px;
     height: 40px;
@@ -299,7 +303,7 @@
   gap : 10px;
   border-radius: 12px;
   cursor: pointer;
-  padding: 0px 10px 0px 10px;
+  /* padding: 0px 10px 0px 10px; */
 }
 .from-global-bar{
   margin-bottom: 20px;

@@ -1072,6 +1072,9 @@ export const AudioPlayerProvider = ({ children }) => {
     const closeNewPlaylistWindow = () =>{
         setCreatingNewPlaylist(false);
     }
+    const closeEditingPlaylist = () =>{
+        setEditingAlbum(null);
+    }
 
     const openTrackActions = (position, track, looseFocusCallback, toggleFavoriteCallback) => {
         // console.log(track, "at", position);
@@ -1279,7 +1282,7 @@ export const AudioPlayerProvider = ({ children }) => {
       };
     
       const openTrackMobileView = () => {
-        if(window.screen.width < 714){
+        if(window.screen.width < 820){
             // addNotification("Open mobile view");
             setTrackMobileView(true);
         }
@@ -1378,7 +1381,7 @@ export const AudioPlayerProvider = ({ children }) => {
             {children}
             {(editingAlbum) ? ( 
                 editingAlbum.type === "album" ? <EditAlbumInfos applyCanges={applyContainerChanges} albumClass={editingAlbum}/>
-                : editingAlbum.type === "playlist" ? <CreatePlaylist editPlaylistClass={editingAlbum} applyCanges={applyContainerChanges}/> 
+                : editingAlbum.type === "playlist" ? <CreatePlaylist closeOverlay={closeEditingPlaylist} editPlaylistClass={editingAlbum} applyCanges={applyContainerChanges}/> 
                 : null) : null
             }
             {(editingArtist) && <EditArtistInfos applyChanges={applyArtistChanges} artist={editingArtist}/>}

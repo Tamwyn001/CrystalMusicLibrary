@@ -198,7 +198,7 @@ const TrackMobileView = () =>{
 
 	useEffect(() => {
 
-		const mq = window.matchMedia("(min-width: 714px)");
+		const mq = window.matchMedia("(min-width: 820px)");
 
 		const update = (e) => {
 		  shown.current = e.matches; // hidden when true

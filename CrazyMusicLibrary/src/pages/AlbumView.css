@@ -101,7 +101,7 @@
      */
     background-color:   color-mix(in srgb, var(--track-entry-hover)20%, var(--track-entry));
 }
-@media screen and (min-width: 714px) {  
+@media screen and (min-width: 820px) {  
     .track-view:hover, .track-view[action-bar="open"]{
         background-color:   var(--track-entry-hover);
     }
@@ -133,7 +133,7 @@
 
     pointer-events: none;
 }
-@media screen and (min-width: 714px) {  
+@media screen and (min-width: 820px) {  
     .track-view:hover .track-number{
         /* On mobile we still show it. The goal is to show the <3 button,
         which is not avaliable in mobile.*/
@@ -165,7 +165,7 @@
     position: absolute;
     
 }
-@media screen and (min-width: 714px) {  
+@media screen and (min-width: 820px) {  
     .track-view:hover .track-favorite, .track-view .track-actions-dots{
         display: none;
     } 
@@ -340,7 +340,7 @@ to {
     margin-bottom: 40px;
     margin-left: 10px;
 }
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     #new-playlist{
         margin-bottom: 40px;
         margin-left: 0px;

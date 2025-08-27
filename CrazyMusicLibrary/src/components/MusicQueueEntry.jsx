@@ -49,7 +49,7 @@ const MusicQueueEntry = memo(
             ) : (
               <CML_logo className="track-image-small" />
             )}
-            <p className="track-title">{trackInfo.title}</p>
+            <span className="track-title">{trackInfo.title}</span>
           </div>
         );
       }, (prev,next) => 

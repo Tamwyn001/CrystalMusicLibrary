@@ -144,6 +144,7 @@ export const GlobalActionBar = ({children}) => {
     const [actionBarCommand, setActionBarCommand] = useState(null);
     const [showingActionLogo, setShowingActionLogo] = useState(false);
     const [currentCommand, setCurrentCommand] = useState(null); //elem of actions
+    const [currentCommandPlaceholder, setCurrentCommandPlaceholder] = useState(""); //elem of actions
     const [proposedCommands, setProposedCommands] = useState([]); //elem of actions
     const [currentActionLogo, setCurrentActionLogo] = useState(null); //elem of actions
     const {playTrackNoQueue, playLibraryShuffle,
@@ -188,6 +189,11 @@ export const GlobalActionBar = ({children}) => {
             boundEvents.current = []; //clear the events
         }
     },[]);
+
+    useEffect(()=>{
+        if(!currentCommand) return
+        setCurrentCommandPlaceholder(currentCommand.description?.toString() || "");
+    },[currentCommand])
 
     /**
      * 
@@ -493,12 +499,14 @@ export const GlobalActionBar = ({children}) => {
                 
                 {children}
                 {(showActionBar) && <div  className="global-action-bar">
-                    <div className="action-bar" ref={wrapperRef} data-search-mode={actionBarCommand === commandCodes.SEARCH}>
+                    <div className="action-bar" ref={wrapperRef} 
+                        data-search-mode={actionBarCommand === commandCodes.SEARCH}>
                         <div className="action-bar-research">
                             
                             {(currentActionLogo)? currentActionLogo : null}
                         
-                            <input  type="text" id="actionbar-searchbar" className="searchbar" onChange={findMatchingCommands} placeholder={`${currentCommand.description}`} />
+                            <input type="text" id="actionbar-searchbar" className="searchbar" 
+                            onChange={findMatchingCommands} placeholder={currentCommandPlaceholder} />
 
                             <div className="action-bar-results">
                         <List

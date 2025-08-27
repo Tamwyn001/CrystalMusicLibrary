@@ -19,7 +19,7 @@ const TrackActions = ({trackY, track, isFav}) => {
     const wrapperRef = useRef(null);
     const [top, setTop] = useState(null);
     const location = useLocation();
-    const [ isMobile, setIsMobile ] = useState(() => window.innerWidth < 714);
+    const [ isMobile, setIsMobile ] = useState(() => window.innerWidth < 820);
 
     useEffect(() => {
         const handleClickedOutside = (e) =>{            

@@ -1,7 +1,7 @@
 #mobile-shortcut{
     display: none;
 }
-@media screen and (max-width: 714px) {
+@media screen and (max-width: 820px) {
     #mobile-shortcut{
         display: flex;
         flex-direction: row;
@@ -21,4 +21,10 @@
     display: flex;
     flex-direction: column;
     align-items: center;
+    border-radius: 10px;
+}
+
+.mobile-shortcut-entry[data-active="true"]{
+    color: var(--mobile-entry-in-view);
+   
 }

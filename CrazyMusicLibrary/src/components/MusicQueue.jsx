@@ -1,4 +1,4 @@
-import {useEffect, useRef } from 'react';
+import {useEffect, useRef, useState } from 'react';
 import { useAudioPlayer } from '../GlobalAudioProvider.jsx';
 import './MusicQueue.css';
 import MusicQueueEntry from './MusicQueueEntry.jsx';
@@ -17,7 +17,7 @@ const MusicQueue = ({hideComponent}) => {
     const wrapperRef = useRef(null);
     const {subscribe} = useEventContext();
     const cacheRef = useRef(new Map()); // store rendered rows
-
+    const [listHeight, setListHeight] = useState(0);
     useEffect(() => {
         const handleClickedOutside = (e) =>{            
             if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
@@ -33,6 +33,10 @@ const MusicQueue = ({hideComponent}) => {
             document.removeEventListener("touchstart", handleClickedOutside);
         }
     },[]);
+
+    useEffect(()=>{
+        setListHeight(wrapperRef.current?.offsetHeight || 0);
+    },[wrapperRef.current])
     /**
      * 
      * @param {React.TouchEvent} e 
@@ -43,14 +47,14 @@ const MusicQueue = ({hideComponent}) => {
     }
     return (
         <div className="music-queue" ref={wrapperRef} onTouchMove={stopMovePropagation}>
-            <div className="queue-header">
+            <div className="queue-header" >
                 <h2>Music Queue</h2> 
                 {playQueue.length > 0 && <IconTrash className="buttonRound" id="queue-trash" onClick={deleteQueue} />}
             </div>
            
             {playQueue.length > 0 ?  
                 <List
-                height={'auto'}
+                height={listHeight}
                 itemCount={playQueue.length}
                 itemSize={itemHeight}
                 width={'100%'}

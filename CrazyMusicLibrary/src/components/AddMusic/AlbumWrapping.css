@@ -51,7 +51,7 @@
     font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
 }
 
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     .albumWrapping-library{
         display: flex;
         flex-direction: row;
@@ -97,7 +97,7 @@
     width: 100%;
 }
 
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     .albumDetails{
     display: flex;
     flex-direction: column;
@@ -117,7 +117,7 @@
     column-gap: 10px;
     row-gap: 0px;
 }
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     .albumType{
         display: grid;
         grid-template-areas: "myArea myArea";

@@ -41,7 +41,7 @@
 :root.dark .addMusicContainer{
     background : var(--header-gradient-simple-2);
 }
-@media screen and (max-width: 714px) {
+@media screen and (max-width: 820px) {
     .addMusicContainer{
         margin: auto;   
         top: 5%;
@@ -96,7 +96,7 @@
 
 }
 
-@media screen and (min-width: 714px) {
+@media screen and (min-width: 820px) {
     .albums-overview{
         padding: 10px 50px;   
     }
