@@ -131,7 +131,7 @@ const AlbumView = ({isPlaylist = false}) => {
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([]);return;} //return if empty or only white spaces
         console.log(`${apiBase}/read-write/search/${input}`);
         fetch(`${apiBase}/read-write/search/${input}`, {
-            method: "GET"})
+            method: "GET",credentials:"include"})
         .then((res) => {
             if (res.ok) {
                 return res.json();

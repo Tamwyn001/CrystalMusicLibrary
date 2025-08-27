@@ -364,7 +364,7 @@ export const GlobalActionBar = ({children}) => {
     const fetchSearchResults = async (input) => {
         if (input === "" || input.trim().length === 0) {return;} //return if empty or only white spaces
         fetch(`${apiBase}/read-write/search/${input}`, {
-            method: "GET"})
+            method: "GET",credentials:"include"})
         .then((res) => {
             if (res.ok) {
                 return res.json();
@@ -493,7 +493,7 @@ export const GlobalActionBar = ({children}) => {
                 
                 {children}
                 {(showActionBar) && <div  className="global-action-bar">
-                    <div className="action-bar" ref={wrapperRef}>
+                    <div className="action-bar" ref={wrapperRef} data-search-mode={actionBarCommand === commandCodes.SEARCH}>
                         <div className="action-bar-research">
                             
                             {(currentActionLogo)? currentActionLogo : null}
@@ -507,10 +507,12 @@ export const GlobalActionBar = ({children}) => {
                             itemSize={50}
                             width={'calc(100% - 0px)'}
                             
-                            style={{overflowY: "auto", marginBottom: "20px"}}
                         >
                             {({ index, style }) => 
-                                <ActionBarEntry key={index} entry={proposedCommands[index]} style={{...style, width:" calc(100% - 20px)", marginTop: "10px"}} onClick={handleActionBarEntryClick}/>
+                                <ActionBarEntry key={index} entry={proposedCommands[index]} 
+                                style={style} 
+                                onClick={handleActionBarEntryClick}
+                                className="from-global-bar"/>
                             }
                         </List>
                         </div>

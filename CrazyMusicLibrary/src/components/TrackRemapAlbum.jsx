@@ -66,7 +66,7 @@ const TrackRemapAlbum = ({onClose, track}) => {
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd([]);return;} //return if empty or only white spaces
         console.log(`${apiBase}/read-write/search/${input}/${["albums"]}`);
         fetch(`${apiBase}/read-write/search/${input}/${["albums"]}`, {
-            method: "GET"})
+            method: "GET",credentials:"include"})
         .then((res) => res.json())
         .then(data => {
             setProposedEntryToAdd(

@@ -8,6 +8,7 @@ import { useNavigate } from "react-router-dom";
 import Loading from "../components/Loading.jsx";
 import apiBase from "../../APIbase.js";
 import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
+import MobileShortcuts from "../components/MobileShortcuts.jsx";
 
 const Layout = () => {
     const navigate = useNavigate();
@@ -42,6 +43,7 @@ const Layout = () => {
                 <div className="content">
                     <Outlet /> {/* Route content will render here */}
                 </div>
+                <MobileShortcuts/>
             </div>
         </div>
     )

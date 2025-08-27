@@ -264,8 +264,8 @@ router.get("/user-data-usage/:id", async (req, res) => {
         (accumulator, { size } ) => accumulator + size, 0));
 });
 
-router.get("/search/:query{/:restrictionType}", async (req, res) => {
-    res.json(findAudioEntity(req.params.query, req.params.restrictionType?.split(',')));
+router.get("/search/:query{/:restrictionType}", verify.token, async (req, res) => {
+    res.json(findAudioEntity(req.params.query, req.decoded.email, req.params.restrictionType?.split(',')));
 });
 
 

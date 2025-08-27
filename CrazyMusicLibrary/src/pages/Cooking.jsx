@@ -80,7 +80,7 @@ const Cooking = () => {
         const input = e.target.value;
         if (input === "" || input.trim().length === 0) {setProposedEntryToAdd(mostUsedTags);return;} //return if empty or only white spaces
         fetch(`${apiBase}/read-write/search/${input}/tags,salads`, {
-            method: "GET"})
+            method: "GET",credentials:"include"})
         .then((res) => {
             if (res.ok) {
                 return res.json();

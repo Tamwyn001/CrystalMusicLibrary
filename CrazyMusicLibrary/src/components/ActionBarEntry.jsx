@@ -1,7 +1,7 @@
-const ActionBarEntry = ({ entry, style,onClick}) => {
+const ActionBarEntry = ({ entry, style,onClick,className=""}) => {
 
     return (
-        <div className="action-bar-entry" style={style} onClick={() => {onClick(entry);}}>
+        <div className={`action-bar-entry ${className}`} style={style} onClick={() => {onClick(entry);}}>
             {entry.icon()}
             <span style={{flex : '1'}}> {entry.name}</span>
             {(entry.tooltip) ? entry.tooltip(entry.type) : null}

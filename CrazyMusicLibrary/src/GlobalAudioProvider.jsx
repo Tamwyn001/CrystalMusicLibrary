@@ -84,7 +84,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
-        return  isNaN(stored) ? 0.5 : Math.min(1, Math.max(0, stored));;
+        return  isNaN(stored) ? 1 : Math.min(1, Math.max(0, stored));;
       });
     const [creatingNewPlaylist, setCreatingNewPlaylist] = useState(false)
     const [ tagWindowOpen, setTagWindowOpen ] = useState(false);
@@ -132,6 +132,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const [trackMobileView, setTrackMobileView] = useState(false);
     const mobileMusicPlayRef = useRef(null);
     const currentDisplayedPage = useRef(null);
+    const songRawPalette = useRef([]);
     //call inside a mount
     const setupAudioGraph = () => {
 
@@ -1107,6 +1108,7 @@ export const AudioPlayerProvider = ({ children }) => {
                 addNotification(`Avaliable soon :)`, notifTypes.INFO);
                 break;
             case trackActionTypes.ADD_TO_FAVORITES:
+                console.log(track);
                 toggleTrackFavorite(track.id, true, toggleTrackFavoriteWithActionBar.current);
                 break;
             case trackActionTypes.REMOVE_FROM_FAVORITES:
@@ -1257,6 +1259,7 @@ export const AudioPlayerProvider = ({ children }) => {
         }
         let colorThief = new ColorThief();
         const palette = colorThief.getPalette(imgRef.current, 10);
+        songRawPalette.current = palette;
         generateContrastedPairs(palette);
         console.log("recomputed");
         console.log(paletteRef.current);
@@ -1306,6 +1309,7 @@ export const AudioPlayerProvider = ({ children }) => {
     return (
         <AudioPlayerContext.Provider 
         value={{
+            songRawPalette,
             currentDisplayedPage,
             mobileMusicPlayRef,
             toggleTrackFavorite,
@@ -1380,7 +1384,7 @@ export const AudioPlayerProvider = ({ children }) => {
             {(editingArtist) && <EditArtistInfos applyChanges={applyArtistChanges} artist={editingArtist}/>}
 
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
-            {(trackActionContext) ? <TrackActions isFav={container.favPlaylist}trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
+            {(trackActionContext) ? <TrackActions isFav={container?.favPlaylist || false} trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
             {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}
             {(tagWindowOpen) && <EditTagsWindow/>}
             {trackMobileView && <TrackMobileView />}

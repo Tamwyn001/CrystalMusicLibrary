@@ -4,6 +4,7 @@ const path = require("path")
 const { unlinkSync } = require("fs");
 const { v4 : uuidv4} = require("uuid");
 const _ = require("lodash");
+const { Console } = require("console");
 const db = getDatabase();
 // inserting array of arrays
 const batchInsert = (table, columns, params, ignore = false) => {
@@ -461,16 +462,18 @@ const getTracksAddedByUsers = (id) => { // this is for stats, for actual user/al
     return db.prepare(query).all(id);
 }
 
-const findAudioEntity = (id, restriction = []) => {
+const findAudioEntity = (id, email, restriction = []) => {
     if (restriction.includes("tags")){
         const queryTags = "SELECT * FROM tags WHERE name LIKE ?";
         const salad = (restriction.includes("salads")) ? db.prepare("SELECT * from salads WHERE name LIKE ?").all(`%${id}%`) : null;
         return {tags : db.prepare(queryTags).all(`%${id}%`), salads : salad}
     }
     const queryTracks = `
-        SELECT t.id AS id, t.title as name, a.cover as path FROM tracks t
+        SELECT t.id AS id, t.title as name, a.cover as path, (f.entry_id IS NOT NULL) AS is_favorite
+        FROM tracks t   
         JOIN albums a ON t.album = a.id
-        WHERE t.title LIKE ?;
+        LEFT JOIN favorites f ON f.entry_id = t.id 
+        WHERE t.title LIKE ? AND (f.user_id = (SELECT id from users WHERE email = ?));
     `;
     const queryAlbums = `
         SELECT a.id AS id, a.title as name, a.cover as path FROM albums a WHERE a.title LIKE ?;
@@ -487,7 +490,7 @@ const findAudioEntity = (id, restriction = []) => {
     `;
     if(restriction.length === 0){
         return ({
-            tracks: db.prepare(queryTracks).all(`%${id}%`),
+            tracks: db.prepare(queryTracks).all(`%${id}%`,email),
             albums : db.prepare(queryAlbums).all(`%${id}%`),
             artists: db.prepare(queryArtsits).all(`%${id}%`),
             genres: db.prepare(queryGenre).all(`%${id}%`),
@@ -495,7 +498,7 @@ const findAudioEntity = (id, restriction = []) => {
         })};
         
     return ({
-        tracks: restriction.includes("tracks") ? db.prepare(queryTracks).all(`%${id}%`) : null,
+        tracks: restriction.includes("tracks") ? db.prepare(queryTracks).all(`%${id}%`,email) : null,
         albums : restriction.includes("albums") ? db.prepare(queryAlbums).all(`%${id}%`) : null,
         artists: restriction.includes("artists") ? db.prepare(queryArtsits).all(`%${id}%`) : null,
         genres: restriction.includes("genres") ? db.prepare(queryGenre).all(`%${id}%`) : null,

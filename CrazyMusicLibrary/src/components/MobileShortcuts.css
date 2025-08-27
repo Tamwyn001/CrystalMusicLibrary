@@ -1,0 +1,24 @@
+#mobile-shortcut{
+    display: none;
+}
+@media screen and (max-width: 714px) {
+    #mobile-shortcut{
+        display: flex;
+        flex-direction: row;
+        position: fixed;
+        bottom: 0;
+        height: var(--mobile-shortcut-hight);
+        width: 100%;
+        z-index: 10;
+        gap:20px;
+        align-items: center;
+        justify-content: center;
+        background: var(--header-gradient-simple-2);
+        box-shadow: var(--box-shadow);
+    }
+}
+.mobile-shortcut-entry{
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+}

@@ -43,7 +43,8 @@ const BAR_NUMBER = 5;
 const TrackMobileView = () =>{
     const {currentTrackData, trackCoverUrl,setTrackMobileView,toggleTrackFavorite,
         playQueue, jumpToQueueTrack, queuePointer, playLibraryShuffle,
-        isPlaying, getFFTAtCurrentTime,fftConfigRef } = useAudioPlayer();
+        isPlaying, getFFTAtCurrentTime,fftConfigRef, songRawPalette, recomputeColors,
+        requestNewFullScreenImage  } = useAudioPlayer();
     const {addNotification} = useNotifications();
     const cacheRef = useRef(new Map()); // store rendered rows
     const musicQueueDivRef = useRef(null);
@@ -59,10 +60,23 @@ const TrackMobileView = () =>{
     const divColor2 = useRef(null);
     const divColor3 = useRef(null);
     const shown = useRef(false);
+    const imgRef = useRef(null);
     useEffect(() =>{
         if(!currentTrackData) return;
         setFav(currentTrackData.isFav)
+        
     }, [currentTrackData]);
+
+    useEffect(()=>{
+        if(trackCoverUrl){
+            console.log("request");
+            requestNewFullScreenImage().then((data) => {
+                console.log("received", data);
+                imgRef.current.src = URL.createObjectURL(data.blob);
+                imgRef.current.addEventListener('load', recompute);
+        });
+    }}
+    ,[trackCoverUrl]);
     const toggleFavorite = async () => {
         // e.stopPropagation();
         if(!currentTrackData) return;
@@ -70,7 +84,8 @@ const TrackMobileView = () =>{
     }
 
     const animate = (now) => {
-        if(now - lastTime.current < (1000 / 30)){
+        if(now - lastTime.current < (1000 / 30) ||
+         !(divColor1.current && divColor2.current && divColor3.current)){
             animationRef.current = requestAnimationFrame(animate);
             return;
         }
@@ -83,13 +98,17 @@ const TrackMobileView = () =>{
         const display = new Array(BAR_NUMBER).fill(0);
         for (let i = 0; i < FFTdataView.length; i++) {
             // todo Math.floor leaves some artefect for bar > fftsise/2 
-            display[Math.floor(i/barSummation)] += Number(FFTdata[i])/10;
+            display[Math.floor(i/barSummation)] += Number(FFTdata[i])/100;
         }
-        divColor1.current.style.setProperty("--strength-1", `${display[1]}%`);
-        divColor1.current.style.setProperty("--strength-2", `${display[2]}%`);
-        divColor2.current.style.setProperty("--strength-1", `${display[3]}%`);
-        divColor2.current.style.setProperty("--strength-2", `${display[4]}%`);
-        divColor3.current.style.setProperty("--strength-1", `${display[0]}%`);
+        for (let index = 0; index < display.length; index++) {
+            display[index] =  Math.min(100,Math.max(display[index],0))
+        }
+        const NORM = 3;
+        divColor1.current.style.setProperty("--strength-1", `${display[1]/NORM}%`);
+        divColor1.current.style.setProperty("--strength-2", `${display[2]/NORM}%`);
+        divColor2.current.style.setProperty("--strength-1", `${display[3]/NORM}%`);
+        divColor2.current.style.setProperty("--strength-2", `${display[4]/NORM}%`);
+        divColor3.current.style.setProperty("--strength-1", `${display[0]/NORM}%`);
         animationRef.current = requestAnimationFrame(animate);
     }
     const closeMobileView = () =>{
@@ -163,7 +182,19 @@ const TrackMobileView = () =>{
 		} 
 		animationRef.current = requestAnimationFrame(animate);
 		console.log("FFT found, requested animation frame.");
+        
 	},[fftConfigRef.current]);
+
+    useEffect(()=>{
+        console.log("New paellette", songRawPalette.current);
+        if(songRawPalette.current?.length > 0){
+            divColor1.current.style.setProperty("--c-1", `rgb(${songRawPalette.current[1].join(',')})`);
+            divColor1.current.style.setProperty("--c-2", `rgb(${songRawPalette.current[2].join(',')})`);
+            divColor2.current.style.setProperty("--c-1", `rgb(${songRawPalette.current[3].join(',')})`);
+            divColor2.current.style.setProperty("--c-2", `rgb(${songRawPalette.current[4].join(',')})`);
+            divColor3.current.style.setProperty("--c-1", `rgb(${songRawPalette.current[0].join(',')})`);
+        }
+    },[songRawPalette.current])
 
 	useEffect(() => {
 
@@ -174,16 +205,25 @@ const TrackMobileView = () =>{
 		  animationRef.current = requestAnimationFrame(animate);	  
 		  console.log("Canvas hidden?", shown.current);
 		};
-	  
+       
 		// Initial check
 		update(mq);
-	  
+        if(imgRef.current?.complete && imgRef.current?.src){
+            recomputeColors(imgRef);
+        }
 		// Subscribe
 		mq.addEventListener("change", update);
 		return () => {
 			mq.removeEventListener("change", update);
 		}// cleanup on unmount
 	}, []);
+    const recompute = () => {
+        console.log("recomputing")
+        recomputeColors(imgRef, ()=>{});
+        imgRef.current.removeEventListener('load',  recompute);
+    }
+
+
 
     return <div id="track-mobile-view"
         ref={mobileViewDivRef}
@@ -200,11 +240,14 @@ const TrackMobileView = () =>{
                 {(currentTrackData?.type == "radio") ? 
                 ((currentTrackData.coverUrl == "") ? 
                     <CML_logo className="trackImage" data-playing={isPlaying}/> :
-                    <img src={currentTrackData.coverUrl} data-playing={isPlaying} className="trackImage" />
+                    <img ref={imgRef} 
+                    crossOrigin={'anonymous'}
+                    data-playing={isPlaying} className="trackImage" />
                 ) :
                 (trackCoverUrl.split('/').pop() === 'null') ?
                     <CML_logo  className="trackImage" data-playing={isPlaying}/>:
-                    <img src={trackCoverUrl} className="trackImage" data-playing={isPlaying}/>
+                    <img ref={imgRef} className="trackImage"
+                    crossOrigin={'anonymous'} data-playing={isPlaying}/>
                 }
                 {currentTrackData ? 
                 <SongTitleArtist title={currentTrackData.title} 
@@ -213,7 +256,7 @@ const TrackMobileView = () =>{
                 isMinimal={true} fn={closeMobileView}/> : null}
 
         </div>
-        {showQueue ? 
+        { showQueue ? 
             playQueue.length > 0 ?  
             <div id="music-queue" ref={musicQueueDivRef} onTouchMove={stopMovePropagation}>
                 <List
@@ -230,7 +273,7 @@ const TrackMobileView = () =>{
         : null}
        
         <div id="fixed-audio-state">
-        {currentTrackData ? 
+        { currentTrackData ? 
             <SongTitleArtist title={currentTrackData.title} 
                 artist={currentTrackData.artist} artistId={currentTrackData.artistId}
                 radio={currentTrackData.type === "radio"}

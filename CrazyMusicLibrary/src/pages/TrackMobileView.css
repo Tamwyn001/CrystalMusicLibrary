@@ -52,21 +52,23 @@
     --strength-3 : 0%;
     --strength-4 : 0%;
     --strength-5 : 0%;
+    --c-1 : var(--header-3);
+    --c-2 : var(--header-2);
 }
 #track-mobile-view #grad1{
     background: linear-gradient(to bottom, 
-        color-mix(in srgb, blue var(--strength-1), var(--cards-background)),
-        color-mix(in srgb, red var(--strength-2), var(--cards-background)));
+        color-mix(in srgb, var(--c-1) var(--strength-1), transparent),
+        color-mix(in srgb, var(--c-2) var(--strength-2), transparent));
     mask: linear-gradient(to right, #fff, transparent);
 }
 #track-mobile-view #grad2{
     background: linear-gradient(to bottom, 
-        color-mix(in srgb, green var(--strength-1), var(--cards-background)),
-        color-mix(in srgb, gold var(--strength-2), var(--cards-background)));
+        color-mix(in srgb, var(--c-1) var(--strength-1), transparent),
+        color-mix(in srgb, var(--c-2) var(--strength-2), transparent));
     mask: linear-gradient(to left, #fff, transparent);
 }
 #track-mobile-view #grad3{
-    background: color-mix(in srgb, purple var(--strength-1), var(--cards-background));
+    background: color-mix(in srgb, var(--c-1) var(--strength-1), transparent);
     mask: radial-gradient(circle at center, #fff, transparent 60%)
 }
 #track-mobile-view[data-fade-out="true"]{
@@ -153,6 +155,10 @@
     width: calc(100% - 40px);
     transition: height 0.3s ease-out;
 }
+#floating-audio-state[data-minimize="false"] .trackImage{
+    max-height: calc(100% - 40px);
+
+}
 #floating-audio-state[data-minimize="true"]{
     flex-grow: 0;
     margin-bottom: 0px;
@@ -224,7 +230,7 @@
 }
 
 #floating-audio-state[data-minimize="false"] .trackImage[data-playing="false"]{
-    max-width: calc(100% - 60px);
+    max-width: calc(100% - 80px);
     filter: brightness(0.9);
 }
 #floating-audio-state[data-minimize="false"] .trackImage[data-playing="true"]{
@@ -237,6 +243,8 @@
     width: 20%;
     margin: 0px;
     margin-right: 10px;
+    margin-top: auto;
+    margin-bottom: auto;
 }
 #no-items-in-queue{
     flex-grow: 1;

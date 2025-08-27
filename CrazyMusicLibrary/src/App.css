@@ -4,6 +4,7 @@
 
 :root{
   --mobile-padding : 150px;
+  --mobile-shortcut-hight : 75px;
 
   /* CSS HEX */
   --yinmn-blue: #235690ff;
@@ -236,7 +237,11 @@
   position: absolute;
   top : 70px;
   height: fit-content;
-  left: 20px;
+  right: 20px;
+  transition: width 0.2s ease-out;
+}
+.action-bar[data-search-mode="true"] .action-bar-results{
+  width:calc(100% - 30px);
 }
 :root.dark .action-bar-results{
   background: var(--header-gradient-simple-3);
@@ -296,9 +301,23 @@
   cursor: pointer;
   padding: 0px 10px 0px 10px;
 }
+.from-global-bar{
+  margin-bottom: 20px;
+  width: calc(100% - 20px);
+  margin-top: 10px;
+}
+
+.from-search-bar{
+  padding: 0px;
+  height: 70px;
+}
 
 .action-bar-entry:hover{
   background-color: var(--cards-background-hovered);
+}
+
+.action-bar-entry span {
+  line-height: 20px;
 }
 
 @keyframes showActionCurrent{
@@ -430,4 +449,28 @@
     /* live gradient */
     background: linear-gradient(to bottom, var(--col1), var(--col2));
 }
+#researchbar{
+  min-height: 200px;
+}
+#researchbar > div{
+  display: flex;
+  flex-direction: column;
+}
+#researchbar > div input {
+  margin-top: 0px;
+}
+#researchbar .action-bar-research{
+  z-index: 0;
+  height: auto;
+  background: none;
 
+}
+#researchbar .action-bar-results{
+  position: relative;
+  top: 0px;
+  left : 0; 
+  transform: none;
+  width: 100%;
+  height: fit-content;
+  background: none;
+}

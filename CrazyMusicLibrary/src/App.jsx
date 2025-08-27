@@ -26,6 +26,7 @@ import './components/UIControls.css';
 import RouteWithFFT from './pages/RouteWithFFT.jsx';
 import FullScreenSong from './pages/FullScreenSong.jsx';
 import { useScrollToggle } from './PageUsesScroll.jsx';
+import MobileSearch from './pages/MobileSearch.jsx';
 const App = () => {
     useScrollToggle(["/", "/register","/settings","/admin-pannel"]);
 
@@ -52,6 +53,7 @@ const App = () => {
                                     <Route path="playlists/:playlistId" element={<AlbumView isPlaylist={true} />}/>
                                     <Route path="cooking" element={<Cooking/>}/>
                                     <Route path="radio" element={<Radio/>}/>
+                                    <Route path="search" element={<MobileSearch/>}/>
                                 </Route>
                                 <Route path="account" element={<Account />} /> 
                                 <Route path="settings" element={<Settings />} /> 
