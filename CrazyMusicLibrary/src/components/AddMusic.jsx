@@ -479,9 +479,8 @@ const AddMusic = ({ closeOverlay, uploadPercent, uploadProgress, uploadFinished,
             setActiveIndex(0);
             setEditingAlbum(null);
             setPercentageUpload(0);
-            console.log("Closing overlay");
             emit("musicUploaded");
-            closeOverlay();
+
         }, 750);
 
     }
@@ -520,8 +519,8 @@ const AddMusic = ({ closeOverlay, uploadPercent, uploadProgress, uploadFinished,
         }
     }
     return (
-        <div className='addMusicRoot'>
-            <div className="addMusicContainer" style={(isMinimize) ? { display: "none" } : {}}>
+        <div className='addMusicRoot' data-minimized={isMinimize}>
+            <div className="addMusicContainer">
                 <AddMusicContext.Provider value={{ albums, moveTrackToNewAlbum, editingAlbum, moveTrackToAlbum, setEditingAlbum }}>
                     <IconX className="buttonRound closeOverlay" onClick={handleClose} />
                     <h2>Add Music</h2>

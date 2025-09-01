@@ -922,7 +922,7 @@ export const AudioPlayerProvider = ({ children }) => {
             setEditingAlbum({
                 id: playlistInfos.id,
                 type : "playlist",
-                coverURL: `${apiBase}/covers/${playlistInfos.cover}`,
+                coverURL: playlistInfos.cover ? `${apiBase}/covers/${playlistInfos.cover}` : null,
                 name: playlistInfos.title,
                 description: playlistInfos.description,
                 collaborators : collaborators

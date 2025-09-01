@@ -10,7 +10,7 @@ $appVersion = "3.0.0"
 # Create target directories
 $targets = @("mac-os", "linux", "windows")
 # $supportedTargets = @("linux", "windows")
-$supportedTargets = @("windows")
+$supportedTargets = @("windows", "linux")
 
 foreach ($target in $targets) {
     $targetPath = Join-Path $pkg_root $target
@@ -53,7 +53,7 @@ $winBuildDate = Get-Date
 $deltaWin = $winBuildDate.Subtract($copyDate).TotalSeconds
 
 Write-Host "Linux build"
-# wsl -d ubuntu bash "$rootWSL/build-wsl.sh"
+wsl -d ubuntu bash "$rootWSL/build-wsl.sh"
 $linuxBuildDate = Get-Date
 $deltaLinux = $linuxBuildDate.Subtract($winBuildDate).TotalSeconds
 

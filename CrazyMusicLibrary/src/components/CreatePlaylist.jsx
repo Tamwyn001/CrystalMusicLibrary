@@ -12,11 +12,13 @@ const CreatePlaylist = ({closeOverlay, applyCanges, editPlaylistClass}) => { //p
     const [playlistClass, setPlaylistClass] = useState((editPlaylistClass) ? editPlaylistClass : {id : uuidv4()});
     const [possibleCollaborators, setPossibleCollaborators] = useState([])
     const [collaborators, setCollaborators] = useState([]);
+    // const []
 
     //only load when the playlistClass is set
     useEffect(() => {
         if (playlistClass) {
-            setCoverURL(playlistClass.coverURL);
+            // const isValid = playlistClass.coverURL.split('/').pop() !== "null";
+            setCoverURL(playlistClass.coverUR);
            
         }
         if(playlistClass.collaborators){
@@ -90,7 +92,8 @@ const CreatePlaylist = ({closeOverlay, applyCanges, editPlaylistClass}) => { //p
                 </div>
                 <form className="albumDetails" id='editAlbumInfos' >
                     <label htmlFor="playlistName">Playlist name</label>
-                    <input type="text" id="playlistName" placeholder="Enter playlist name" defaultValue={playlistClass?.name} />
+                    <input type="text" id="playlistName" placeholder="Enter playlist name"
+                     defaultValue={playlistClass.name ? playlistClass.name : ''} />
                     <div className="albumTypeOption">
                         <label htmlFor="description">Description</label>
                         <textarea id="description" 

@@ -98,11 +98,15 @@
     margin: 0px auto;
     font-weight: bold;
 }
-#track-mobile-view #songTitle[data-new="true"][data-from-minimal="true"]{
+#track-mobile-view #songTitle[data-new="true"]{
     animation: newSong 0.4s ease-out;
 }
 /* Only animate the visible title */
 #track-mobile-view-content[data-minimize="false"] #songTitle[data-new="true"][data-from-minimal="true"]
+{
+    animation:none !important;
+}
+#track-mobile-view-content[data-minimize="true"] #songTitle[data-new="true"][data-from-minimal="false"]
 {
     animation:none !important;
 }

@@ -7,7 +7,7 @@ const isPkg = typeof process.pkg !== "undefined";
 const readline = require("readline")
 const { existsSync, mkdirSync } = require("fs");
 const APP_VERSION = "3.0.0";
-const DEV_MODE = true;
+const DEV_MODE = false;
 
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
@@ -165,8 +165,8 @@ app.use(cors({
    
 
     if (allowedDomains.includes(origin)) return callback(null, true);
-    console.log(" User from \x1b[1;31m",`${origin}`,"\x1b[0m is not trusted.");
-    return callback(new Error(`This (${origin}) is not allowed, try to enter the ip printed when the library got ready.`), false);
+    console.log(" User from \x1b[1;31m",`${origin}`,"\x1b[0m is not trusted. Are you behind this action?");
+    return callback(new Error(`This (${origin}) is not allowed, try to enter the ip printed when the library got ready. If you added a new network interface (Personal Hotspot, etc), consider restarting the library.`), false);
   },
   credentials: true,
   exposedHeaders: ["Content-Disposition"]

@@ -1,6 +1,6 @@
 .not-found{
     margin: auto;
-    background-color: aliceblue;
+    background : var(--header-gradient-simple-3);
     text-align: center;
     display: flex;
     flex-direction: column;

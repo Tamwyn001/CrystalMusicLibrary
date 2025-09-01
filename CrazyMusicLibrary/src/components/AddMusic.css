@@ -13,6 +13,18 @@
     top:0;
     z-index: 20;
 }
+.addMusicRoot[data-minimized="true"]{
+    display: none;
+}
+#upload-progress-tiny{
+    position: absolute;
+    bottom : -30px;
+    padding : 2px 7px;
+    border-radius: 10px;
+    background-color:var(--cards-background);
+    text-align: center;
+}
+
 .addMusicContainer{
     --width: 820px;
     --height: 700px;

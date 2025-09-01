@@ -1,7 +1,6 @@
 :root{
     --card-border-radius: 15px;
 }
-
 .album-card{
     display: flex;
     flex-direction: column;
@@ -12,7 +11,21 @@
     position: relative;
     box-shadow: var(--box-shadow-small);
 }
-
+.skeleton-loader-album{
+    background-color: var(--cards-background);
+    width: 100%;
+    aspect-ratio:1;
+    border-radius: 10px;
+    animation: loadAlbum 0.4s ease-in-out alternate infinite;
+}
+@keyframes loadAlbum{
+    from{
+        opacity: 0.8;
+    }
+    to{
+        opacity: 1;
+    }
+}
 .album-card[context="add"]{
     width: 150px;
 }
@@ -76,7 +89,7 @@
     width: 100%;
     height: auto;
     aspect-ratio: 1;
-    border-radius:  var( --card-border-radius) ;
+    border-radius:  var( --card-border-radius) var( --card-border-radius)  0px 0px;
 }
 
 .album-card-overview-button{

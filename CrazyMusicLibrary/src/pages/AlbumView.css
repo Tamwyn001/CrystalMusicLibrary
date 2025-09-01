@@ -294,6 +294,7 @@ to {
         border-radius: 20px;
         animation: rotate 5s linear infinite;
         display: block;
+        min-width: 300px;
     }
 }
 .track-id{

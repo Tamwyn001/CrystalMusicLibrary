@@ -17,14 +17,15 @@ const AudioControls = ({context}) => {
         playPreviousSong();
     }
     return(
-        <div className="audio-controls" data-mobile-context={context.mobile}>
+        <div className="audio-controls" data-mobile-context={context.mobile} 
+            data-preserv-width={context.preserv}>
             {(!context.mobile || context.maximize) ? <SvgHoverToggle iconHovered={IconPlayerTrackPrevFilled} 
                 iconDefault={IconPlayerTrackPrev} onClick={handlePreviousNextSong}/> : null}
             <SvgHoverToggle iconHovered={ (isPlaying) ? IconPlayerPauseFilled : IconPlayerPlayFilled} 
                             iconDefault={(isPlaying) ? IconPlayerPause : IconPlayerPlay} 
                             onClick={handleToggleTrackPaused}/>
-            <SvgHoverToggle iconHovered={IconPlayerTrackNextFilled} iconDefault={IconPlayerTrackNext}
-             onClick={handlePlayNextSong}/>
+            {!(context.radio && context.mobile) && <SvgHoverToggle iconHovered={IconPlayerTrackNextFilled} iconDefault={IconPlayerTrackNext}
+             onClick={handlePlayNextSong}/>}
         </div>
     )
 }

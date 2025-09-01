@@ -111,6 +111,9 @@
     flex-direction: row;
     gap: 10px;
 }
+.audio-controls[data-preserv-width="true"]{
+    min-width: 80px;
+}
 .audio-controls > div {
     height: 35px;
 }
@@ -229,7 +232,7 @@
 }
 #add-radio-fav{
     position: absolute;
-    top: 20px;
+    top: 16px;
     right:20px;
     cursor: pointer;
 }

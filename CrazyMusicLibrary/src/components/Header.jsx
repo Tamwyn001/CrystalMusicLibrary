@@ -86,6 +86,8 @@ const Header = () => {
     }, []);
 
     const onUploadFished = () => {
+        setIsAddMusicMinimized(false);
+        closeNewMusic();
 
     }
     const handleClicNewMusic = () => {
@@ -150,7 +152,7 @@ const Header = () => {
                         : <SmallFFTVisualizer/>}
                     <div className='trackinfo-mobile'>
                         <span id="songTitle">{currentTrackData.title}</span>
-                        <AudioControls context={{mobile : true}}/>
+                        <AudioControls context={{mobile : true, radio : currentTrackData?.type === "radio" , preserv : true}}/>
                     </div>
                 </div>
 
@@ -186,8 +188,7 @@ const Header = () => {
                 <RadialProgressBar percent={uploadPercent} size={44} useText={false} style={{position: "absolute", transform:"translate(-1px, -5.5px)"}}/>}
                 <IconMusicPlus style={{zIndex:"10", position: "relative"}}className="addMusicButton buttonRound" onClick={handleClicNewMusic}/>
                 
-                {(uploadProgress) && <span 
-                    style={{position: "absolute", bottom : "-30px", padding : "2px 7px", borderRadius: "10px",backgroundColor:"rgba(255, 255, 255, 0.7)", textAlign : "center"}}>{uploadProgress.done}/{uploadProgress.total}</span>
+                {(uploadProgress) && <span id="upload-progress-tiny">{uploadProgress.done}/{uploadProgress.total}</span>
                 }
             </div>
             <UserDropdown />
@@ -197,7 +198,7 @@ const Header = () => {
             uploadFinished={onUploadFished} 
             uploadProgress={setUploadProgress}
             isMinimize={isAddMusicMinimized}
-            setMinimized={ setIsAddMusicMinimized}
+            setMinimized={setIsAddMusicMinimized}
             closeOverlay={closeNewMusic} />) }
 
       </header>    

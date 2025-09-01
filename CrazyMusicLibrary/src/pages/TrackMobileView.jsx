@@ -13,8 +13,7 @@ import { useNotifications } from '../GlobalNotificationsProvider.jsx';
 
 const itemHeight = 50; // Height of each item in pixels
 const height = 0; // window.screen.height - 500; // Height of the list in pixels
-const SongTitleArtist = memo(({title, radio, artist, artistId, isMinimal, fn})=>{
-    console.log("radio", radio);
+const SongTitleArtist = memo(({title, radio, artist, artistId, isMinimal, fn}) => {
     const navigate = useNavigate();
     const [isNew, setNew] = useState(true);
     useEffect(() => {
@@ -242,6 +241,7 @@ const TrackMobileView = () =>{
                     <CML_logo className="trackImage" data-playing={isPlaying}/> :
                     <img ref={imgRef} 
                     crossOrigin={'anonymous'}
+                    src={currentTrackData.coverUrl}
                     data-playing={isPlaying} className="trackImage" />
                 ) :
                 (trackCoverUrl.split('/').pop() === 'null') ?
