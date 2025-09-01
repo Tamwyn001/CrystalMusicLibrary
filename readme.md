@@ -42,7 +42,8 @@ I do not own any cover artwork there. All right go to their owners, showcase pur
 
 ## Setup
 Download the executables from the latest release [here](https://github.com/Tamwyn001/CrystalMusicLibrary/releases/latest).
-
+* Note: using pm2 on Linux, you can deamonize the server.js file. To do this download pm2 using npm, (download npm with nvm). The needed folder is /backend from the root of the repo.
+*  
 | Windows | Linux | Mac-Os |
 |---------|-------|--------|
 | x64     | x64   | see [Host with NodeJs](/doc/buildFromSource.md)    |
@@ -72,7 +73,7 @@ Download the executables from the latest release [here](https://github.com/Tamwy
     ```
 
 3. Run the ```crystal-music.library.exe``` file on Windows or similar for other OS.
-4. **If this step fails:** see 
+4. **If this step fails:** see [Host with NodeJs](/doc/buildFromSource.md)
 5. Once the server is running, an IP will be printed, open it in the browser, or on your mobile phone.
 
 
