@@ -30,7 +30,7 @@ const resolvedDataPath = path.isAbsolute(rawPathData)
 
 console.log("Data path: \x1b[2m", resolvedDataPath,"\x1b[0m");
 try{
-  for(const uploadDir of ["music", "covers", "covers\\artists","ffts"]){
+  for(const uploadDir of ["music", "covers", path.join("covers","artists"), "ffts"]){
       if (!existsSync(path.join(resolvedDataPath, uploadDir))){
           console.log(`Creating directory  \x1b[2m${path.join(resolvedDataPath, uploadDir)}\x1b[0m`);
           mkdirSync(path.join(resolvedDataPath, uploadDir), { recursive: true });
@@ -91,7 +91,7 @@ setupDatabase(resolvedDatabasePath, basePath);
 
 
 
-const { networkInterfaces } = require("os");
+const { networkInterfaces, hostname } = require("os");
 
 const authRouter = require("./routes/auth.js");
 
@@ -127,6 +127,7 @@ function getLocalIPs() {
       }
     }
   }
+  validIP.push(hostname())
   return validIP;
 }
 
