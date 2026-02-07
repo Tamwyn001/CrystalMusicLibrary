@@ -61,7 +61,7 @@ class JobFFT extends Job {
         super( jobKey, jobManager, payload);
         
         // @ts-ignore
-        this.currentConfig = require('../config/config.json');
+        this.currentConfig = require(jobManager.libraryConfig.configFilePath);
         if(completeLibrary){
             this.waitingList = this.GetWholeLibraryFiles();
         } else {
@@ -88,7 +88,7 @@ class JobFFT extends Job {
      */
     AddFilesToFFT(paths) {
         // @ts-ignore
-        this.currentConfig = require('../config/config.json');
+        this.currentConfig = require(jobManager.libraryConfig.configFilePath);
         const freeWorkers = this.GetFreeWorker();
         if(freeWorkers > 0){
             
