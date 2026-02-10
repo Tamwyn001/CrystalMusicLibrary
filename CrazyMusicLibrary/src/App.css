@@ -478,3 +478,36 @@
   height: fit-content;
   background: none;
 }
+
+#track-lyrics-div{
+  position: absolute;
+  right: 0;
+  margin-right: 30px;
+  top: calc(50% - 150px);
+  background-color: rgba(186, 186, 186, 0.415);
+  width: 30%;
+  height: 300px;
+  border-radius: 20px;
+  padding: 10px 20px;
+  z-index: 10;
+  backdrop-filter: blur(10px);
+  display: grid;
+  grid-template-rows: 1fr auto 1fr;
+  align-items: center;
+}
+.in-lyrics{
+  color: #eaf1ff;
+  font-size: 30px;
+  line-height: 35px;
+  font-weight: 900;
+  filter:blur(0.3px);
+
+}
+.off-lyrics{
+
+
+  color: #c6c6c69f;
+  font-size: 20px;
+  filter:blur(1px);
+  font-weight: 500;
+}

@@ -6,7 +6,7 @@
   const path = require("path");
 
   let dbInstance = null
-  const LATEST_DATABASE_VERSION = 6;
+  const LATEST_DATABASE_VERSION = 7;
 
 
   // Higher order function - returns a function that always runs in a transaction
@@ -435,7 +435,17 @@
         dbInstance.prepare("PRAGMA foreign_keys = ON;").run();
         console.log(`   \x1b[1m\x1b[38;5;222mUpgraded database to v6.\x1b[0m Added music deletion: Extanded Foreign keys contraints.`);
     }
-  
+  if(currentVersion < 7){
+      const instructionsToV7 = 
+        [ "UPDATE schema_version SET version = 7;",
+        `ALTER TABLE tracks ADD lyrics TEXT`,
+        `ALTER TABLE tracks ADD is_instrumental INT`]; 
+        const upgradeV7 = asTransaction(() => {
+          instructionsToV7.forEach(action => {dbInstance.prepare(action).run();})
+        })
+        upgradeV7();
+        console.log("   \x1b[1m\x1b[38;5;222mUpgraded database to v7.\x1b[0m Added lyrics support.");
+    }
 
 
   }

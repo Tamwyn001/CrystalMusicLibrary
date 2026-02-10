@@ -11,7 +11,7 @@
 
 
 const LAST_USER_CONFIG_VERSION = 2;
-const LAST_SERVER_CONFIG_VERSION = 2;
+const LAST_SERVER_CONFIG_VERSION = 3;
 
 const defaultConfig = {
     version : LAST_SERVER_CONFIG_VERSION,
@@ -20,6 +20,11 @@ const defaultConfig = {
         samples : 512,
         samplingInterval : 1/60, //60fps
         parallelCompute : 5
+    },
+    ServerLyrics : {
+        useServerLyrics : true,
+        concurrency : 50,
+        storeLocally : true,
     }
 }
 
@@ -53,6 +58,14 @@ const migrateServerConfigIfNecessary = (loadedConfig) => {
     if(version < 2){
         loadedConfig.ServerFFT.samplingInterval = 1/60;
         loadedConfig.version = 2;
+    }
+    if(version < 3){
+        //Create new field
+        loadedConfig.ServerLyrics = {};
+        loadedConfig.ServerLyrics.useServerLyrics = true;
+        loadedConfig.ServerLyrics.concurrency = 50;
+        loadedConfig.ServerLyrics.storeLocally = true;
+        loadedConfig.version = 3;
     }
     return wasUpToDate;
 }

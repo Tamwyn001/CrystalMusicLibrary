@@ -256,7 +256,8 @@ const getAlbumTracksPath = (id) => {
 
  const getTrackInfos = (id) => {
     const query = `
-        SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist, ad.id as artistId
+        SELECT t.title AS title, t.duration AS rawDuration, ad.name AS artist, ad.id as artistId, t.lyrics as lyrics,
+        t.is_instrumental as is_instrumental
         FROM tracks AS t JOIN albums AS a ON t.album = a.id
         JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
         JOIN artists_descs AS ad ON A2A.artist = ad.id
@@ -924,7 +925,12 @@ const getUserId = (email) => {
     return db.prepare("SELECT id FROM users WHERE email = ?").get(email).id;
 }
 
+const getTrackLyrics = (trackId) =>{
+    return db.prepare("SELECT is_instrumental, lyrics FROM tracks WHERE id = ?").get(trackId);
+}
+
 module.exports = {
+    getTrackLyrics,
     toogleUserLikesRadio,
     checkUserExistsEmailName,
     getUserId,

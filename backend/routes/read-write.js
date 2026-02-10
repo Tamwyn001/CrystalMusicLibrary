@@ -2,7 +2,7 @@ const express = require( "express");
 // @ts-ignore
 const {existsSync, mkdirSync, statSync, createReadStream, unlink, fstat} = require( "fs");
 // @ts-ignore
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit, getTrackLyrics } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 // @ts-ignore
@@ -570,6 +570,10 @@ router.get("/getSongMetaDataCover/:id", async (req,res) => {
         console.error(err);
         return res.status(500).send("Error reading metadata.");
     }
+});
+
+router.get("/getTrackLyrics/:trackId", (req, res) =>{
+    res.json(getTrackLyrics(req.params.trackId));
 });
 
 module.exports = {router, runServerStats};

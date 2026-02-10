@@ -144,6 +144,7 @@ class JobFFT extends Job {
             
 
             // STEP 1 : Audio to raw pcm data
+            // ffmpegPromise reused on purpose!
             workerState.ffmpegPromise = getSampleRate(workerState.audioPath);
              /** @type {Number} */
             const sampleRate = await workerState.ffmpegPromise;

@@ -6,6 +6,7 @@ import _ from "lodash";
 import AudioControls from "../components/AudioControls.jsx";
 import { contrastRatio, lerp } from "../../lib.js";
 import apiBase from "../../APIbase.js";
+import TrackLyrics from "./TrackLyrics.jsx";
 const FullScreenSong = () => {
     const {fullScreenImage,currentTrackData, 
         requestNewFullScreenImage, playingTrack,
@@ -179,6 +180,7 @@ const FullScreenSong = () => {
                 <IconColorSwatch />
             </button>
         </div>
+        <TrackLyrics/>
         <div data-inactive={userInactive} className="full-screen-audio-ctrl">
             <AudioControls context={""}/>
         </div>

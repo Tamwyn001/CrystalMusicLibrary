@@ -6,6 +6,7 @@ const JobFFT = require("../jobs/jobFFT");
 const bodyParser = require("body-parser");
 const { getMulterInstance } = require("../multerConfig");
 const LibraryConfig = require("./libraryConfig");
+const JobLyrics = require("../jobs/jobLyrics");
 
 class JobsManager {
     /** @type {Job[]} */
@@ -49,6 +50,9 @@ class JobsManager {
                 break;
             case 'JOB_FFT':
                 newJob = new JobFFT("JOB_FFT", this, payload);
+                break;
+            case 'JOB_LYRICS':
+                newJob = new JobLyrics("JOB_LYRICS", this, payload);
                 break;
         }
         if(!newJob) return;

@@ -147,7 +147,7 @@ if(DEV_MODE){
   localDomains = getLocalIPs().map(ip => {return `http://${ip}:${PORT}`});
 
 }
-const allowedDomains = [...localDomains];
+const allowedDomains = [...localDomains, "http://localhost:5174"];
 console.log("✅ Web APP ready to be served");
 app.use(express.static(publicPath));
 

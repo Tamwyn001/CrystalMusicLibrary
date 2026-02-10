@@ -87,6 +87,10 @@ const AdminPannel = () => {
                         description={"Runs a fast Fourier transform on each audio files to extract the audio spectrum. The result is writen into .bin files. For a .flac audio of 41kHz, we expect 3Mb spectrum file."}
                         payload={{completeLibrary : true}}
                         doneTotalView={doneTotalView}/>
+                    <BackendJob jobKey={"JOB_LYRICS"} jobName={"Fetch all lyrics"}
+                        description={"Accesses the API of lrclib to fetch lyrics. This may take verious time depending on the need to further serivices if the track is not found."}
+                        payload={{mode : "all_library"}}
+                        doneTotalView={doneTotalView}/>
 
                     {/* <BackendJob jobKey={"JOB_LOSSLES"} jobName={"Analyse Lossless"}
                         description={"Reextract the metadatas of the songs to check for lossy or not songs."}/>

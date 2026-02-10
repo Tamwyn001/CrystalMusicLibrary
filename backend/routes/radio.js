@@ -9,6 +9,7 @@ const jwt = require("jsonwebtoken");
 const { Readable } = require('stream');
 const _ = require("lodash");
 const verify = require('./verify');
+const { LIBRARY_AGENT } = require('../statics');
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
 const upload = getMulterInstance(uploadPath);
@@ -212,7 +213,7 @@ class RadioRouter{
         try {
             const response = await fetch(`${this.radioServers[id]}/json/stations`,
                 {
-                    headers: { 'User-Agent': 'Crystal Music Library/3.0.0' },
+                    headers: LIBRARY_AGENT,
                     method : "POST",
                     body : new URLSearchParams(
                         { offset: `${Math.floor(Math.random()*100000)}`,
