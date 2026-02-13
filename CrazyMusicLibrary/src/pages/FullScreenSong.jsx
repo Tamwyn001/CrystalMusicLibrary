@@ -188,7 +188,6 @@ const FullScreenSong = () => {
             <img className="full-screen-image-back full-screen-fadable" ref={imgRefBack} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
             <div className="full-screen">
                 <img className="full-screen-image full-screen-fadable" ref={imgRef} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
-                
             </div>
             <img className="full-screen-image-back full-screen-fadable" ref={imgRefBackB} crossOrigin={"anonymous"} data-inactive={userInactive} alt="No tracks palying"/>
             <div className="full-screen">

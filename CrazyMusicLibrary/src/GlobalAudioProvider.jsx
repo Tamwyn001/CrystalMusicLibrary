@@ -56,7 +56,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const [playingTrack, setPlayingTrack] = useState('');
     const [isPlaying, setIsPlaying] = useState(false);
     const [currentTrackData, setCurrentTrackData] = useState({}); // Store track data here
-    const [currentTime, setCurrentTime] = useState(0); // Store current time here
+    const currentTimeRef = useRef(0); // Store current time here
     const globalAudioRef = useRef(null); //audioRef that links either to A or B.
     const audioRefA = useRef(null); //
     const audioRefB = useRef(null); //
@@ -309,6 +309,7 @@ export const AudioPlayerProvider = ({ children }) => {
         const t = globalAudioRef.current.currentTime;
         
         if (Math.abs(t - lastTimeRef.current) > 1.0) {
+            emit("on-seek-song", t);
             const CHUNKS_PER_SECOND = Math.round(1 / fftConfigRef.current.interval);
             const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
             const seekChunk = Math.floor(t * CHUNKS_PER_SECOND);
@@ -443,7 +444,7 @@ export const AudioPlayerProvider = ({ children }) => {
             globalAudioRef.current.src = resolveTrackURL(trackId); // Set the new track URL
         }else{
             
-            setCurrentTime(0);
+            currentTimeRef.current = 0
             return;
         }
         globalAudioRef.current.play();
@@ -636,7 +637,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
     }
 
-    const updateTime = () => setCurrentTime(globalAudioRef.current?.currentTime);
+    const updateTime = () => {currentTimeRef.current = globalAudioRef.current?.currentTime};
     const playNextTrackOnEnd = () => {
 
           if(playQueue.length > 0 && playQueue.length <= queuePointer + 1){
@@ -775,7 +776,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const stopMusic = () => {
         resetAudioNodes();
-        setCurrentTime(0); // Reset the current time state
+        currentTimeRef.current = 0; // Reset the current time state
         setIsPlaying(false);
         setCurrentTrackData(null);
         setShouldInitPlay(false);
@@ -796,7 +797,7 @@ export const AudioPlayerProvider = ({ children }) => {
         if (percent < 0 || percent > 100) return; // Ensure percent is between 0 and 100
         const newTime = (percent / 100) * globalAudioRef.current.duration; // Calculate new time based on percent
         globalAudioRef.current.currentTime = newTime; // Set the new current time
-        setCurrentTime(newTime); // Update the current time state
+        currentTimeRef.current = newTime; // Update the current time state
         rescheduleAudioTransition();
     }
 
@@ -808,7 +809,7 @@ export const AudioPlayerProvider = ({ children }) => {
         } else {
             globalAudioRef.current.currentTime += seconds; // Jump forward or backward
         }
-        setCurrentTime(globalAudioRef.current.currentTime); // Update the current time state
+        currentTimeRef.current = globalAudioRef.current.currentTime; // Update the current time state
     }
 
 
@@ -1348,7 +1349,7 @@ export const AudioPlayerProvider = ({ children }) => {
             openTrackActions,
             getNextSongsFromAlbum,
             currentTrackData,
-            currentTime,
+            currentTimeRef,
             isPlaying,
             toggleTrackPaused,
             playNextSong,

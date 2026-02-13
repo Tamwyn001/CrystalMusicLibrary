@@ -501,13 +501,62 @@
   line-height: 35px;
   font-weight: 900;
   filter:blur(0.3px);
+}
+.in-lyrics[data-anim="fade-small"]{
+    animation: slideUpSmall 0.3s ease-in-out 1;
+}
+.off-lyrics[data-anim="fade-big"]{
+    animation: slideUpBig 0.3s ease-in-out 1;
+}
+.off-lyrics[data-anim="fade-out"]{
+    animation: fadeOut 0.1s ease-in-out 1 ;
+    animation-fill-mode: forwards ;
+}
 
+.in-lyrics::before {
+  content: attr(data-text);
+  position: absolute;
+  left: 0;
+  top: 0;
+  width: 100%;
+  height: 100%;
+  transform: scale(1.05);
+  opacity: 0.3;
+  filter: blur(6px);
 }
 .off-lyrics{
-
-
   color: #c6c6c69f;
   font-size: 20px;
   filter:blur(1px);
   font-weight: 500;
+  opacity: 1;
+}
+
+@keyframes slideUpSmall {
+  from {translate: 0px 0px;
+    font-size: 30px;
+  font-weight: 900;
+    color: #eaf1ff;
+}
+  to {translate: 0px -87px;
+    font-size: 20px;
+  font-weight: 500;
+  color: #c6c6c69f;}
+}
+
+@keyframes fadeOut {
+  from {opacity: 1;}
+  to {opacity: 0;}
+}
+
+
+@keyframes slideUpBig {
+  from {translate: 0px 0px;
+    font-size: 20px;
+  font-weight: 500;
+  color: #c6c6c69f;}
+  to {translate: 0px -80px;
+    font-size: 30px;
+  font-weight: 900;
+  color: #eaf1ff;}
 }
