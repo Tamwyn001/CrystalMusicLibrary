@@ -1,4 +1,3 @@
-
 const { getDatabase } = require("../db");
 const {Job, JobStatus} = require("./jobBase");
 const { join, basename } = require("path");
@@ -6,9 +5,8 @@ const {v4 : uuidv4} = require("uuid");
 const { existsSync, writeFileSync } = require("fs");
 const { spawn, exec } = require("child_process");
 const { Worker } = require("worker_threads");
-const JobsManager = require("../routes/jobs");
-const path = require("path");
-const { words } = require("lodash");
+const JobsManager = require("./jobs");
+const { JobContainerSearchMode } = require("../statics");
 
 class FFTWorkerState {
     cancelled = false;
@@ -62,11 +60,22 @@ class JobFFT extends Job {
         
         // @ts-ignore
         this.currentConfig = require(jobManager.libraryConfig.configFilePath);
-        if(completeLibrary){
-            this.waitingList = this.GetWholeLibraryFiles();
-        } else {
-            this.waitingList = payload.tracks;
-        }
+
+            let query;
+        switch (payload.mode) {
+            case JobContainerSearchMode.ALL:
+                this.waitingList = this.getWholeLibraryTracksSignature();
+                break;
+            case JobContainerSearchMode.ALBUM:
+                this.waitingList = this.getAlbumSignatures(payload.target);
+                break
+            case JobContainerSearchMode.MULT_TRACKS:
+                // this.waitingList = this.getTrackSignature(payload.target);
+                // todo
+            case JobContainerSearchMode.TRACK:
+                this.waitingList = this.getTrackSignature(payload.target);
+            }
+
         this.updateProgress(0, this.waitingList.length);
         for(let i = 0; i < this.currentConfig.ServerFFT.parallelCompute; i++){
             this.CreateFFTWorker(0);
@@ -75,9 +84,18 @@ class JobFFT extends Job {
         
     };
     addNewTask(payload){
+        super.addNewTask(payload);
         this.waitingList.push(...payload.tracks);
+        console.log("Pushed", payload.tracks)
+        // Create remainings workers if job still active 
+        if(this.status !== JobStatus.INACTIVE 
+            || this.status !==  JobStatus.PAUSED 
+        ){
+        for(let i=0; i < this.freeWorkersToUse.length; i++){
+            this.CreateFFTWorker(0);
+        }
+        }
     }
-
     GetFreeWorker() {
         return this.currentConfig.ServerFFT.parallelCompute - 
         this.currentFFTWrokers.length;
@@ -95,7 +113,7 @@ class JobFFT extends Job {
         }
     }
 
-    GetWholeLibraryFiles(){
+    getWholeLibraryTracksSignature(){
         const db = getDatabase();
         /** @type {{path : string}[]} tracks */
         const tracks = db.prepare("SELECT path FROM tracks;").all();
@@ -319,6 +337,23 @@ class JobFFT extends Job {
             this.CreateFFTWorker(0);
         }  
     }
+
+    getAlbumSignatures(albumId){
+        const db = getDatabase();
+        return db.prepare(`
+            SELECT t.path as path
+            FROM tracks t 
+            JOIN albums a ON a.id = t.album
+            WHERE a.id=?;`).all(albumId); 
+    };
+    getTrackSignature(trackId){
+        const db = getDatabase();
+        return db.prepare(`
+            SELECT t.path as path
+            FROM tracks t 
+            WHERE t.id=?;`).all(trackId); 
+    };
+
     resumeJob(){
         super.resumeJob();
         for(let i = this.currentFFTWrokers.length; i < this.currentConfig.ServerFFT.parallelCompute; i++){

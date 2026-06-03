@@ -1,12 +1,12 @@
 const express = require("express");
 
-const JobCD = require("../jobs/jobCD");
-const { JobStatus, Job } = require("../jobs/jobBase");
-const JobFFT = require("../jobs/jobFFT");
+const JobCD = require("./jobCD");
+const { JobStatus, Job } = require("./jobBase");
+const JobFFT = require("./jobFFT");
 const bodyParser = require("body-parser");
 const { getMulterInstance } = require("../multerConfig");
-const LibraryConfig = require("./libraryConfig");
-const JobLyrics = require("../jobs/jobLyrics");
+const LibraryConfig = require("../routes/libraryConfig");
+const JobLyrics = require("./jobLyrics");
 
 class JobsManager {
     /** @type {Job[]} */
@@ -25,10 +25,9 @@ class JobsManager {
      * 
      * @param {string} jobKey The key to identify the job
      * @param {*} payload The content to pass to the job
-     * @param {boolean} inPlace Should we input the an exisiting job? If false creates a new one.
      * @returns 
      */
-    registerNewJob (jobKey, payload, inPlace) {
+    registerNewJob (jobKey, payload) {
         // Escpade cases
         switch(jobKey){
             case 'JOB_FFT':
@@ -36,13 +35,6 @@ class JobsManager {
                 break;
         };
 
-        if(inPlace){
-            const existingJob = this.jobs.find(job => job.jobKey === jobKey);
-            if(existingJob) {
-                existingJob.addNewTask(payload);
-                return;
-            }
-        }
         var newJob = null;
         switch(jobKey){
             case 'JOB_CD':
@@ -60,6 +52,15 @@ class JobsManager {
 
     }
 
+    supplyJob(jobKey, payload){
+        const existingJob = this.jobs.find(job => job.jobKey === jobKey);
+        if(existingJob) {
+            existingJob.addNewTask(payload);
+            return;
+        }
+        // If no job found, we need to create one.
+        this.registerNewJob(jobKey, payload);
+    };
     pauseJob (jobKey) {
         const existingJob = this.jobs.find(job => job.jobKey === jobKey);
         if(!existingJob) return;
@@ -88,9 +89,18 @@ class JobsManager {
          
         this.router.post("/run/:id", this.upload.none(), (req,res) =>{
             const payload = JSON.parse(req.body.payload);
-            this.registerNewJob(req.params.id, payload, false);
+            this.registerNewJob(req.params.id, payload);
             res.json({message:""});
          });
+
+        this.router.post("/supply/:id", this.upload.none(), (req,res) =>{
+            
+            const payload = JSON.parse(req.body.payload);
+            console.log(payload);
+            this.supplyJob(req.params.id, payload);
+            res.json({message:""});
+         });
+
          
         this.router.get("/pause/:id", (req,res) =>{
             this.pauseJob(req.params.id);

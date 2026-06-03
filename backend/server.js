@@ -188,7 +188,7 @@ app.use("/auth", authRouter);
 console.log(`  . 🔑     Authentification`);
 app.use("/read-write", readWriteRouter);
 console.log(`  . 📰     Read write music`);
-const JobsManager = require("./routes/jobs.js");
+const JobsManager = require("./jobs/jobs.js");
 const RadioRouter = require("./routes/radio.js");
 const LibraryConfig = require("./routes/libraryConfig.js");
 

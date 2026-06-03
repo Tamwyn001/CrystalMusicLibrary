@@ -38,6 +38,7 @@ class Job {
     }
     stopJob () {
         // this.status = JobStatus.INACTIVE; 
+        this.progress.working = 0;
         console.log("[Job]", this.jobKey,"is now stoped.")  ;
     }
     addNewTask(payload){}

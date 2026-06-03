@@ -110,7 +110,7 @@ const BackendJob = ({jobName, description, jobKey, payload={}, doneTotalView = n
     const run = () =>{
         const data = new FormData();
         data.append("payload", JSON.stringify(payload));
-        fetch(`${apiBase}/jobs/run/${jobKey}`, {method : "POST", credentials: "include", body: data})
+        fetch(`${apiBase}/jobs/supply/${jobKey}`, {method : "POST", credentials: "include", body: data})
         .then(res => res.json())
         .then(res => {
             refetchStatus(true);

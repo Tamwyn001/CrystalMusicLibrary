@@ -560,3 +560,9 @@
   font-weight: 900;
   color: #eaf1ff;}
 }
+
+.div-flex-horizontal{
+  display: flex;
+  flex-direction:row;
+  gap: 10px;
+}

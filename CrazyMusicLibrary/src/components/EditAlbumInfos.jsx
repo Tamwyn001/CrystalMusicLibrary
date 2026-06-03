@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import CML_logo from './CML_logo';
 import './AddMusic/AlbumWrapping.css'
-import { IconFolderPlus, IconDirections, IconTrashFilled, IconTrashX, IconTrash } from '@tabler/icons-react';
+import { IconFolderPlus, IconDirections, IconTrashFilled, IconTrashX, IconTrash, IconTextScan2, IconBarrelOff, IconAnalyze } from '@tabler/icons-react';
 import { FixedSizeList as List } from 'react-window';
 import TrackRemapAlbum from './TrackRemapAlbum';
 import ButtonWithCallback from './ButtonWithCallback';
@@ -85,7 +85,19 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const deleteForAll = async() => {
         deleteAlbum(false, {name: albumClass.name, id: albumClass.id});
     }
-    
+
+    const recomputeLyrics = async () => {
+        addNotification("Scheduled lyrics", notifTypes.COMMAND);
+        const data = new FormData();
+        data.append("payload", JSON.stringify({target : albumClass.id, mode : "album"}));
+        fetch(`${apiBase}/jobs/supply/JOB_LYRICS`, {method : "POST", credentials: "include", body: data});
+    };
+    const recomputeFFT = async () => {
+        addNotification("Scheduled spectra", notifTypes.COMMAND);
+        const data = new FormData();
+        data.append("payload", JSON.stringify({target : albumClass.id, mode : "album"}));
+        fetch(`${apiBase}/jobs/supply/JOB_FFT`, {method : "POST", credentials: "include", body: data});
+    };
     return(
         <div className="page-overlay-blur">
             <div className="albumWrapping-library">
@@ -104,7 +116,14 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
                          style={{marginTop: "auto"}}/>
                     <ButtonWithCallback  onClick={deleteForAll}
                          text={"Remove from library"} icon={<IconTrash/>}/>
-
+                    {/* <div class="div-flex-horizontal"> */}
+                    <ButtonWithCallback onClick={recomputeLyrics}
+                         text={"Find lyrics"} icon={<IconTextScan2/>}
+                         style={{marginTop: "auto"}}/>
+                    <ButtonWithCallback onClick={recomputeFFT}
+                         text={"Find spectra"} icon={<IconAnalyze/>}
+                         style={{marginTop: "auto"}}/>
+                    {/* </div> */}
                 </div>
                 <form className="albumDetails" id='editAlbumInfos' >
                     <label htmlFor="albumName">Album name</label>

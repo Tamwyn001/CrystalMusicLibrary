@@ -14,6 +14,7 @@ const path = require("path")
 const icy = require("icy");
 const verify = require("./verify.js");
 const { parseFile } = require("music-metadata");
+const { JobContainerSearchMode } = require("../statics.js");
 
 const router = express.Router();
 
@@ -58,7 +59,9 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
     });
     musicFileProcess.then((trackName) => {
         console.log("  ⧰ \x1b[1m\x1b[38;5;85m" + trackName + "\x1b[0m at", meta.albumUuid);
-        router.jobManager.registerNewJob("JOB_FFT", {tracks : [req.files.music[0].path]}, true);
+        router.jobManager.supplyJob("JOB_FFT", {
+            mode : JobContainerSearchMode.TRACK,
+            target :  req.files.music[0].uuid});
     });
     res.json({ message: "Files uploaded successfully" });
     
