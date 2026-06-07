@@ -340,7 +340,6 @@ export const AudioPlayerProvider = ({ children }) => {
         if(trackBlendTimeoutRef.current) {
             clearTimeout(trackBlendTimeoutRef.current);
             trackBlendTimeoutRef.current = null;
-            return
         }
         if(shouldStopMusic || !globalAudioRef.current){return};
         

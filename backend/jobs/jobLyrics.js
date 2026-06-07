@@ -2,7 +2,7 @@ const { getDatabase } = require("../db");
 const {Job, JobStatus} = require("./jobBase");
 const JobsManager = require('./jobs');
 const { JobContainerSearchMode, LIBRARY_AGENT } = require("../statics");
-const { default: pLimit } = require("p-limit");
+const pLimit = require("p-limit");
 
 const librProvider = 'https://lrclib.net/api'
 const findEntryAPiGet = (entry) =>`${librProvider}/get?${new URLSearchParams(entry).toString()}`;
@@ -91,10 +91,15 @@ class JobLyrics extends Job{
         // Runs until all api call are done
         let todo = [...query, ...pending];
         if (todo.length === 0) return;
-        await this.jobQueueLimit.map(todo, async entry => 
-                 this.fetchAddLyricsPromise(entry, API_SEARCH_METHODE.GET).then(() => {
+
+        const jobs = [];
+        for (query in todo){
+            jobs.push(this.jobQueueLimit( () => 
+                 this.fetchAddLyricsPromise(query, API_SEARCH_METHODE.GET).then(() => {
                     if(this.status!=JobStatus.RUNNING) this.resumeJob()})).catch(
-                        (err)=>{console.log("Could not fetch lyrics")});
+                        (err)=>{console.log("Could not fetch lyrics")}))
+        }
+        await Promise.all(jobs);
         console.log("Treated", todo.length,"    in this recurssion.")
         await this.recursiveApiCall(this.newPendingJobs);
     }
@@ -113,7 +118,7 @@ class JobLyrics extends Job{
         //On error we abort
         try{
             const res1 = await JobLyrics.fetchLyrics(search, method);
-            // console.log("res1:",res1);
+            console.log("Lyrics res:",res1?.message);
             let res2;
             const fallBack = !(res1.plainLyrics || res1.instrumental);
             if(fallBack){

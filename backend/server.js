@@ -8,6 +8,10 @@ const readline = require("readline")
 const { existsSync, mkdirSync } = require("fs");
 const APP_VERSION = "3.0.0";
 const DEV_MODE = false;
+const dns = require('dns');
+const os = require('os');
+
+
 
 // Public path handling (for /dist and static files)
 const publicPath = isPkg
@@ -109,13 +113,13 @@ const { default: checkDiskSpace } = require("check-disk-space");
 
 
 
-
 // -----------------------------------
 // 📡 Get local IP
 // -----------------------------------
-function getLocalIPs() {
+function getLocalIPs(hostname) {
   const validIP = ['localhost'];
   const interfaces = networkInterfaces();
+ 
   for (const name of Object.keys(interfaces)) {
     for (const iface of interfaces[name]) {
       if (
@@ -127,7 +131,7 @@ function getLocalIPs() {
       }
     }
   }
-  validIP.push(hostname())
+  validIP.push(hostname);
   return validIP;
 }
 
@@ -140,11 +144,12 @@ const app = express();
 const PORT = process.env.PORT || 4590;
 let localDomains;
 
+const onDNSResolved = (hostname) => {
 if(DEV_MODE){
   console.log("Dev mode: adding vite to trusted routes");
-  localDomains = getLocalIPs().map(ip => {return [`http://${ip}:${PORT}`, `http://${ip}:5174`]}).flat(1);
+  localDomains = getLocalIPs(hostname).map(ip => {return [`http://${ip}:${PORT}`, `http://${ip}:5174`]}).flat(1);
 } else{
-  localDomains = getLocalIPs().map(ip => {return `http://${ip}:${PORT}`});
+  localDomains = getLocalIPs(hostname).map(ip => {return `http://${ip}:${PORT}`});
 
 }
 const allowedDomains = [...localDomains, "http://localhost:5174"];
@@ -279,13 +284,10 @@ const writeNewStorageEnv = async () => {
   // console.log(`  . 💾     Storage space: ${process.env.CML_TOTAL_STORAGE} bytes`);
 }
 writeNewStorageEnv();
-
-
-
-// -----------------------------------
-// 🌐 Open browser (only when NOT packaged)
-// -----------------------------------
-// if (!isPkg) {
-//   const open = require("open");
-//   open.default(`http://${localIP}:${PORT}`);
-// }
+};
+console.log("Query DNS resolve of library host..")
+dns.lookup(os.hostname(), { hints: 0 }, (err, address) => {
+  dns.reverse(address, (err, hostnames) => {
+    onDNSResolved(hostnames[0]); 
+  });
+});
