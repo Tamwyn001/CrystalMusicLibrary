@@ -54,28 +54,14 @@ class JobFFT extends Job {
      */
     constructor(jobKey, jobManager, payload)  {
         
-        const completeLibrary = payload.completeLibrary || false;
         // @ts-ignore
         super( jobKey, jobManager, payload);
         
         // @ts-ignore
         this.currentConfig = require(jobManager.libraryConfig.configFilePath);
 
-            let query;
-        switch (payload.mode) {
-            case JobContainerSearchMode.ALL:
-                this.waitingList = this.getWholeLibraryTracksSignature();
-                break;
-            case JobContainerSearchMode.ALBUM:
-                this.waitingList = this.getAlbumSignatures(payload.target);
-                break
-            case JobContainerSearchMode.MULT_TRACKS:
-                // this.waitingList = this.getTrackSignature(payload.target);
-                // todo
-            case JobContainerSearchMode.TRACK:
-                this.waitingList = this.getTrackSignature(payload.target);
-            }
-
+        this.switchOnPayloadAndQueue(payload);
+        console.log(this.waitingList);
         this.updateProgress(0, this.waitingList.length);
         for(let i = 0; i < this.currentConfig.ServerFFT.parallelCompute; i++){
             this.CreateFFTWorker(0);
@@ -83,9 +69,25 @@ class JobFFT extends Job {
 
         
     };
+    switchOnPayloadAndQueue(payload){
+        switch (payload.mode) {
+        case JobContainerSearchMode.ALL:
+            this.waitingList.push(...this.getWholeLibraryTracksSignature());
+            break;
+        case JobContainerSearchMode.ALBUM:
+            this.waitingList.push(...this.getAlbumSignatures(payload.target));
+            break
+        case JobContainerSearchMode.MULT_TRACKS:
+            this.waitingList.push(
+                payload.target.forEach((uid) => {return  this.getTrackSignature(uid);}));
+        case JobContainerSearchMode.TRACK:
+            this.waitingList.push(this.getTrackSignature(payload.target));
+        }
+    }
     addNewTask(payload){
         super.addNewTask(payload);
-        this.waitingList.push(...payload.tracks);
+        this.switchOnPayloadAndQueue(payload);
+        console.log(this.waitingList);
         console.log("Pushed", payload.tracks)
         // Create remainings workers if job still active 
         if(this.status !== JobStatus.INACTIVE 
@@ -340,18 +342,20 @@ class JobFFT extends Job {
 
     getAlbumSignatures(albumId){
         const db = getDatabase();
-        return db.prepare(`
+        const tracks = db.prepare(`
             SELECT t.path as path
             FROM tracks t 
             JOIN albums a ON a.id = t.album
             WHERE a.id=?;`).all(albumId); 
+        return tracks.map(track => track.path);
+
     };
     getTrackSignature(trackId){
         const db = getDatabase();
         return db.prepare(`
             SELECT t.path as path
             FROM tracks t 
-            WHERE t.id=?;`).all(trackId); 
+            WHERE t.id=?;`).get(trackId).path; 
     };
 
     resumeJob(){
