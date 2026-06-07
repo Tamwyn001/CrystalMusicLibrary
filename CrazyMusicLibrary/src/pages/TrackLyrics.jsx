@@ -25,15 +25,20 @@ const TrackLyrics = () => {
     const animRef = useRef(null);
     const [currentLine, setCurrentLine] = useState(null);
     useEffect(()=>{
-        if(!(currentTrackData?.lyrics && syncedLyricsRef.current)) {clearLyrics(); return}
-        // syncedLyricsRef.current = processLyricsTimestamps(currentTrackData.lyrics);
-        setCurrentLine({previous : [], 
-            current: "",
-            next:syncedLyricsRef.current.slice(0,1).map(entry => entry.lyric)});
+        console.log("REFRESH", currentTrackData);
+        if(!(currentTrackData?.lyrics)) {clearLyrics(); return;}
+        syncedLyricsRef.current = processLyricsTimestamps(currentTrackData.lyrics);
+        remapLyricsOnSeek(currentTimeRef.current);
+
+        // setCurrentLine({previous : [], 
+        //     current: "",
+        //     next:syncedLyricsRef.current.slice(0,1).map(entry => entry.lyric)});
+        cancelAnimationFrame(update)
         animRef.current = requestAnimationFrame(update);
-    },[currentTrackData?.lyrics]);
+    },[currentTrackData]);
+
     const remapLyricsOnSeek = (t) =>{
-        // searchFuture = lastTime.current < t;
+        if(!(syncedLyricsRef.current)) return;
         syncingSeekRef.current = true;
         const next = syncedLyricsRef.current.findIndex(el => el.time > t);
         setCurrentLine({previous : syncedLyricsRef.current[next-2]?.lyrics, 
@@ -49,6 +54,7 @@ const TrackLyrics = () => {
         const unsubscribe = subscribe("on-seek-song", remapLyricsOnSeek);
         syncedLyricsRef.current = processLyricsTimestamps(currentTrackData.lyrics);
         remapLyricsOnSeek(currentTimeRef.current);
+        cancelAnimationFrame(update)
         animRef.current = requestAnimationFrame(update);
         return () => {unsubscribe(); cancelAnimationFrame(animRef.current);};   
     }, [])
@@ -69,13 +75,15 @@ const TrackLyrics = () => {
         const lyricsScope = lyricsScopeRef.current;
         if(!(currentTrackData?.lyrics && syncedLyricsRef.current[lyricsScope]?.time)) 
         {
-            clearLyrics(); 
-            // animRef.current = requestAnimationFrame(update);
+            setCurrentLine(null);    
+                    // animRef.current = requestAnimationFrame(update);
             return}
         // if(!lyricsScopeRef.current) return
         //Skip next resolution if already counted by the remap lyrics
         if(syncingSeekRef.current){
             syncingSeekRef.current = false; 
+            cancelAnimationFrame(update)
+
             animRef.current = requestAnimationFrame(update);
             return;}
 
@@ -95,6 +103,7 @@ const TrackLyrics = () => {
         }
 
         lastTime.current = now;
+        cancelAnimationFrame(update)
         animRef.current = requestAnimationFrame(update);
     };
     const slideUp = () => {
@@ -110,16 +119,18 @@ const TrackLyrics = () => {
 
     const clearLyrics = () => {
         setCurrentLine(null);
-        cancelAnimationFrame(update);};
-
+        cancelAnimationFrame(update);
+        syncedLyricsRef.current = null;
+    };
+    if (!syncedLyricsRef.current) return <></>;
     return (
-        <div id="track-lyrics-div">
+        <div id="track-lyrics-div"> 
             <span ref={previousLyricsRef} className="off-lyrics">{currentLine?.previous}</span>
             <span ref={currentLyricsRef} className="in-lyrics" data-text={currentLine?.current}>{currentLine?.current}</span>
             <span ref={nextLyricsRef} className="off-lyrics">{currentLine?.next[0]}</span>
             <span className="off-lyrics">{currentLine?.next[1]}</span>
-
         </div>
+        
     )
 }
 

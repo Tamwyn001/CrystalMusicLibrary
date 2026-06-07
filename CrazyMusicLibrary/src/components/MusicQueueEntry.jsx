@@ -12,8 +12,8 @@ import apiBase from "../../APIbase.js";
  */
 const MusicQueueEntry = memo(
     ({ index, style, data }) => {
-        const { playQueue, cacheRef, jumpToQueueTrack, queuePointer } = data;
-        const trackId = playQueue[index];
+        const { playQueueRef, cacheRef, jumpToQueueTrack, queuePointerRef } = data;
+        const trackId = playQueueRef.current[index];
         const [loaded, setLoaded] = useState(!!cacheRef.current[trackId]);
         let trackInfo = cacheRef.current[trackId];
         if (!trackInfo) {
@@ -40,8 +40,8 @@ const MusicQueueEntry = memo(
           <div
             className="music-queue-entry"
             style={rowStyle}
-            is-passed={`${index < queuePointer}`}
-            is-selected={`${index === queuePointer}`}
+            is-passed={`${index < queuePointerRef.current}`}
+            is-selected={`${index === queuePointerRef.current}`}
             onClick={() => jumpToQueueTrack(index)}
           >
             {trackInfo.cover ? (
@@ -53,8 +53,8 @@ const MusicQueueEntry = memo(
           </div>
         );
       }, (prev,next) => 
-            prev.data.playQueue[prev.data.queuePointer] 
-            === next.data.playQueue[next.data.queuePointer]
+            prev.data.playQueueRef.current[prev.data.queuePointerRef.current] 
+            === next.data.playQueueRef.current[next.data.queuePointerRef.current]
     );
 
 export default MusicQueueEntry;

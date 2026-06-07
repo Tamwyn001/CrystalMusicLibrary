@@ -13,7 +13,7 @@ const height = "100%"; // Height of the list in pixels
 // Memoized row that only renders once per index
 
 const MusicQueue = ({hideComponent}) => {
-    const { playQueue, deleteQueue, jumpToQueueTrack, queuePointer } = useAudioPlayer();
+    const { playQueueRef, deleteQueue, jumpToQueueTrack, queuePointerRef } = useAudioPlayer();
     const wrapperRef = useRef(null);
     const {subscribe} = useEventContext();
     const cacheRef = useRef(new Map()); // store rendered rows
@@ -49,16 +49,16 @@ const MusicQueue = ({hideComponent}) => {
         <div className="music-queue" ref={wrapperRef} onTouchMove={stopMovePropagation}>
             <div className="queue-header" >
                 <h2>Music Queue</h2> 
-                {playQueue.length > 0 && <IconTrash className="buttonRound" id="queue-trash" onClick={deleteQueue} />}
+                {playQueueRef.current.length > 0 && <IconTrash className="buttonRound" id="queue-trash" onClick={deleteQueue} />}
             </div>
            
-            {playQueue.length > 0 ?  
+            {playQueueRef.current.length > 0 ?  
                 <List
                 height={listHeight}
-                itemCount={playQueue.length}
+                itemCount={playQueueRef.current.length}
                 itemSize={itemHeight}
                 width={'100%'}
-                itemData={{ playQueue, cacheRef, jumpToQueueTrack, queuePointer }}
+                itemData={{playQueueRef, cacheRef, jumpToQueueTrack, queuePointerRef }}
                 >
                     {MusicQueueEntry}
                 </List>:                                     

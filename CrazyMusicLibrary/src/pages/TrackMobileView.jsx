@@ -41,7 +41,7 @@ const BAR_NUMBER = 5;
 //Cant use useAudioPlayer here
 const TrackMobileView = () =>{
     const {currentTrackData, trackCoverUrl,setTrackMobileView,toggleTrackFavorite,
-        playQueue, jumpToQueueTrack, queuePointer, playLibraryShuffle,
+        playQueueRef, jumpToQueueTrack, queuePointerRef, playLibraryShuffle,
         isPlaying, getFFTAtCurrentTime,fftConfigRef, songRawPalette, recomputeColors,
         requestNewFullScreenImage  } = useAudioPlayer();
     const {addNotification} = useNotifications();
@@ -257,14 +257,14 @@ const TrackMobileView = () =>{
 
         </div>
         { showQueue ? 
-            playQueue.length > 0 ?  
+            playQueueRef.current.length > 0 ?  
             <div id="music-queue" ref={musicQueueDivRef} onTouchMove={stopMovePropagation}>
                 <List
                 height={musicQueueDivRef.current?.offsetHeight || height}
-                itemCount={playQueue.length}
+                itemCount={playQueueRef.current.length}
                 itemSize={itemHeight}
                 width={'100%'}
-                itemData={{ playQueue, cacheRef, jumpToQueueTrack, queuePointer }}
+                itemData={{ playQueueRef, cacheRef, jumpToQueueTrack, queuePointerRef }}
    
                 >
                     {MusicQueueEntry}
@@ -281,7 +281,7 @@ const TrackMobileView = () =>{
             <SongProgress/>
             <AudioControls context={{mobile : true, maximize : true}}/>
             <div className="track-list-header">
-            {playQueue.length > 0 ?
+            {playQueueRef.current.length > 0 ?
             <ButtonWithCallback text={''} 
                     icon={isFav ? <IconStarFilled /> : <IconStar/>}
                     onClick={toggleFavorite}/>  

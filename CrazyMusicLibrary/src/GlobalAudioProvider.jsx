@@ -55,17 +55,16 @@ export const AudioPlayerProvider = ({ children }) => {
     // all function logic
     const [playingTrack, setPlayingTrack] = useState('');
     const [isPlaying, setIsPlaying] = useState(false);
-    const [currentTrackData, setCurrentTrackData] = useState({}); // Store track data here
+    const [currentTrackData, setCurrentTrackDataState] = useState({}); // Store track data here for cosmetix
+    const currentTrackDataRef = useRef(null); // Store track data here for internal use
     const currentTimeRef = useRef(0); // Store current time here
     const globalAudioRef = useRef(null); //audioRef that links either to A or B.
     const audioRefA = useRef(null); //
     const audioRefB = useRef(null); //
-    const [playQueue, setPlayQueue] = useState([]); // Store play queue here
     const [trackCoverUrl, setTrackCoverUrl] = useState('null'); // Store track cover URL here
     const resolveTrackURL = (name) => `${name}` != 'null' ? `${apiBase}/read-write/music/${name}` : null; // Adjust the path as needed
-    const [queuePointer, setQueuePointer] = useState(-1); // Pointer to the current track in the queue
-    const playQueueRef = useRef(playQueue);
-    const queuePointerRef = useRef(queuePointer);
+    const playQueueRef = useRef([]);
+    const queuePointerRef = useRef(-1);
     const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
     const [editingArtist, setEditingArtist] = useState(null); // Flag to indicate if the album is being edited
     const {emit, subscribe} = useEventContext();
@@ -80,7 +79,6 @@ export const AudioPlayerProvider = ({ children }) => {
     const targetAudioHelperRef = useRef('A');
     const trackBlendTimeoutRef = useRef(null);
     const [ trackBlendTime, setTrackBlendTime ] = useState(5); // s
-    const [ shouldInitPlay, setShouldInitPlay ] = useState(false); // trigger flag when the user clics a track, not autoplay.
     const [volume, setVolume] = useState(() => {
         // Only runs once on mount
         const stored = parseFloat(localStorage.getItem('volume'));
@@ -134,6 +132,11 @@ export const AudioPlayerProvider = ({ children }) => {
     const currentDisplayedPage = useRef(null);
     const songRawPalette = useRef([]);
     //call inside a mount
+    const setCurrentTrackData = (newData) =>{
+        currentTrackDataRef.current = newData;
+        setCurrentTrackDataState(newData);
+    }
+    const currentPlayingTrackRef = useRef(null);
     const setupAudioGraph = () => {
 
         // NODE A
@@ -163,7 +166,7 @@ export const AudioPlayerProvider = ({ children }) => {
                     const title = data.metadata.adw_ad == "true" ? 
                         "Advertisment - " + `${(Number(data.metadata.durationMilliseconds)/1000).toFixed(1)}s`: 
                         data.metadata.StreamTitle;
-                    setCurrentTrackData(old => {return {...old, title : title}});
+                    setCurrentTrackData({...currentTrackDataRef.current, title : title});
                 };
         
                 source.addEventListener("error", (e) => {
@@ -174,7 +177,7 @@ export const AudioPlayerProvider = ({ children }) => {
           });
           
           audioRefA.current.addEventListener('canplay', () => {
-            console.log('Stream is playable!');
+            // console.log('Stream is playable!');
           });
           
 
@@ -268,7 +271,6 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const onPlaying = () => {
         if(!fftConfigRef.current){return;}
-        console.log("Record start playing", globalAudioRef.current.currentTime);
         audioTimeTrackingRef.current.lastAudioTime = globalAudioRef.current.currentTime;
         audioTimeTrackingRef.current.lastPerformanceNow = performance.now();
     };
@@ -313,12 +315,13 @@ export const AudioPlayerProvider = ({ children }) => {
             const CHUNKS_PER_SECOND = Math.round(1 / fftConfigRef.current.interval);
             const TOTAL_CHUNKS = SECONDS_TO_BUFFER * CHUNKS_PER_SECOND;
             const seekChunk = Math.floor(t * CHUNKS_PER_SECOND);
-            console.log("Seeking chunk", seekChunk, TOTAL_CHUNKS, CHUNKS_PER_SECOND, SECONDS_TO_BUFFER);
+            // console.log("Seeking chunk", seekChunk, TOTAL_CHUNKS, CHUNKS_PER_SECOND, SECONDS_TO_BUFFER);
             writeIndexRef.current = 0;
 
              // This tells us: chunk 0 in buffer == chunk N in audio
             bufferStartChunkRef.current = seekChunk; 
             bufferFFTData(FFTcurrentTrack.current, seekChunk, seekChunk + TOTAL_CHUNKS);
+            rescheduleAudioTransition();
         }else{
             maybeFetchFFT(FFTcurrentTrack.current, t);
         }
@@ -329,20 +332,23 @@ export const AudioPlayerProvider = ({ children }) => {
         if(!currentTrackData){ return; } 
         // Radios do not need transitions. 
         if(currentTrackData.type === 'radio'){ return; } 
-        rescheduleAudioTransition();
+        // rescheduleAudioTransition();
     }, [currentTrackData]);
 
     const rescheduleAudioTransition = () => {
-        const shouldStopMusic = playQueue.length <= queuePointer + 1; 
-        if(trackBlendTimeoutRef.current) clearTimeout(trackBlendTimeoutRef.current);
+        const shouldStopMusic = playQueueRef.current.length <= queuePointerRef.current + 1; 
+        if(trackBlendTimeoutRef.current) {
+            clearTimeout(trackBlendTimeoutRef.current);
+            trackBlendTimeoutRef.current = null;
+            return
+        }
         if(shouldStopMusic || !globalAudioRef.current){return};
         
-        console.log("Transition rescheduled, timesout in ", currentTrackData.rawDuration , globalAudioRef.current.currentTime , trackBlendTime, currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime);
+        console.log("Transition rescheduled, timesout in ", Math.max((currentTrackDataRef.current.rawDuration - globalAudioRef.current.currentTime - trackBlendTime )* 1000, 0));
         trackBlendTimeoutRef.current = setTimeout(() => {
             targetAudioHelperRef.current = targetAudioHelperRef.current === "A" ? "B": "A";
-            playbackWithTransition(queuePointer + 1)
-        }
-        , (Math.min(currentTrackData.rawDuration - globalAudioRef.current.currentTime - trackBlendTime) * 1000), 0);
+            playbackWithTransition(queuePointerRef.current + 1);
+        }, (Math.max((currentTrackDataRef.current.rawDuration - globalAudioRef.current.currentTime - trackBlendTime )* 1000, 0)));
     }
 
 
@@ -350,7 +356,9 @@ export const AudioPlayerProvider = ({ children }) => {
     //We asume A just started playing. So need an inializer before, like audio A source = ...
     //this is only called if a track will follow
     const playbackWithTransition = async (newQueuePointer) => {
-        const shouldStopMusic = playQueue.length <= newQueuePointer; 
+        const shouldStopMusic = playQueueRef.current.length <= queuePointerRef.current + 1; 
+        // console.log("SHOULD STOP",shouldStopMusic,playQueueRef.current.length , queuePointerRef.current + 1)
+
 
         //if another track, we switch audios
         setQueuePointer(newQueuePointer);
@@ -359,12 +367,12 @@ export const AudioPlayerProvider = ({ children }) => {
             audioRefA.current : audioRefB.current; 
 
         
-        if(playQueue[newQueuePointer].startsWith("radio-")){
+        if(playQueueRef.current[queuePointerRef.current].startsWith("radio-")){
             // Radios are passed as an object instead of a string (song uuid).
             let radioDetails = {};
-            if(playQueue[newQueuePointer].startsWith("radio-id")){
-                const radioUuid = playQueue[newQueuePointer].split("radio-id:")[1];
-                // We expect newQueuePointer to always be 0.
+            if(playQueueRef.current[queuePointerRef.current].startsWith("radio-id")){
+                const radioUuid = playQueueRef.current[queuePointerRef.current].split("radio-id:")[1];
+                // We expect queuePointerRef.current to always be 0.
                 radioDetails = await fetch(`${apiBase}/radio/${radioUuid}`)
                     .then(res=>res.json());
                 console.log(radioDetails);
@@ -373,12 +381,12 @@ export const AudioPlayerProvider = ({ children }) => {
                     ...radioDetails, duration : "0-", uuid : radioUuid});
    
             } else {
-                radioDetails.url = playQueue[newQueuePointer].split("radio-url:")[1];
+                radioDetails.url = playQueueRef.current[queuePointerRef.current].split("radio-url:")[1];
                 console.log(externalRadioInfos.current);
                 const {name : artist, ...rest} = externalRadioInfos.current;
                 const infos = {artist, ...rest};
                 setCurrentTrackData({type : 'radio', ...infos, duration : "0-"});
-   
+                
             }
             globalAudioRef.current.src = radioDetails.url;
             
@@ -388,7 +396,8 @@ export const AudioPlayerProvider = ({ children }) => {
                 console.log(event);
                 const data = JSON.parse(event.data);
                 console.log("Now playing:", data.metadata.StreamTitle);
-                setCurrentTrackData(old => {return {...old, title : data.metadata.StreamTitle}});
+                setCurrentTrackData({...currentTrackDataRef.current, title : data.metadata.StreamTitle});
+
             };
             setPlayingTrack('');
             source.addEventListener("error", (e) => {
@@ -405,14 +414,19 @@ export const AudioPlayerProvider = ({ children }) => {
             
         }
         externalRadioInfos.current = null;
-        const trackId = playQueue[newQueuePointer];
+        const trackId = playQueueRef.current[queuePointerRef.current];
+        currentPlayingTrackRef.current = trackId;
         await fetch(`${apiBase}/read-write/trackInfos/${trackId}`, {
             method: 'GET'
         })
         .then(res => res.json())
         .then(data => {
+            // fetch obscelete, user asked new
+            if (currentPlayingTrackRef.current != data.id) return;
+
             data.duration = parseAudioDuration(data.rawDuration);
             setCurrentTrackData(data);
+            rescheduleAudioTransition();
         });
 
        
@@ -640,36 +654,31 @@ export const AudioPlayerProvider = ({ children }) => {
     const updateTime = () => {currentTimeRef.current = globalAudioRef.current?.currentTime};
     const playNextTrackOnEnd = () => {
 
-          if(playQueue.length > 0 && playQueue.length <= queuePointer + 1){
+          if(playQueueRef.current.length > 0 && playQueueRef.current.length <= queuePointerRef.current + 1){
             stopMusic();
         }
         };
 
-    useEffect(() => {
-        if (!shouldInitPlay || queuePointer === -1 || playQueue.length === 0 ) {
+    const initPlay = () =>{
+        if (queuePointerRef.current === -1 || playQueueRef.current.length === 0 ) return; // avoid reseting the track to the beggining when just adding tracks to queue
 
-            return; // avoid reseting the track to the beggining when just adding tracks to queue
-        }
         resetAudioNodes();
-        console.log("init Autoplay", playQueue, queuePointer, shouldInitPlay, audioRefA.current, audioRefB.current);
-        playbackWithTransition(queuePointer);
-        setShouldInitPlay(false);
-    }, [playQueue, queuePointer, shouldInitPlay]);
-    
-    useEffect(() => {
-        queuePointerRef.current = queuePointer;
-    },[queuePointer])
+        console.log("init Autoplay", playQueueRef.current, queuePointerRef.current, audioRefA.current, audioRefB.current);
+        playbackWithTransition(queuePointerRef.current);
+    };
+    const setQueuePointer = (newPtr) => {
+        queuePointerRef.current = newPtr;
+    };
 
+    const setPlayQueue = (newQueue) => {
+        playQueueRef.current = newQueue;
+    };
 
-    useEffect(() => {
-        playQueueRef.current = playQueue;
-        // console.log('PlayCueue updated', playQueueRef.current);
-    },[playQueue])
 
     const toggleTrackPaused = () => {
         if(!globalAudioRef.current && playQueueRef.current.length > 0){
             setQueuePointer(0);
-            setShouldInitPlay(true);
+            initPlay();
             return;
         }
         if (isPlaying) {
@@ -680,7 +689,7 @@ export const AudioPlayerProvider = ({ children }) => {
 
         } else {
             setIsPlaying(true);
-            if (queuePointer === -1 && playQueue.length !== 0 ) {
+            if (queuePointerRef.current === -1 && playQueueRef.current.length !== 0 ) {
                 setQueuePointer(0);
                 return;
             }
@@ -699,7 +708,7 @@ export const AudioPlayerProvider = ({ children }) => {
             setPlayQueue(data);
             console.log(data);
             setQueuePointer(data.findIndex(id => id === trackId));
-            setShouldInitPlay(true);
+            initPlay();
         });
     }
 
@@ -707,23 +716,23 @@ export const AudioPlayerProvider = ({ children }) => {
         setPlayQueue([trackPath]);
 
         setQueuePointer(0);
-        setShouldInitPlay(true);
+        initPlay();
     };
 
 
 
     const playPreviousSong = () => {
-        if (globalAudioRef.current.currentTime > 5 || queuePointer === 0) { // Check if the current time is greater than 3 seconds or if it's the first song
+        if (globalAudioRef.current.currentTime > 5 || queuePointerRef.current === 0) { // Check if the current time is greater than 3 seconds or if it's the first song
             globalAudioRef.current.currentTime = 0; // Reset the current time to 0
             rescheduleAudioTransition();
             return; // Don't play the previous song if the current time is less than 3 seconds
         }
-        setQueuePointer(queuePointer - 1); // Move to the previous track in the queue
-        setShouldInitPlay(true);
+        setQueuePointer(queuePointerRef.current - 1); // Move to the previous track in the queue
+        initPlay();
     };
-
+    
     const playContainer = (containerId, containerType, onlyFavs = false) => {
-        setShouldInitPlay(false);
+
         fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, {
             method: 'GET',
             credentials: 'include'
@@ -732,11 +741,11 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(data => {
             setPlayQueue(data);
             setQueuePointer(0);
-            setShouldInitPlay(true);        
+            initPlay();        
         });
     };
     const addContainerToQueue = (containerId, containerType, onlyFavs = false) => {
-        setShouldInitPlay(false);
+
         fetch(`${apiBase}/read-write/nextSongs/${containerType}/${containerId}/${onlyFavs}`, {
             method: 'GET',
             credentials: 'include'
@@ -756,22 +765,19 @@ export const AudioPlayerProvider = ({ children }) => {
         }).then(res => res.json())
         .then(data => {
             setPlayQueue(_.shuffle(data));
-            setShouldInitPlay(true);
+            initPlay();
             setQueuePointer(0);
         });
     };
 
-    const playNextSong = (useRefs = false) => {
-        const queue = useRefs ? playQueueRef.current : playQueue;
-        const pointer = useRefs ? queuePointerRef.current : queuePointer;
-    
-        if (queue.length <= pointer + 1) {
+    const playNextSong = () => {
+        if (playQueueRef.current.length <= queuePointerRef.current + 1) {
             stopMusic();
             console.log("stop");
         }
         
-        setQueuePointer(pointer + 1);
-        setShouldInitPlay(true);
+        setQueuePointer(queuePointerRef.current + 1);
+        initPlay();
     };
 
     const stopMusic = () => {
@@ -779,7 +785,6 @@ export const AudioPlayerProvider = ({ children }) => {
         currentTimeRef.current = 0; // Reset the current time state
         setIsPlaying(false);
         setCurrentTrackData(null);
-        setShouldInitPlay(false);
         setQueuePointer(-1);
         setTrackCoverUrl('null');
         setPlayQueue([]);
@@ -798,7 +803,7 @@ export const AudioPlayerProvider = ({ children }) => {
         const newTime = (percent / 100) * globalAudioRef.current.duration; // Calculate new time based on percent
         globalAudioRef.current.currentTime = newTime; // Set the new current time
         currentTimeRef.current = newTime; // Update the current time state
-        rescheduleAudioTransition();
+
     }
 
     const jumpTrackSeconds = (seconds) => {
@@ -815,8 +820,8 @@ export const AudioPlayerProvider = ({ children }) => {
 
 
     const jumpToQueueTrack = (index) => {
-        if (index < 0 || index >= playQueue.length) return; // Ensure index is within bounds
-        setShouldInitPlay(true)
+        if (index < 0 || index >= playQueueRef.current.length) return; // Ensure index is within bounds
+        initPlay()
         setQueuePointer(index);
     }
     const fetchTrackCover = (trackName) =>{
@@ -878,7 +883,7 @@ export const AudioPlayerProvider = ({ children }) => {
         const data = await res.json();
         const tracks = data.map((track) => track.id); // Extract the track name from the response
         setPlayQueue(_.shuffle(tracks));
-        setShouldInitPlay(true);
+        initPlay();
         setQueuePointer(0);
     }
 
@@ -887,7 +892,7 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(response => response.json())
         .then(data => {
             setPlayQueue(_.shuffle(data));
-            setShouldInitPlay(true);
+            initPlay();
             setQueuePointer(0);
             addNotification("Playing the library in shuffle", notifTypes.INFO);
         });
@@ -1050,7 +1055,6 @@ export const AudioPlayerProvider = ({ children }) => {
         data.append("playlist", JSON.stringify(playlist))
         if(coverFile) {
             data.append("cover", coverFile);
-            console.log(coverFile);
         }
         fetch(`${apiBase}/read-write/newPlaylist`, {
             method : "POST",
@@ -1067,7 +1071,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const playRadio = (URL) => {
         setQueuePointer(0);
         setPlayQueue([URL]);
-        setShouldInitPlay(true);
+        initPlay();
     }
 
     const closeNewPlaylistWindow = () =>{
@@ -1126,13 +1130,13 @@ export const AudioPlayerProvider = ({ children }) => {
                 .then(id => {navigate(`albums/${id}`)});
     }
     const playTrackNext = (track) =>{
-        const array = playQueue;
-        array.splice(queuePointer + 1, 0, track.id);
+        const array = playQueueRef.current;
+        array.splice(queuePointerRef.current + 1, 0, track.id);
         setPlayQueue(array);
         addNotification(`${track.title} playing next.`, notifTypes.SUCCESS);
     }
     const playTrackEnd = (track) => {
-        const array = playQueue
+        const array = playQueueRef.current
         array.push(track.id);
         setPlayQueue(array);
         addNotification(`${track.title} playing at the end.`, notifTypes.INFO);
@@ -1169,7 +1173,7 @@ export const AudioPlayerProvider = ({ children }) => {
         if(salad.length === 0) { return}
         setPlayQueue(salad);
         setQueuePointer(index || 0);
-        setShouldInitPlay(true);
+        initPlay();
 
     };
 
@@ -1184,7 +1188,6 @@ export const AudioPlayerProvider = ({ children }) => {
         if(fullScreenMode.current){
             locationBeforeFullScreen.current = location.pathname;
         }
-        console.log(locationBeforeFullScreen.current);
         navigate(fullScreenMode.current ? "/full-screen" : 
             (locationBeforeFullScreen.current 
             && locationBeforeFullScreen.current !== "/full-screen" ?
@@ -1209,6 +1212,10 @@ export const AudioPlayerProvider = ({ children }) => {
     const skipAudioSeconds = (forward) => {
         if(globalAudioRef.current){
             globalAudioRef.current.currentTime += (forward ? 1 : -1 ) * 10;
+        }
+        if (Math.abs(globalAudioRef.current.currentTime - globalAudioRef.current.duration)<0.1)
+        {
+            playNextSong(true);
         }
     }
 
@@ -1237,15 +1244,14 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const toggleCurrentRadioToFavorites = () => {
-        if(currentTrackData?.type === "radio"){
-            fetch(`${apiBase}/radio/addToFavs/${currentTrackData.uuid}`,{method : "POST", 
+        if(currentTrackDataRef.current?.type === "radio"){
+            fetch(`${apiBase}/radio/addToFavs/${currentTrackDataRef.current.uuid}`,{method : "POST", 
                 credentials : "include"})
             .then(async res => {
                 const json = await res.json();
                  return {json , ok: res.ok}})
             .then(data=>{
                 addNotification(data.json.message, notifTypes.INFO);
-                console.log(data);
                 if(!data.ok) return;
                 emit("refetch-known-radios");
             }).catch(err => {
@@ -1265,8 +1271,6 @@ export const AudioPlayerProvider = ({ children }) => {
         const palette = colorThief.getPalette(imgRef.current, 10);
         songRawPalette.current = palette;
         generateContrastedPairs(palette);
-        console.log("recomputed");
-        console.log(paletteRef.current);
         safeComputedCallback();
     }
 
@@ -1303,9 +1307,8 @@ export const AudioPlayerProvider = ({ children }) => {
         .then(res => res.json())
         .then((newFavBool) =>{
             callBackSetState(newFavBool);
-            console.log(currentTrackData.id , trackId)
-            if(currentTrackData.id === trackId){
-                currentTrackData.isFav = newFavBool;
+            if(currentTrackDataRef.current.id === trackId){
+                currentTrackDataRef.current.isFav = newFavBool;
             }
            
         });
@@ -1360,8 +1363,8 @@ export const AudioPlayerProvider = ({ children }) => {
             jumpToPercent,
             addContainerToQueue,
             playContainerSuffle,
-            playQueue,
-            queuePointer,
+            playQueueRef,
+            queuePointerRef,
             jumpToQueueTrack,
             deleteQueue,
             addArtistToQueue,
