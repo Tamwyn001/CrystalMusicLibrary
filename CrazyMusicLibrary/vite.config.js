@@ -14,9 +14,9 @@ export default defineConfig({
     alias: {
       ...{
         // See https://github.com/mantinedev/ui.mantine.dev/issues/113
-        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
-         find: '@', replacement: resolve(__dirname, 'src') 
+        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs'
       },
+      ...{find: '@', replacement: resolve(__dirname, 'src')}
     }
   },
   build: {
