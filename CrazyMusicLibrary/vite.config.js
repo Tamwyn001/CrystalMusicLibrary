@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import {resolve} from 'path';
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -13,7 +14,8 @@ export default defineConfig({
     alias: {
       ...{
         // See https://github.com/mantinedev/ui.mantine.dev/issues/113
-        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs'
+        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs',
+         find: '@', replacement: resolve(__dirname, 'src') 
       },
     }
   },
