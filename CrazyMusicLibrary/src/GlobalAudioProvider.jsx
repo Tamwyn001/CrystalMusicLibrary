@@ -13,6 +13,7 @@ import { useEventContext } from "./GlobalEventProvider.jsx";
 import _ from "lodash";
 import ColorThief from "../third_party_modules/color-thief/dist/color-thief.mjs"
 import TrackMobileView from "./pages/TrackMobileView.jsx";
+import TrackEditInfos from "./pages/TrackEditinfos.jsx";
 
 const AudioPlayerContext = createContext(undefined);
 const trackActionTypes = {
@@ -23,6 +24,7 @@ const trackActionTypes = {
     REMOVE_FROM_PLAYLIST : "remove_from_playlist",
     ADD_TO_FAVORITES : "add_to_favs",
     REMOVE_FROM_FAVORITES : "remove_from_favs",
+    EDIT_INFOS :"edit_infos",
     NONE : "none"
 }
 const useRoutingHistory = () => {
@@ -75,6 +77,8 @@ export const AudioPlayerProvider = ({ children }) => {
     const navigate = useNavigate();
     const [ container, setContainer] = useState(null); //{id, type : "album"||"playlist"||..}
     const [ editingTrackTags, setEdtitingTrackTags ] = useState(null)
+    const [ editingTrackInfos,  setEdtitingTrackInfos ] = useState(null)
+
     const [ saladContext, setSaladContext] = useState(null)
     const targetAudioHelperRef = useRef('A');
     const trackBlendTimeoutRef = useRef(null);
@@ -1121,6 +1125,9 @@ export const AudioPlayerProvider = ({ children }) => {
             case trackActionTypes.REMOVE_FROM_FAVORITES:
                 toggleTrackFavorite(track.id, true, toggleTrackFavoriteWithActionBar.current);
                 break;
+            case trackActionTypes.EDIT_INFOS:
+                setEdtitingTrackInfos(track);
+                break;
         }
     }
     const gotoTrackAlbum = (track) => {
@@ -1152,6 +1159,20 @@ export const AudioPlayerProvider = ({ children }) => {
     const linkNewContainer = (newContainer, refreshCallback) => {
         albumAskRefreshRef.current = refreshCallback;
         setContainer(newContainer);
+    };
+
+    const applyTrackEditInfos = (infos, track) =>{
+        setEdtitingTrackInfos(null);
+        if(!track) return;
+        const data = new FormData();
+        data.append("title", JSON.stringify(infos.title));
+        data.append("lyrics", JSON.stringify(infos.lyrics));
+
+        fetch(`${apiBase}/read-write/changeTrackinfos/${track}`,
+            {method : "POST",
+            credentials:"include",
+            body: data})
+        .then(res => res.json()).then(data => {addNotification("Song upated!", notifTypes.SUCCESS)})
     };
 
     const applyTrackEditTags = (tags, track) =>{
@@ -1392,6 +1413,7 @@ export const AudioPlayerProvider = ({ children }) => {
             {(creatingNewPlaylist) && <CreatePlaylist closeOverlay={closeNewPlaylistWindow} applyCanges={sendNewPlaylist}/>}
             {(trackActionContext) ? <TrackActions isFav={container?.favPlaylist || false} trackY={trackActionContext.position.y}  track={trackActionContext.track} />: null}
             {(editingTrackTags) && <TagEditor apply={applyTrackEditTags} track={editingTrackTags}/>}
+            {(editingTrackInfos) && <TrackEditInfos apply={applyTrackEditInfos} track={editingTrackInfos}/>}
             {(tagWindowOpen) && <EditTagsWindow/>}
             {trackMobileView && <TrackMobileView />}
         </AudioPlayerContext.Provider>

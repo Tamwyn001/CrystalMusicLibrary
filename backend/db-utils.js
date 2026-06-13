@@ -268,6 +268,11 @@ const getAlbumTracksPath = (id) => {
         JOIN favorites f on t.id = f.entry_id WHERE t.id = ?`).get(id);
     return {type : 'track', ...db.prepare(query).get(id), isFav : isFav != undefined, id:id};
 }
+const setTracksInfos = (content) =>{
+    const query = `UPDATE tracks SET title = ?, lyrics = ? WHERE id = ?`;
+    db.prepare(query).run(content.title, content.lyrics, content.id);
+    return {message: "Track updated."}
+}
 
  const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {
     const query = (onlyFavs) ? 
@@ -930,6 +935,7 @@ const getTrackLyrics = (trackId) =>{
 }
 
 module.exports = {
+    setTracksInfos,
     getTrackLyrics,
     toogleUserLikesRadio,
     checkUserExistsEmailName,

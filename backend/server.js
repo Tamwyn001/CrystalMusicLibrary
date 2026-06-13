@@ -131,7 +131,7 @@ function getLocalIPs(hostname) {
       }
     }
   }
-  validIP.push(hostname);
+  validIP.push(hostname+process.env.CML_SERVER_SUFIX);
   return validIP;
 }
 

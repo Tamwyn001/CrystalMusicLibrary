@@ -1,4 +1,4 @@
-import { IconFolderPin, IconHeart, IconHeartBroken, IconLabel, IconMusicX, IconRowInsertBottom, IconRowInsertTop } from "@tabler/icons-react";
+import { IconFolderPin, IconHeart, IconHeartBroken, IconLabel, IconMusicCog, IconMusicX, IconRowInsertBottom, IconRowInsertTop } from "@tabler/icons-react";
 import { useEffect, useRef, useState } from "react";
 import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import { useLocation } from "react-router-dom";
@@ -46,8 +46,8 @@ const TrackActions = ({trackY, track, isFav}) => {
 
 
 
-    return(top && <div className="track-actions-div"  ref={wrapperRef} style={{height : "fit-content", top:top}}>
-        <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.TOP_QUEUE, track)}}>
+    return(top && <div className="track-actions-div"ref={wrapperRef} style={{height : "fit-content", top:top}}>
+        <div className="track-action-entry"  data-is-top={true} onClick={() => {onClicTrackActionEntry(trackActionTypes.TOP_QUEUE, track)}}>
             <span>Front queue</span> <IconRowInsertTop/>
         </div>
         <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.END_QUEUE, track)}}>
@@ -79,6 +79,11 @@ const TrackActions = ({trackY, track, isFav}) => {
                 <span>Add to favorites</span> <IconHeart/>
             </div> : null
         }
+
+        <div className="track-action-entry" onClick={() => {onClicTrackActionEntry(trackActionTypes.EDIT_INFOS, track)}}>
+            <span>Edit</span> <IconMusicCog/>
+        </div>
+
                     
     </div>)
 }

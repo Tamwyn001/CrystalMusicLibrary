@@ -2,7 +2,7 @@ const express = require( "express");
 // @ts-ignore
 const {existsSync, mkdirSync, statSync, createReadStream, unlink, fstat} = require( "fs");
 // @ts-ignore
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit, getTrackLyrics } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit, getTrackLyrics, setTracksInfos } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 // @ts-ignore
@@ -155,6 +155,9 @@ router.get("/trackInfos/:id", async (req, res) => {
     //const trackInfos = await parseFile(filePath); //* pareseFile too overkill, maybe for an advanced view in the future
     res.json(getTrackInfos(req.params.id));
 });
+router.post("/changeTrackinfos/:id", upload.none(), async (req, res) => {
+    res.json(setTracksInfos({ id : req.params.id, title : JSON.parse(req.body.title), lyrics : JSON.parse(req.body.lyrics)}));}
+);
 router.get("/trackAlbumId/:trackId", (req, res) => {
     res.json(getTrackAlbumId(req.params.trackId));
 })
@@ -578,5 +581,7 @@ router.get("/getSongMetaDataCover/:id", async (req,res) => {
 router.get("/getTrackLyrics/:trackId", (req, res) =>{
     res.json(getTrackLyrics(req.params.trackId));
 });
+
+
 
 module.exports = {router, runServerStats};

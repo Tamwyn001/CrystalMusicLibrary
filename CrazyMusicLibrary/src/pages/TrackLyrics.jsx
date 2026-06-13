@@ -60,6 +60,7 @@ const TrackLyrics = () => {
     }, [])
 
     const update = (time) => {
+        console.log("updating", currentLyricsRef);
         if(!(currentLyricsRef.current &&
         nextLyricsRef.current &&
         previousLyricsRef.current)){
