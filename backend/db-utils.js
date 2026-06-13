@@ -271,7 +271,7 @@ const getAlbumTracksPath = (id) => {
 const setTracksInfos = (content) =>{
     const query = `UPDATE tracks SET title = ?, lyrics = ? WHERE id = ?`;
     db.prepare(query).run(content.title, content.lyrics, content.id);
-    return {message: "Track updated."}
+    return {message: "Track updated.", title: content.title}
 }
 
  const getNextSongsFromAlbum = (albumId,onlyFavs, email) => {

@@ -13,23 +13,30 @@ export const EventProvider = ({ children }) => {
         listenersRef.current.get(eventName).add(callback);
         // console.log('registered', eventName, callback, listenersRef.current);
         //returns an unsubscribing function 
+ 
         return () => {
             listenersRef.current.get(eventName)?.delete(callback);
-
           };
     };
 
     //calls all bound event to the eventName
     const emit = (eventName, payload) => {
         if (listenersRef.current.has(eventName)){
-            listenersRef.current.get(eventName).forEach(cb => {cb(payload); console.log('called at', cb)});  
+            listenersRef.current.get(eventName).forEach(cb => {cb(payload); 
+                // console.log('called at', cb);
+            });  
             };
         };
+    const unsubscribe = (eventName) => {
+        const baseEvent = listenersRef.current.get(eventName);
+        baseEvent.forEach(cb => {baseEvent.delete(cb);}); 
+    };
 
     return (
     <EventContext.Provider value={{
         emit,
-        subscribe}}>
+        subscribe,
+        unsubscribe}}>
         {children}
     </EventContext.Provider>
     )

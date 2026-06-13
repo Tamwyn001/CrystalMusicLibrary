@@ -41,7 +41,7 @@ const TrackEditInfos= ({apply, track}) => {
 
             </form>
             <button className="roundButton go-back" onClick={handleApply}>Apply</button>
-            <button className="roundButton go-back" onClick={apply}>Cancel</button>
+            <button className="roundButton go-back" onClick={() => {apply(null, track.id)}}>Cancel</button>
 
         </div>: <div className="albumWrapping-library"><span>Loading</span></div>}
     </div>);

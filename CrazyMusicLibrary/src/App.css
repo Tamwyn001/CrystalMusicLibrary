@@ -511,12 +511,24 @@
 }
 .off-lyrics[data-anim="fade-big"]{
     animation: slideUpBig 0.3s ease-in-out 1;
+    animation-delay: 0.05s;
 }
 .off-lyrics[data-anim="fade-out"]{
-    animation: fadeOut 0.1s ease-in-out 1 ;
+    animation: fadeOutIn 0.3s ease-in-out 1 ;
     animation-fill-mode: forwards ;
+    animation-delay: 0.1s;
 }
 
+.data-fade-text-in {
+  animation: fadeIn 0.2s ease-in-out forwards;
+}
+
+.data-fade-text-out{
+  animation: fadeOut 0.2s ease-in-out forwards;
+}
+#in-lyrics-div{
+  opacity: 1;
+}
 .in-lyrics::before {
   content: attr(data-text);
   position: absolute;
@@ -537,32 +549,43 @@
 }
 
 @keyframes slideUpSmall {
-  from {translate: 0px 0px;
+  0% {translate: 0px 0px;
     font-size: 30px;
   font-weight: 900;
     color: #eaf1ff;
 }
-  to {translate: 0px -87px;
+  80% {translate: 0px -87px;
     font-size: 20px;
   font-weight: 500;
   color: #c6c6c69f;}
 }
-
+@keyframes fadeOutIn {
+  0% {opacity: 1;}
+  50% {opacity: 0;}
+  100% {opacity: 1;}
+}
 @keyframes fadeOut {
   from {opacity: 1;}
   to {opacity: 0;}
 }
+@keyframes fadeIn {
+  from {opacity: 0;}
+  to {opacity: 1;}
+}
+
 
 
 @keyframes slideUpBig {
   from {translate: 0px 0px;
     font-size: 20px;
   font-weight: 500;
-  color: #c6c6c69f;}
+  color: #c6c6c69f;
+opacity: 1;}
   to {translate: 0px -80px;
     font-size: 30px;
   font-weight: 900;
-  color: #eaf1ff;}
+  color: #eaf1ff;
+opacity: 0;}
 }
 
 .div-flex-horizontal{

@@ -69,7 +69,7 @@ export const AudioPlayerProvider = ({ children }) => {
     const queuePointerRef = useRef(-1);
     const [editingAlbum, setEditingAlbum] = useState(null); // Flag to indicate if the album is being edited
     const [editingArtist, setEditingArtist] = useState(null); // Flag to indicate if the album is being edited
-    const {emit, subscribe} = useEventContext();
+    const {emit, subscribe,unsubscribe} = useEventContext();
     const albumAskRefreshRef = useRef(null); // Contains the refresh callback 
     const [ trackActionContext, setTrackActionContext ] = useState(null);
     const trackActionLoosesFocusRef = useRef(null);
@@ -241,11 +241,11 @@ export const AudioPlayerProvider = ({ children }) => {
         audioRefB.current = null;
 
         audioRefA.current?.removeEventListener("timeupdate", updateTime);
-        audioRefA.current?.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefA.current?.removeEventListener("ended", stopMusicOnLastPlayed);
         audioRefA.current?.removeEventListener('error');
         audioRefA.current?.removeEventListener('canplay');
         audioRefB.current?.removeEventListener("timeupdate", updateTime);
-        audioRefB.current?.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefB.current?.removeEventListener("ended", stopMusicOnLastPlayed);
         audioRefA.current?.removeEventListener('timeupdate', detectSeek);
         audioRefB.current?.removeEventListener('timeupdate', detectSeek);
         audioRefA.current?.removeEventListener('playing', onPlaying);
@@ -267,9 +267,9 @@ export const AudioPlayerProvider = ({ children }) => {
         targetAudioHelperRef.current = "A";
 
         audioRefA.current.removeEventListener("timeupdate", updateTime);
-        audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefA.current.removeEventListener("ended", stopMusicOnLastPlayed);
         audioRefB.current.removeEventListener("timeupdate", updateTime);
-        audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
+        audioRefB.current.removeEventListener("ended", stopMusicOnLastPlayed);
 
     };
 
@@ -359,13 +359,11 @@ export const AudioPlayerProvider = ({ children }) => {
     //We asume A just started playing. So need an inializer before, like audio A source = ...
     //this is only called if a track will follow
     const playbackWithTransition = async (newQueuePointer) => {
-        const shouldStopMusic = playQueueRef.current.length <= queuePointerRef.current + 1; 
-        // console.log("SHOULD STOP",shouldStopMusic,playQueueRef.current.length , queuePointerRef.current + 1)
-
 
         //if another track, we switch audios
         setQueuePointer(newQueuePointer);
-        
+        const shouldStopMusic = playQueueRef.current.length <= queuePointerRef.current + 1; 
+
         globalAudioRef.current = targetAudioHelperRef.current === "A" ?
             audioRefA.current : audioRefB.current; 
 
@@ -408,7 +406,7 @@ export const AudioPlayerProvider = ({ children }) => {
             });
             resetTransition();
             audioRefB.current.removeEventListener("timeupdate", updateTime);
-            audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
+            audioRefB.current.removeEventListener("ended", stopMusicOnLastPlayed);
             setIsPlaying(true);
             globalAudioRef.current.play();
 
@@ -473,30 +471,24 @@ export const AudioPlayerProvider = ({ children }) => {
         fetchTrackCover(trackId);
             
         console.log("Fading in", globalAudioRef.current)
-
+        console.log("stop at ended", shouldStopMusic);
         if(targetAudioHelperRef.current === "A"){  
-            if(!shouldStopMusic){
-                startNewTrackBlend(audioRefB, audioRefA);
-                audioRefA.current.addEventListener("timeupdate", updateTime);
-                audioRefA.current.addEventListener("ended", playNextTrackOnEnd);
-            }else{
-                startNewTrackBlend(audioRefB, null);
+            startNewTrackBlend(audioRefB, audioRefA);
+            audioRefA.current.addEventListener("timeupdate", updateTime);
+            if(shouldStopMusic){
+                audioRefA.current.addEventListener("ended", stopMusicOnLastPlayed);
             }
-
             audioRefB.current.removeEventListener("timeupdate", updateTime);
-            audioRefB.current.removeEventListener("ended", playNextTrackOnEnd);
+            audioRefB.current.removeEventListener("ended", stopMusicOnLastPlayed);
 
         }else if(targetAudioHelperRef.current === "B"){
-            if(!shouldStopMusic){
-                startNewTrackBlend(audioRefA, audioRefB);
-                audioRefB.current.addEventListener("timeupdate", updateTime);
-                audioRefB.current.addEventListener("ended", playNextTrackOnEnd);
-            }else{
-                startNewTrackBlend(audioRefA, null);
+            startNewTrackBlend(audioRefA, audioRefB);
+            audioRefB.current.addEventListener("timeupdate", updateTime);
+            if(shouldStopMusic){
+                audioRefB.current.addEventListener("ended", stopMusicOnLastPlayed);
             }
-
             audioRefA.current.removeEventListener("timeupdate", updateTime);
-            audioRefA.current.removeEventListener("ended", playNextTrackOnEnd);
+            audioRefA.current.removeEventListener("ended", stopMusicOnLastPlayed);
         };
 
     }
@@ -628,7 +620,7 @@ export const AudioPlayerProvider = ({ children }) => {
         const interval = 150; //ms
         let iter = 0;
         
-        console.log('Init fadeout for:', fadingInAudioRef.current);
+        // console.log('Init fadeout for:', fadingInAudioRef.current);
         trackBlendIntervalRef.current = setInterval( () => {
             const fadingInVolume = Math.min(1, Math.max(0, (iter * interval) / (trackBlendTime * 1000)));
             //we need a volume ref otherwise it will take the volume value at the first call and stick
@@ -655,12 +647,12 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const updateTime = () => {currentTimeRef.current = globalAudioRef.current?.currentTime};
-    const playNextTrackOnEnd = () => {
-
+    const stopMusicOnLastPlayed = () => {
+        console.log(playQueueRef.current.length , queuePointerRef.current + 1);
           if(playQueueRef.current.length > 0 && playQueueRef.current.length <= queuePointerRef.current + 1){
             stopMusic();
         }
-        };
+    };
 
     const initPlay = () =>{
         if (queuePointerRef.current === -1 || playQueueRef.current.length === 0 ) return; // avoid reseting the track to the beggining when just adding tracks to queue
@@ -689,9 +681,11 @@ export const AudioPlayerProvider = ({ children }) => {
             setIsPlaying(false);
             clearTimeout(trackBlendTimeoutRef.current);
             clearInterval(trackBlendIntervalRef.current);
+            emit("isPlayingTrack", false);
 
         } else {
             setIsPlaying(true);
+            emit("isPlayingTrack", true);
             if (queuePointerRef.current === -1 && playQueueRef.current.length !== 0 ) {
                 setQueuePointer(0);
                 return;
@@ -1085,20 +1079,26 @@ export const AudioPlayerProvider = ({ children }) => {
     }
 
     const openTrackActions = (position, track, looseFocusCallback, toggleFavoriteCallback) => {
-        // console.log(track, "at", position);
         setTrackActionContext({track, position});
-        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
+        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current?.();
         trackActionLoosesFocusRef.current = looseFocusCallback;
         toggleTrackFavoriteWithActionBar.current = toggleFavoriteCallback;
     }
 
-    const closeTrackActions = () =>{
+    // closing by losing focus should cancel all, this unsubscribe. 
+    //closing by clicing option sould remain bind for changes in edit mode.
+    const closeTrackActions = (shouldUnsubscribe = true) =>{
+        if (shouldUnsubscribe){
+            unsubscribe(`update-track-${trackActionContext.track.id}`);
+        }
         setTrackActionContext(null);
-        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current();
+        if(trackActionLoosesFocusRef.current)trackActionLoosesFocusRef.current?.();
+        
+        
     }
 
     const onClicTrackActionEntry = (type, track, callback = null) =>{
-        closeTrackActions();
+        closeTrackActions(type == trackActionTypes.NONE);
         switch(type){
             case trackActionTypes.NONE:
                 return;
@@ -1163,7 +1163,10 @@ export const AudioPlayerProvider = ({ children }) => {
 
     const applyTrackEditInfos = (infos, track) =>{
         setEdtitingTrackInfos(null);
-        if(!track) return;
+        if(!infos) {
+            unsubscribe(`update-track-${track}`);
+            return;
+        };
         const data = new FormData();
         data.append("title", JSON.stringify(infos.title));
         data.append("lyrics", JSON.stringify(infos.lyrics));
@@ -1172,7 +1175,9 @@ export const AudioPlayerProvider = ({ children }) => {
             {method : "POST",
             credentials:"include",
             body: data})
-        .then(res => res.json()).then(data => {addNotification("Song upated!", notifTypes.SUCCESS)})
+        .then(res => res.json()).then(data => {
+            emit(`update-track-${track}`, data.title);
+            addNotification("Song upated!", notifTypes.SUCCESS);})
     };
 
     const applyTrackEditTags = (tags, track) =>{

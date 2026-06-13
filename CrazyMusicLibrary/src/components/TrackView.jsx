@@ -2,16 +2,19 @@ import { IconDots, IconHeart, IconHeartBroken, IconHeartFilled, IconPiano, IconR
 import { useAudioPlayer } from "../GlobalAudioProvider.jsx";
 import { parseAudioDuration } from "../../lib.js";
 import SvgHoverToggle from "./SvgHoverToggle.jsx";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import apiBase from "../../APIbase.js";
+import { useEventContext } from "../GlobalEventProvider.jsx";
 
 const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCover = false }) => {
   const { title, track_number, rawDuration } = track;
   const { playingTrack, openTrackActions, toggleTrackFavorite} = useAudioPlayer();
-  const trackName = track.id;
+  const {subscribe} = useEventContext();
   const [ trackCoverURL, setTrackCoverUrl ] = useState('null');
   const [trackFavorite, setTrackFavorite] = useState(false);
   const [ actionsOpened, setActionsOpened] = useState(false);
+  const [trackName, setTrackName] = useState("");
+  const potentialSubscribeUpdateRef = useRef(null);
   const handleClick = () => { 
     if(isSalad){
       isSalad(index); 
@@ -42,6 +45,10 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
       })
       .then(response => response.json())
       .then(data => {setTrackCoverUrl(`${apiBase}/covers/${data}`);})
+    };
+    setTrackName(title);
+    return () => {
+      if(potentialSubscribeUpdateRef.current) potentialSubscribeUpdateRef.current?.(); 
     }
   },[])
 
@@ -60,7 +67,11 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
     event.stopPropagation();
     setActionsOpened(true);
     openTrackActions({x:event.clientX, y: event.clientY}, track, looseFocusFromActionBar, toggleFavoriteCallback)
-
+    potentialSubscribeUpdateRef.current = subscribe(`update-track-${track.id}`, upadteNameOnChangeInfos);
+  }
+  const upadteNameOnChangeInfos = (name) => {
+    setTrackName(name);
+    potentialSubscribeUpdateRef.current?.();
   }
   //when favorite set with actionbar, no direct connection, so we pass a callback
   const toggleFavoriteCallback = (newFavorite) => {
@@ -77,8 +88,8 @@ const TrackView = ({ index, track, playIconId, isSalad = null, onClick, showCove
      />
       {showCover ?  ((trackCoverURL.split('/').pop() === 'null') ? null :
         <img src={trackCoverURL} className="track-mini-thumbnail" />) : null}
-      {(playingTrack === trackName) ? GetRandomPlayIcon() : showCover ? null : <p className="track-number">{track_number}</p> }
-      <p className="track-name" style={{"--margin" : showCover ? "45px" : "35px" }}>{title}</p>
+      {(playingTrack === track.id) ? GetRandomPlayIcon() : showCover ? null : <p className="track-number">{track_number}</p> }
+      <p className="track-name" style={{"--margin" : showCover ? "45px" : "35px" }}>{trackName}</p>
       <IconDots className={"track-actions-dots" } onClick={clickDots}/>
       <p className="track-length">{parseAudioDuration(rawDuration).readable}</p>
     </div>
