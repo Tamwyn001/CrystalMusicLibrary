@@ -429,7 +429,12 @@ to {
         align-items: flex-start;
     }
 }
-
+.trackIcon{
+    cursor: pointer;
+}
+#albumexport-fileselector{
+    display: none;
+}
 
 #text-no-genre{
     margin: auto;

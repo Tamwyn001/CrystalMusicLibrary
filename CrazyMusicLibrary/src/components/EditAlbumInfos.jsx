@@ -1,15 +1,14 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import CML_logo from './CML_logo';
 import './AddMusic/AlbumWrapping.css'
-import { IconFolderPlus, IconDirections, IconTrashFilled, IconTrashX, IconTrash, IconTextScan2, IconBarrelOff, IconAnalyze } from '@tabler/icons-react';
+import { IconFolderPlus, IconDirections, IconTrashFilled, IconTrashX, IconTrash, IconTextScan2, IconBarrelOff, IconAnalyze, IconFileExport } from '@tabler/icons-react';
 import { FixedSizeList as List } from 'react-window';
 import TrackRemapAlbum from './TrackRemapAlbum';
 import ButtonWithCallback from './ButtonWithCallback';
 import apiBase from '../../APIbase';
-import { useNotifications } from '../GlobalNotificationsProvider';
+import { NotificationsProvider, useNotifications } from '../GlobalNotificationsProvider';
 import { useNavigate } from 'react-router-dom';
 import { useAudioPlayer } from '../GlobalAudioProvider';
-
 
 const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [showTrackRemap, setShowTrackRemap] = useState({visible: false});
@@ -17,8 +16,9 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
     const [date, setDate] = useState("2000-00-00"); // Set the default date to today
     const [fileOverwrite, setFileOverwrite] = useState(null);
     const [ remapedSomeTrack, setRemapedSomeTracks ] = useState(false)
-    const {deleteAlbum } = useAudioPlayer();
+    const {deleteAlbum,exportAlbum } = useAudioPlayer();
     const {notifTypes, addNotification} = useNotifications();
+
     if(!albumClass) return null;
 
     //only load when the albumClass is set
@@ -98,6 +98,11 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
         data.append("payload", JSON.stringify({target : albumClass.id, mode : "album"}));
         fetch(`${apiBase}/jobs/supply/JOB_FFT`, {method : "POST", credentials: "include", body: data});
     };
+
+    const triggerExportAlbum = async() => {
+        await exportAlbum(albumClass);
+    };
+
     return(
         <div className="page-overlay-blur">
             <div className="albumWrapping-library">
@@ -122,6 +127,9 @@ const EditAlbumInfos = ({applyCanges, albumClass}) => {
                          style={{marginTop: "auto"}}/>
                     <ButtonWithCallback onClick={recomputeFFT}
                          text={"Find spectra"} icon={<IconAnalyze/>}
+                         style={{marginTop: "auto"}}/>
+                    <ButtonWithCallback onClick={triggerExportAlbum}
+                         text={"Export"} icon={<IconFileExport/>}
                          style={{marginTop: "auto"}}/>
                     {/* </div> */}
                 </div>

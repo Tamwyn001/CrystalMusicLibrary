@@ -2,7 +2,7 @@ const express = require( "express");
 // @ts-ignore
 const {existsSync, mkdirSync, statSync, createReadStream, unlink, fstat} = require( "fs");
 // @ts-ignore
-const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit, getTrackLyrics, setTracksInfos } = require( "../db-utils.js");
+const {addTracks, addAlbums, getAlbums, getAlbum, getTrackInfos, getNextSongsFromPlayist, getNextSongsFromAlbum, getTrackCoverPath, getTrackIndex, getDbStats, insertNewServerState, latestServerStats, getTrackNameCover, getArtists, getArtist, getArtistTracks, getTracksAddedByUsers, findAudioEntity, getAllTracks, getTrackPath, getGenreAlbums, applyAlbumsEdit, setFavorite, getGenres, getPlaylists, createPlaylist, getPlaylist, addTrackToPlaylist, addAlbumToPlaylist, addPlaylistToPlaylist, addGenreToPlaylist, addArtistToPlaylist, applyPlaylistEdit, moveTrackToAlbum, createNewAlbum, getTrackAlbumId, removeTrackFromPlaylist, updateTrackTags, getTrackTags, getSaladTracks, getUserMostUsedTags, getUserTags, applyTagEdits, deleteTag, registerNewSaladForUser, getUserSalads, deleteSalad, applySaladEdits, getGenreTracks, getThreeAlbumCoverForGenre, deleteAlbum, getAlbumTracksPath, getAlbumCoverPath, applyArtistEdit, getTrackLyrics, setTracksInfos,getAllFilesForDownload, getAlbumNameForExport } = require( "../db-utils.js");
 const {pipeline} = require( "stream");
 const { dirSize } = require( '../lib.js');
 // @ts-ignore
@@ -15,7 +15,8 @@ const icy = require("icy");
 const verify = require("./verify.js");
 const { parseFile } = require("music-metadata");
 const { JobContainerSearchMode } = require("../statics.js");
-
+const {ZipArchive} = require("archiver");
+const contentDisposition = require('content-disposition');
 const router = express.Router();
 
 const uploadPath = process.env.CML_DATA_PATH_RESOLVED; // Assume your main file resolves it
@@ -580,6 +581,24 @@ router.get("/getSongMetaDataCover/:id", async (req,res) => {
 
 router.get("/getTrackLyrics/:trackId", (req, res) =>{
     res.json(getTrackLyrics(req.params.trackId));
+});
+
+router.get("/download-album/:id", (req,res) => {
+    const album = getAlbumNameForExport(req.params.id); 
+    const filename = `${album.artist} - ${album.title}.zip`;
+    const files = getAllFilesForDownload(req.params.id);
+    console.log("Exporting", filename);
+
+    res.setHeader('Content-Disposition', contentDisposition(filename));
+    const archive = new ZipArchive({ store: true });
+    res.setHeader('Content-Type', 'application/zip');
+    archive.on('error', (err) => res.status(500).send({ error: err.message }));
+    archive.pipe(res);
+
+    for(const track of files){
+        archive.file(track.path, {name : track.title});
+    }
+     archive.finalize();
 });
 
 

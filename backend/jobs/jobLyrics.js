@@ -42,7 +42,9 @@ class JobLyrics extends Job{
     init = async (jobKey, jobManager, payload) =>{
         this.currentConfig = require(jobManager.libraryConfig.configFilePath);
 
-        this.jobQueueLimit = pLimit(this.currentConfig.ServerLyrics.concurrency);
+        // used pLimit(this.currentConfig.ServerLyrics.concurrency); but https://lrclib.net/docs 
+        // can only handle 1 at a time + 500ms delay
+        this.jobQueueLimit = pLimit(1);
         let query;
         switch (payload.mode) {
             case JobContainerSearchMode.ALL:
@@ -63,10 +65,10 @@ class JobLyrics extends Job{
     }
 
     async startJobFromQuery(query){
-        console.log("Started", query);
+        // console.log("Started ", query);
         this.updateProgress(0,query.length);
             const progressInterval = setInterval(() => {
-                console.log(`Running: ${this.jobQueueLimit.activeCount}, pending: ${this.jobQueueLimit.pendingCount}`);
+                // console.log(`Running: ${this.jobQueueLimit.activeCount}, pending: ${this.jobQueueLimit.pendingCount}`);
                 const done =  this.progress.total
                         -this.jobQueueLimit.activeCount
                         -this.jobQueueLimit.pendingCount;
@@ -76,7 +78,6 @@ class JobLyrics extends Job{
                     this.progress.working = this.jobQueueLimit.activeCount;
                 }
             }, 250);
-            console.log("Recursive start")
             await this.recursiveApiCall(query);
             clearInterval(progressInterval);
             this.updateProgress(this.progress.total,this.progress.total);
@@ -84,29 +85,29 @@ class JobLyrics extends Job{
 
     async recursiveApiCall(query){
         //recursive stop
+        if(!query) return;
         if(query.length === 0) return;
         let pending = [...this.newPendingJobs];
-        console.log("New pending", pending.length)
         this.newPendingJobs = [];
         // Runs until all api call are done
         let todo = [...query, ...pending];
         if (todo.length === 0) return;
 
         const jobs = [];
-        for (query in todo){
+        // console.log(query);
+        for (const query_elem of todo){
             jobs.push(this.jobQueueLimit( () => 
-                 this.fetchAddLyricsPromise(query, API_SEARCH_METHODE.GET).then(() => {
+                 this.fetchAddLyricsPromise(query_elem, API_SEARCH_METHODE.GET).then(() => {
                     if(this.status!=JobStatus.RUNNING) this.resumeJob()})).catch(
                         (err)=>{console.log("Could not fetch lyrics")}))
         }
         await Promise.all(jobs);
         console.log("Treated", todo.length,"    in this recurssion.")
-        await this.recursiveApiCall(this.newPendingJobs);
+        await this.recursiveApiCall(this.neswPendingJobs);
     }
     static fetchLyrics = (search, method) => {return new Promise(async (res, rej) => {
         const apiCall = method === API_SEARCH_METHODE.GET ?  findEntryAPiGet(search) 
                     : (API_SEARCH_METHODE.SEARCH ?  findEntryAPiSearch(search) : "");
-
         fetch(apiCall, {
             method : "GET",
             headers: LIBRARY_AGENT
@@ -114,25 +115,32 @@ class JobLyrics extends Job{
     })};
 
     fetchAddLyricsPromise = async (entry, method) => {
-        const {id : trackId, ...search} = entry;
+        var {id : trackId, ...search} = entry;  
+        // search = JSON.stringify(search)
         //On error we abort
+        var found = false;
         try{
             const res1 = await JobLyrics.fetchLyrics(search, method);
-            console.log("Lyrics res:",res1?.message);
             let res2;
+            if(res1.plainLyrics || res1.instrumental){
+                found = true;
+            }
             const fallBack = !(res1.plainLyrics || res1.instrumental);
             if(fallBack){
                 search.track_name = stripFeaturing(search.track_name);
                 search.album_name = stripFeaturing(search.album_name);
                 search.artist_name = stripFeaturing(search.artist_name);
                 res2 = await JobLyrics.fetchLyrics(search, method);
+                if(res1.plainLyrics || res1.instrumental) found = true;
+            
             }
             
             const lyrics = fallBack ? res2.syncedLyrics : res1.syncedLyrics;
             const db = getDatabase();
             db.prepare(`UPDATE tracks SET lyrics = ?, is_instrumental=? WHERE id=?`)
                 .run(lyrics, lyrics=='' ? 1 : 0, trackId);
-            console.log("Found lyrics:", lyrics?.slice(1,50));
+            console.log( (res1.instrumental|| res2?.instrumental) ? `Lyrics :${search.track_name} is instrumental` :
+                 found ? `Found lyrics for ${search.track_name}`: `Cant find lyrics for ${search.track_name}`);
         }
         catch(err){return;}
     };

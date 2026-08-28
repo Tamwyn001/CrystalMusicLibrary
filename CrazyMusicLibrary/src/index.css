@@ -82,6 +82,6 @@ button:focus-visible {
   color: var(--selection-text);
 }
 
-*{
+/* *{
   overscroll-behavior: contain;
-}
+} */

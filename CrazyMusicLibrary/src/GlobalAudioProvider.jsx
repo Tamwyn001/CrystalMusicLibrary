@@ -1338,9 +1338,34 @@ export const AudioPlayerProvider = ({ children }) => {
            
         });
       };
+
+    const exportAlbum = async (albumClass) => {
+        const res = await fetch(`${apiBase}/read-write/download-album/${albumClass.id}`,{
+            method : "GET",
+            credentials : "include"
+        });
+
+        if(!res.ok){
+            addNotification(notifTypes.INFO, "Export failed");
+            return;
+        }
+        // const json_res = await res.json();
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download =`${albumClass.artist} - ${albumClass.name}.zip`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+
+        window.URL.revokeObjectURL(url);
+
+    };  
     return (
         <AudioPlayerContext.Provider 
         value={{
+            exportAlbum,
             songRawPalette,
             currentDisplayedPage,
             mobileMusicPlayRef,

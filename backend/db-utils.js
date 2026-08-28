@@ -934,7 +934,23 @@ const getTrackLyrics = (trackId) =>{
     return db.prepare("SELECT is_instrumental, lyrics FROM tracks WHERE id = ?").get(trackId);
 }
 
+const getAllFilesForDownload = (albumId) => {
+    return db.prepare("SELECT path, title FROM tracks WHERE album = ?").all(albumId);
+}
+const getAlbumNameForExport = (albumId) => {
+    const queryAlbumInfos = `
+        SELECT a.title AS title, ad.name AS artist
+        FROM albums AS a 
+        LEFT JOIN artists_to_albums AS A2A ON a.id = A2A.taking_part
+        LEFT JOIN artists_descs AS ad ON A2A.artist = ad.id
+        WHERE a.id = ?
+    `;
+    return db.prepare(queryAlbumInfos).get(albumId);
+}
+
 module.exports = {
+    getAlbumNameForExport,
+    getAllFilesForDownload,
     setTracksInfos,
     getTrackLyrics,
     toogleUserLikesRadio,
