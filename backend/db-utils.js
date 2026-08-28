@@ -16,8 +16,8 @@ const batchInsert = (table, columns, params, ignore = false) => {
     // Function to add tracks to the database
     const localTime = currentDate();
     const {id : userAddingId} = db.prepare("SELECT id FROM users WHERE email = ?").get(userAdding);
-    batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration, uploaded_by", 
-        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path, localTime, track.no, track.duration, userAddingId || 1]));
+    batchInsert("tracks", "id, title, album, release_date, path, created_at, track_number, duration, uploaded_by, disc", 
+        tracks.map((track) => [track.uuid, track.title, track.albumId, track.year, track.path, localTime, track.no, track.duration, userAddingId || 1, track.disc]));
 }
 
 /**

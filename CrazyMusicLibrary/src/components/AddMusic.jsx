@@ -110,6 +110,7 @@ class Track {
         this.title = file.name;
         this.no = 1;
         this.duration = 0;
+        this.disc = 0;
         this.year = 2003;
         /** @type {File} */
         this.picture = null; 
@@ -117,13 +118,14 @@ class Track {
     setPicture(picture){
         this.picture = picture
     }
-    setAdditionalData(albumName ="", title = "", no = 1, duration = 0, year = 2000, artists = []) {
+    setAdditionalData(albumName ="", title = "", no = 1, duration = 0, year = 2000, artists = [], disc = 0) {
         this.title = title;
         this.no = no;
         this.duration = duration;
         this.year = year;
         this.artists = artists;
         this.albumName = albumName;
+        this.disc = disc;
     }
     /** @param {Album} album */
     setAlbum(album) {
@@ -146,7 +148,7 @@ class Track {
      */
     getPuredTrackMeta(){
         return {albumUuid : this.album.uuid, duration : this.duration, no : this.no,
-            year : this.year, title : this.title, id : this.id
+            year : this.year, title : this.title, id : this.id, disc : this.disc
          }
         
     }
@@ -314,7 +316,8 @@ const AddMusic = ({ closeOverlay, uploadPercent, uploadProgress, uploadFinished,
                     meta.format.duration || 0,
                     meta.common.year,
                     // Flats all artists combination and trim all ["A1, A2", "A3 "] => ["A1","A2","A3"]
-                    meta.common.artists.map(ar=> ar.split(",")).flat(1).map(a=>a.trim())
+                    meta.common.artists.map(ar=> ar.split(",")).flat(1).map(a=>a.trim()),
+                    meta.common.disk?.no || 0
                 );
                 track.setPicture(meta.common?.picture?.[0]);
                 setFinishedMeta((prev) => prev + 1);

@@ -42,6 +42,7 @@ router.post("/upload", upload.fields([{ name: "music" }, { name: "cover" }]), as
         file.year = meta.year;
         file.no = meta.no;   
         file.duration = meta.duration;
+        file.disc = meta.disc;
         let addedBy = null;
         try{
             const token = req.cookies.token;
