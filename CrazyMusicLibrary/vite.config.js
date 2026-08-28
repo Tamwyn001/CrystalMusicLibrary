@@ -12,11 +12,12 @@ export default defineConfig({
   },
   resolve: {
     alias: {
+      ...{find: '@', replacement: resolve(__dirname, 'src')},
       ...{
         // See https://github.com/mantinedev/ui.mantine.dev/issues/113
-        '@tabler/icons-react': '@tabler/icons-react/dist/esm/icons/index.mjs'
+        '@tabler/icons-react':  resolve(__dirname, 'node_modules/@tabler/icons-react/dist/esm/icons/index.mjs')
       },
-      ...{find: '@', replacement: resolve(__dirname, 'src')}
+      
     }
   },
   build: {
